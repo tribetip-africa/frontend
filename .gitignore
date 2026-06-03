@@ -22,7 +22,22 @@
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
+
+# IDE / editor (local only)
+.idea/
+.vscode/
+.cursor/
+
+# playwright (local e2e runs)
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# turbopack
+.turbo
 
 # debug
 npm-debug.log*
