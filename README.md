@@ -43,4 +43,23 @@ Platform URLs default by environment:
 
 Override via `.env.local` (`NEXT_PUBLIC_TRIBETIP_PLATFORM_URL`, `NEXT_PUBLIC_API_URL`).
 
-Validate: `npm run test:platform`
+## Tests (Jest)
+
+```bash
+npm test              # run all unit tests
+npm run test:watch    # watch mode
+npm run test:coverage # with coverage report
+```
+
+## Caching (security-first)
+
+| Route type | Policy | Behavior |
+|------------|--------|----------|
+| Auth (`/sign-in`, `/sign-up`, API auth) | `noStore` | Never cached |
+| Dashboard | `noStore` | Private, no CDN cache |
+| Landing `/` | `staticPage` | Short public edge cache |
+| Public creator API | `publicShort` | 60s revalidate |
+
+Middleware sets `Cache-Control` headers. API client uses `secureFetch()`.
+
+Covered by Jest in `src/lib/cache-policy.test.ts` and `src/lib/secure-fetch.test.ts`.
