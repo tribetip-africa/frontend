@@ -7,6 +7,7 @@ export type Tribe = {
 export type AuthResponse = {
   message: string;
   token?: string;
+  confirmation_required?: boolean;
   tribe: Tribe;
 };
 
@@ -20,7 +21,7 @@ export type SignUpPayload = {
 };
 
 export type SignInPayload = {
-  email: string;
+  login: string;
   password: string;
 };
 
