@@ -47,7 +47,12 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
           },
         ]
       : [
-          { name: "email", label: "Email", type: "email", autoComplete: "email", required: true },
+          {
+            name: "login",
+            label: "Email or username",
+            autoComplete: "username",
+            required: true,
+          },
           {
             name: "password",
             label: "Password",
@@ -123,7 +128,11 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
             required={field.required}
             className="w-full rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-sm text-brand-900 outline-none ring-brand-500 placeholder:text-brand-400 focus:ring-2"
             placeholder={
-              field.name === "username" ? "e.g. ama_creates" : undefined
+              field.name === "username"
+                ? "e.g. ama_creates"
+                : field.name === "login"
+                  ? "you@email.com or your_username"
+                  : undefined
             }
           />
           {field.name === "username" && (
