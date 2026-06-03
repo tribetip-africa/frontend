@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
@@ -12,12 +12,18 @@ import { getCreatorPageDisplayUrl } from "@/lib/platform";
 export default function DashboardPage() {
   const router = useRouter();
   const { tribe, isLoading, signOut } = useAuth();
+  const signingOut = useRef(false);
 
   useEffect(() => {
-    if (!isLoading && !tribe) {
+    if (!isLoading && !tribe && !signingOut.current) {
       router.replace("/sign-in");
     }
   }, [isLoading, tribe, router]);
+
+  const handleSignOut = () => {
+    signingOut.current = true;
+    signOut().then(() => router.replace("/"));
+  };
 
   useEffect(() => {
     checkApiHealth().then((ok) => {
@@ -92,7 +98,7 @@ export default function DashboardPage() {
               Back to home
             </Button>
           </Link>
-          <Button variant="ghost" type="button" onClick={() => signOut().then(() => router.push("/"))}>
+          <Button variant="ghost" type="button" onClick={handleSignOut}>
             Sign out
           </Button>
         </div>
