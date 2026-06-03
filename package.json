@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:platform": "tsx --test src/lib/platform.test.ts"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:live": "node scripts/run-live-tests.mjs"
   },
   "dependencies": {
     "next": "16.2.7",
@@ -16,12 +19,15 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
-    "playwright": "^1.52.0",
+    "jest": "^30.4.2",
+    "jest-environment-node": "^30.4.1",
+    "playwright": "^1.60.0",
     "tailwindcss": "^4",
     "tsx": "^4.19.4",
     "typescript": "^5"
