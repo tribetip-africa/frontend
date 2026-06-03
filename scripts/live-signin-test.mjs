@@ -1,33 +1,33 @@
 import { chromium } from "playwright";
+import {
+  WEB_BASE,
+  apiSignUp,
+  assertNoStore,
+  waitForServices,
+} from "./live-helpers.mjs";
 
 const ts = Date.now();
 const username = `signin_${ts}`;
 const email = `signin${ts}@tribetip.africa`;
 const password = "securepass123";
 
+await waitForServices();
+
+const { response: signup } = await apiSignUp({ username, email, password });
+if (!signup.ok) {
+  throw new Error(`API signup failed: ${signup.status}`);
+}
+
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage();
 
 try {
-  // Register via API so we only test sign-in UI
-  const signup = await fetch("http://127.0.0.1:3001/tribes.json", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({
-      tribe: {
-        email,
-        password,
-        password_confirmation: password,
-        username,
-        country_code: "NG",
-        currency: "NGN",
-      },
-    }),
-  });
-  if (!signup.ok) throw new Error(`API signup failed: ${signup.status}`);
+  console.log("1. Open sign-in page");
+  const signInPage = await page.goto(`${WEB_BASE}/sign-in`, { waitUntil: "networkidle" });
+  assertNoStore(signInPage.headers(), "/sign-in");
 
-  await page.goto("http://localhost:3000/sign-in", { waitUntil: "networkidle" });
-  await page.fill("#email", email);
+  console.log("2. Sign in via UI with username");
+  await page.fill("#login", username);
   await page.fill("#password", password);
   await page.getByRole("main").getByRole("button", { name: /^sign in$/i }).click();
   await page.waitForURL("**/dashboard", { timeout: 15000 });
