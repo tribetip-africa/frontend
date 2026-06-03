@@ -12,8 +12,9 @@ export default function SignUpPage() {
   const { signUp } = useAuth();
 
   async function handleSubmit(values: Record<string, string>) {
-    await signUp(values as unknown as SignUpPayload);
-    router.push("/dashboard");
+    const payload = values as unknown as SignUpPayload;
+    const { confirmationRequired } = await signUp(payload);
+    router.push(confirmationRequired ? "/sign-in?confirm_email=1" : "/dashboard");
   }
 
   return (
