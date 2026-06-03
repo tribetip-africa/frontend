@@ -1,16 +1,26 @@
 import { chromium } from "playwright";
+import {
+  WEB_BASE,
+  assertCspPresent,
+  assertNoStore,
+  waitForServices,
+} from "./live-helpers.mjs";
 
 const ts = Date.now();
 const username = `live_${ts}`;
 const email = `live${ts}@tribetip.africa`;
 const password = "securepass123";
 
+await waitForServices();
+
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage();
 
 try {
   console.log("1. Open sign-up page");
-  await page.goto("http://localhost:3000/sign-up", { waitUntil: "networkidle" });
+  const signUpPage = await page.goto(`${WEB_BASE}/sign-up`, { waitUntil: "networkidle" });
+  assertNoStore(signUpPage.headers(), "/sign-up");
+  assertCspPresent(signUpPage.headers(), "/sign-up");
   await page.getByRole("heading", { name: /create your creator page/i }).waitFor();
 
   console.log("2. Fill and submit sign-up form");
@@ -21,8 +31,10 @@ try {
   await page.fill("#password_confirmation", password);
   await page.getByRole("button", { name: /create my page/i }).click();
 
-  console.log("3. Wait for dashboard redirect");
+  console.log("3. Wait for dashboard (dev skips email confirmation)");
   await page.waitForURL("**/dashboard", { timeout: 15000 });
+  const dashboardResponse = await page.reload({ waitUntil: "domcontentloaded" });
+  assertNoStore(dashboardResponse.headers(), "/dashboard");
 
   const dashboardText = await page.textContent("main");
   if (!dashboardText?.includes(`@${username}`)) {
