@@ -5,6 +5,7 @@ import type {
   SignUpPayload,
 } from "@/types/api";
 import { getApiBaseUrl } from "@/lib/platform";
+import { secureFetch } from "@/lib/secure-fetch";
 
 const API_BASE = getApiBaseUrl();
 
@@ -37,18 +38,43 @@ async function parseJson<T>(response: Response): Promise<T> {
 
 export async function checkApiHealth(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE}/up`, { cache: "no-store" });
+    const response = await secureFetch(`${API_BASE}/up`, { cachePolicy: "noStore" });
     return response.ok;
   } catch {
     return false;
   }
 }
 
+export type PublicProfile = {
+  id: string;
+  username: string;
+  display_name: string;
+  bio: string | null;
+  country_code: string;
+  currency: string;
+  default_tip_amount_cents: number;
+};
+
+export async function fetchPublicProfile(username: string): Promise<PublicProfile> {
+  const response = await secureFetch(`${API_BASE}/tribes/${username}`, {
+    cachePolicy: "publicShort",
+    headers: { Accept: "application/json" },
+  });
+
+  const data = await parseJson<{ profile: PublicProfile } & ApiError>(response);
+  if (!response.ok) {
+    throw new ApiRequestError(response.status, data);
+  }
+
+  return data.profile;
+}
+
 export async function signUp(
   payload: SignUpPayload,
 ): Promise<{ data: AuthResponse; token: string | null }> {
-  const response = await fetch(`${API_BASE}/tribes.json`, {
+  const response = await secureFetch(`${API_BASE}/tribes.json`, {
     method: "POST",
+    cachePolicy: "noStore",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ tribe: payload }),
   });
@@ -67,8 +93,9 @@ export async function signUp(
 export async function signIn(
   payload: SignInPayload,
 ): Promise<{ data: AuthResponse; token: string }> {
-  const response = await fetch(`${API_BASE}/tribes/sign_in.json`, {
+  const response = await secureFetch(`${API_BASE}/tribes/sign_in.json`, {
     method: "POST",
+    cachePolicy: "noStore",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ tribe: payload }),
   });
@@ -89,8 +116,9 @@ export async function signIn(
 }
 
 export async function signOut(token: string): Promise<void> {
-  const response = await fetch(`${API_BASE}/tribes/sign_out.json`, {
+  const response = await secureFetch(`${API_BASE}/tribes/sign_out.json`, {
     method: "DELETE",
+    cachePolicy: "noStore",
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
