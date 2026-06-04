@@ -18,10 +18,13 @@ const page = await browser.newPage();
 
 try {
   console.log("1. Open sign-up page");
-  const signUpPage = await page.goto(`${WEB_BASE}/sign-up`, { waitUntil: "networkidle" });
+  const signUpPage = await page.goto(`${WEB_BASE}/sign-up`, { waitUntil: "domcontentloaded" });
   assertNoStore(signUpPage.headers(), "/sign-up");
   assertCspPresent(signUpPage.headers(), "/sign-up");
-  await page.getByRole("heading", { name: /create your creator page/i }).waitFor();
+  await page.locator("h1", { hasText: "Create your creator page" }).waitFor();
+  await page.locator("form").waitFor();
+  await page.waitForSelector("#username", { state: "visible" });
+  await page.waitForSelector("#email", { state: "visible" });
 
   console.log("2. Fill and submit sign-up form");
   await page.selectOption("#country_code", "NG");

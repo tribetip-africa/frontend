@@ -23,7 +23,7 @@ const page = await browser.newPage();
 
 try {
   console.log("1. Open sign-in page");
-  const signInPage = await page.goto(`${WEB_BASE}/sign-in`, { waitUntil: "networkidle" });
+  const signInPage = await page.goto(`${WEB_BASE}/sign-in`, { waitUntil: "domcontentloaded" });
   assertNoStore(signInPage.headers(), "/sign-in");
 
   console.log("2. Sign in via UI with username");
