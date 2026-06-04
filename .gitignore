@@ -28,7 +28,9 @@ Thumbs.db
 # IDE / editor (local only)
 .idea/
 .vscode/
-.cursor/
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
 
 # playwright (local e2e runs)
 /test-results/
