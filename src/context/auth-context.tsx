@@ -4,16 +4,15 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
 } from "react";
 import { signIn as apiSignIn, signOut as apiSignOut, signUp as apiSignUp } from "@/lib/api";
 import {
   clearStoredAuth,
-  getStoredToken,
-  getStoredTribe,
+  getAuthStorageSnapshot,
   setStoredAuth,
+  subscribeAuthStorage,
 } from "@/lib/auth-storage";
 import type { SignInPayload, SignUpPayload, Tribe } from "@/types/api";
 
@@ -28,35 +27,33 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [tribe, setTribe] = useState<Tribe | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+const emptyAuthSnapshot = { token: null, tribe: null };
 
-  useEffect(() => {
-    const storedToken = getStoredToken();
-    const storedTribe = getStoredTribe();
-    if (storedToken && storedTribe) {
-      setToken(storedToken);
-      setTribe(storedTribe);
-    }
-    setIsLoading(false);
-  }, []);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const hasMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
+  const { token, tribe } = useSyncExternalStore(
+    subscribeAuthStorage,
+    getAuthStorageSnapshot,
+    () => emptyAuthSnapshot,
+  );
+
+  const isLoading = !hasMounted;
 
   const signUp = useCallback(async (payload: SignUpPayload) => {
     const { data, token: jwt } = await apiSignUp(payload);
 
     if (data.confirmation_required) {
       clearStoredAuth();
-      setToken(null);
-      setTribe(null);
       return { confirmationRequired: true };
     }
 
     if (jwt) {
       setStoredAuth(jwt, data.tribe);
-      setToken(jwt);
-      setTribe(data.tribe);
       return { confirmationRequired: false };
     }
     // Registration does not issue JWT; sign in to obtain a session token.
@@ -65,16 +62,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password: payload.password,
     });
     setStoredAuth(sessionToken, session.tribe);
-    setToken(sessionToken);
-    setTribe(session.tribe);
     return { confirmationRequired: false };
   }, []);
 
   const signIn = useCallback(async (payload: SignInPayload) => {
     const { data, token: jwt } = await apiSignIn(payload);
     setStoredAuth(jwt, data.tribe);
-    setToken(jwt);
-    setTribe(data.tribe);
   }, []);
 
   const signOut = useCallback(async () => {
@@ -86,8 +79,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     clearStoredAuth();
-    setToken(null);
-    setTribe(null);
   }, [token]);
 
   const value = useMemo(
