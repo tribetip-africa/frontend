@@ -98,6 +98,7 @@ jobs:
   live:
     name: Live tests
     runs-on: ubuntu-latest
+    if: ${{ secrets.TRIBETIP_CHECKOUT_TOKEN != '' }}
     env:
       LIVE_API_URL: http://127.0.0.1:3001
       LIVE_WEB_URL: http://127.0.0.1:3000
@@ -132,13 +133,6 @@ jobs:
           --health-retries 5
 
     steps:
-      - name: Ensure API checkout token is configured
-        run: |
-          if [ -z "${{ secrets.TRIBETIP_CHECKOUT_TOKEN }}" ]; then
-            echo "::error::Live tests need the TRIBETIP_CHECKOUT_TOKEN secret (PAT with read access to tribetip-africa/tribetip). See README."
-            exit 1
-          fi
-
       - name: Checkout frontend
         uses: actions/checkout@v4
 
@@ -246,11 +240,15 @@ jobs:
     steps:
       - name: Require all checks to pass
         run: |
+          if [[ "${{ needs.live.result }}" == "skipped" ]]; then
+            echo "::notice::Live tests skipped (set TRIBETIP_CHECKOUT_TOKEN to enable). See README."
+          fi
+
           if [[ "${{ needs.lint.result }}" != "success" ||
                 "${{ needs.typecheck.result }}" != "success" ||
                 "${{ needs.test.result }}" != "success" ||
                 "${{ needs.error-handling.result }}" != "success" ||
-                "${{ needs.live.result }}" != "success" ||
+                ( "${{ needs.live.result }}" != "success" && "${{ needs.live.result }}" != "skipped" ) ||
                 "${{ needs.build.result }}" != "success" ||
                 "${{ needs.security.result }}" != "success" ]]; then
             echo "One or more required checks failed."

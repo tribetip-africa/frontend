@@ -14,7 +14,8 @@
     "test:errors": "jest --ci --testPathPatterns=src/lib/errors",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:live": "node scripts/run-live-tests.mjs"
+    "test:live": "node scripts/run-live-tests.mjs",
+    "ci": "npm run lint && npm run typecheck && npm run test:ci && npm run test:errors && npm run build"
   },
   "dependencies": {
     "next": "16.2.7",

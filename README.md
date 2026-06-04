@@ -83,4 +83,10 @@ The **Live tests** workflow job checks out the private [`tribetip-africa/tribeti
    |------|--------|
    | `TRIBETIP_CHECKOUT_TOKEN` | your PAT |
 
-3. Re-run the workflow. Without this secret, the live job fails immediately with a clear error instead of `Not Found` on checkout.
+3. Re-run the workflow. Without this secret, the live job is **skipped** and other CI jobs still pass.
+
+Run the same checks locally (without live Playwright):
+
+```bash
+npm run ci
+```
