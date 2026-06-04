@@ -11,6 +11,7 @@
     "prepare": "git rev-parse --is-inside-work-tree >/dev/null 2>&1 && mkdir -p .git/hooks && cp .githooks/commit-msg .git/hooks/commit-msg && chmod +x .git/hooks/commit-msg || true",
     "test": "jest",
     "test:ci": "jest --ci",
+    "test:errors": "jest --ci --testPathPatterns=src/lib/errors",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:live": "node scripts/run-live-tests.mjs"
