@@ -3,10 +3,12 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const scriptsDir = path.dirname(fileURLToPath(import.meta.url));
+// Errors test last: it exhausts the public profile rate limit for the runner IP.
 const tests = [
   "live-cache-test.mjs",
   "live-signup-test.mjs",
   "live-signin-test.mjs",
+  "live-errors-test.mjs",
 ];
 
 console.log("Running live test suite…\n");

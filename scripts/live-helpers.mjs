@@ -1,5 +1,53 @@
+import { existsSync } from "node:fs";
+
 export const API_BASE = process.env.LIVE_API_URL ?? "http://127.0.0.1:3001";
 export const WEB_BASE = process.env.LIVE_WEB_URL ?? "http://localhost:3000";
+
+export function resolveTribetipDir() {
+  if (process.env.TRIBETIP_DIR) return process.env.TRIBETIP_DIR;
+
+  const candidates = [
+    new URL("../tribetip", import.meta.url).pathname,
+    new URL("../../tribetip", import.meta.url).pathname,
+  ];
+
+  for (const dir of candidates) {
+    if (existsSync(`${dir}/bin/rails`)) return dir;
+  }
+
+  throw new Error("tribetip API directory not found (set TRIBETIP_DIR)");
+}
+
+export function assertStructuredError(body, { code, status }) {
+  if (!body?.error || typeof body.error !== "object") {
+    throw new Error(`Expected structured error payload, got: ${JSON.stringify(body)}`);
+  }
+  if (body.error.code !== code) {
+    throw new Error(`Expected error.code=${code}, got: ${body.error.code}`);
+  }
+  if (!body.error.message || typeof body.error.message !== "string") {
+    throw new Error(`Expected error.message string, got: ${JSON.stringify(body.error)}`);
+  }
+  if (status !== undefined && body.error.status !== undefined && body.error.status !== status) {
+    throw new Error(`Unexpected error.status in payload: ${body.error.status}`);
+  }
+}
+
+export async function apiRequest(method, path, { body, headers = {} } = {}) {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Origin: WEB_BASE,
+      ...headers,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  const data = await response.json().catch(() => ({}));
+  return { response, data };
+}
 
 export function assertNoStore(headers, route) {
   const cacheControl = (headers["cache-control"] ?? headers.get?.("cache-control")) ?? "";
@@ -64,7 +112,7 @@ export async function apiSignUp({ username, email, password = "securepass123" })
 
 export async function enablePublicProfile(username) {
   const { execSync } = await import("node:child_process");
-  const tribetipDir = new URL("../../tribetip", import.meta.url).pathname;
+  const tribetipDir = resolveTribetipDir();
 
   execSync(
     `bin/rails runner "t = Tribe.find_by!(username: '${username}'); t.update!(display_name: 'Live Test', is_profile_public: true, account_status: 'active')"`,
