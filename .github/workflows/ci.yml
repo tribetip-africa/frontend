@@ -132,6 +132,13 @@ jobs:
           --health-retries 5
 
     steps:
+      - name: Ensure API checkout token is configured
+        run: |
+          if [ -z "${{ secrets.TRIBETIP_CHECKOUT_TOKEN }}" ]; then
+            echo "::error::Live tests need the TRIBETIP_CHECKOUT_TOKEN secret (PAT with read access to tribetip-africa/tribetip). See README."
+            exit 1
+          fi
+
       - name: Checkout frontend
         uses: actions/checkout@v4
 
@@ -140,6 +147,7 @@ jobs:
         with:
           repository: tribetip-africa/tribetip
           path: tribetip
+          token: ${{ secrets.TRIBETIP_CHECKOUT_TOKEN }}
 
       - name: Set up Node
         uses: actions/setup-node@v4

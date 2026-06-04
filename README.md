@@ -63,3 +63,24 @@ npm run test:coverage # with coverage report
 Middleware sets `Cache-Control` headers. API client uses `secureFetch()`.
 
 Covered by Jest in `src/lib/cache-policy.test.ts` and `src/lib/secure-fetch.test.ts`.
+
+## Live tests (Playwright)
+
+Run against local API + Next dev servers:
+
+```bash
+npm run test:live
+```
+
+## CI — live job secret
+
+The **Live tests** workflow job checks out the private [`tribetip-africa/tribetip`](https://github.com/tribetip-africa/tribetip) API repo. GitHub’s default `GITHUB_TOKEN` only has access to this frontend repository, so cross-repo checkout returns **Not Found** unless you add a PAT.
+
+1. Create a fine-grained personal access token with **read** access to `tribetip-africa/tribetip` (or a classic PAT with `repo` scope for that repository).
+2. In **tribetip-africa/frontend** → Settings → Secrets and variables → Actions, add:
+
+   | Name | Value |
+   |------|--------|
+   | `TRIBETIP_CHECKOUT_TOKEN` | your PAT |
+
+3. Re-run the workflow. Without this secret, the live job fails immediately with a clear error instead of `Not Found` on checkout.
