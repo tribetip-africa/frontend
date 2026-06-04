@@ -25,7 +25,14 @@ export type SignInPayload = {
   password: string;
 };
 
+export type ApiErrorPayload = {
+  code: string;
+  message: string;
+  details?: Record<string, unknown>;
+};
+
+/** Supports legacy and structured API error bodies. */
 export type ApiError = {
   errors?: string[];
-  error?: string;
+  error?: string | ApiErrorPayload;
 };

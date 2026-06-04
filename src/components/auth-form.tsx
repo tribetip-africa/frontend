@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { ApiRequestError } from "@/lib/api";
+import { getDisplayMessage, isTribetipError } from "@/lib/errors";
 import { AFRICAN_MARKETS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 
@@ -81,12 +81,9 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
     try {
       await onSubmit(values);
     } catch (err) {
-      if (err instanceof ApiRequestError) {
-        setError(err.message);
-      } else if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Something went wrong. Please try again.");
+      setError(getDisplayMessage(err));
+      if (process.env.NODE_ENV === "development" && isTribetipError(err)) {
+        console.warn("[TribetipError]", err.toJSON());
       }
     } finally {
       setLoading(false);

@@ -1,23 +1,44 @@
-import type {
-  ApiError,
-  AuthResponse,
-  SignInPayload,
-  SignUpPayload,
-} from "@/types/api";
+import type { AuthResponse, SignInPayload, SignUpPayload } from "@/types/api";
+import {
+  TribetipAuthError,
+  TribetipNetworkError,
+  handleRequest,
+  parseApiErrorBody,
+} from "@/lib/errors";
 import { getApiBaseUrl } from "@/lib/platform";
 import { secureFetch } from "@/lib/secure-fetch";
 
 const API_BASE = getApiBaseUrl();
 
-export class ApiRequestError extends Error {
-  status: number;
-  body: ApiError;
+/** @deprecated Use TribetipApiError from @/lib/errors */
+export { TribetipApiError as ApiRequestError } from "@/lib/errors";
 
-  constructor(status: number, body: ApiError, message?: string) {
-    super(message ?? body.errors?.join(", ") ?? body.error ?? "Request failed");
-    this.status = status;
-    this.body = body;
-  }
+async function parseJson<T>(response: Response): Promise<T> {
+  const text = await response.text();
+  if (!text) return {} as T;
+  return JSON.parse(text) as T;
+}
+
+async function requestJson<T>(
+  input: string,
+  init: Parameters<typeof secureFetch>[1] = {},
+): Promise<{ response: Response; data: T }> {
+  return handleRequest(async () => {
+    let response: Response;
+
+    try {
+      response = await secureFetch(input, init);
+    } catch (error) {
+      throw new TribetipNetworkError(undefined, error);
+    }
+
+    const data = await parseJson<T & Record<string, unknown>>(response);
+    if (!response.ok) {
+      throw parseApiErrorBody(response.status, data);
+    }
+
+    return { response, data };
+  }, { url: input, method: init.method ?? "GET" });
 }
 
 function parseBearerToken(authorization: string | null): string | null {
@@ -30,15 +51,11 @@ function extractToken(response: Response, data: AuthResponse): string | null {
   return parseBearerToken(response.headers.get("Authorization"));
 }
 
-async function parseJson<T>(response: Response): Promise<T> {
-  const text = await response.text();
-  if (!text) return {} as T;
-  return JSON.parse(text) as T;
-}
-
 export async function checkApiHealth(): Promise<boolean> {
   try {
-    const response = await secureFetch(`${API_BASE}/up`, { cachePolicy: "noStore" });
+    const { response } = await requestJson<Record<string, unknown>>(`${API_BASE}/up`, {
+      cachePolicy: "noStore",
+    });
     return response.ok;
   } catch {
     return false;
@@ -56,15 +73,13 @@ export type PublicProfile = {
 };
 
 export async function fetchPublicProfile(username: string): Promise<PublicProfile> {
-  const response = await secureFetch(`${API_BASE}/tribes/${username}`, {
-    cachePolicy: "publicShort",
-    headers: { Accept: "application/json" },
-  });
-
-  const data = await parseJson<{ profile: PublicProfile } & ApiError>(response);
-  if (!response.ok) {
-    throw new ApiRequestError(response.status, data);
-  }
+  const { data } = await requestJson<{ profile: PublicProfile }>(
+    `${API_BASE}/tribes/${username}`,
+    {
+      cachePolicy: "publicShort",
+      headers: { Accept: "application/json" },
+    },
+  );
 
   return data.profile;
 }
@@ -72,17 +87,15 @@ export async function fetchPublicProfile(username: string): Promise<PublicProfil
 export async function signUp(
   payload: SignUpPayload,
 ): Promise<{ data: AuthResponse; token: string | null }> {
-  const response = await secureFetch(`${API_BASE}/tribes.json`, {
-    method: "POST",
-    cachePolicy: "noStore",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ tribe: payload }),
-  });
-
-  const data = await parseJson<AuthResponse & ApiError>(response);
-  if (!response.ok) {
-    throw new ApiRequestError(response.status, data);
-  }
+  const { response, data } = await requestJson<AuthResponse>(
+    `${API_BASE}/tribes.json`,
+    {
+      method: "POST",
+      cachePolicy: "noStore",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ tribe: payload }),
+    },
+  );
 
   return {
     data: data as AuthResponse,
@@ -93,21 +106,19 @@ export async function signUp(
 export async function signIn(
   payload: SignInPayload,
 ): Promise<{ data: AuthResponse; token: string }> {
-  const response = await secureFetch(`${API_BASE}/tribes/sign_in.json`, {
-    method: "POST",
-    cachePolicy: "noStore",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ tribe: payload }),
-  });
-
-  const data = await parseJson<AuthResponse & ApiError>(response);
-  if (!response.ok) {
-    throw new ApiRequestError(response.status, data);
-  }
+  const { response, data } = await requestJson<AuthResponse>(
+    `${API_BASE}/tribes/sign_in.json`,
+    {
+      method: "POST",
+      cachePolicy: "noStore",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ tribe: payload }),
+    },
+  );
 
   const token = extractToken(response, data as AuthResponse);
   if (!token) {
-    throw new Error(
+    throw new TribetipAuthError(
       "No authentication token returned. Restart the Rails API so CORS exposes Authorization, or ensure sign-in returns token in JSON.",
     );
   }
@@ -116,7 +127,7 @@ export async function signIn(
 }
 
 export async function signOut(token: string): Promise<void> {
-  const response = await secureFetch(`${API_BASE}/tribes/sign_out.json`, {
+  await requestJson<Record<string, unknown>>(`${API_BASE}/tribes/sign_out.json`, {
     method: "DELETE",
     cachePolicy: "noStore",
     headers: {
@@ -124,11 +135,6 @@ export async function signOut(token: string): Promise<void> {
       Authorization: `Bearer ${token}`,
     },
   });
-
-  if (!response.ok) {
-    const data = await parseJson<ApiError>(response);
-    throw new ApiRequestError(response.status, data);
-  }
 }
 
 export { API_BASE };
