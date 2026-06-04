@@ -98,7 +98,8 @@ jobs:
   live:
     name: Live tests
     runs-on: ubuntu-latest
-    if: ${{ secrets.TRIBETIP_CHECKOUT_TOKEN != '' }}
+    # secrets.* is not allowed in job if: — use a repo variable to opt in (see README).
+    if: ${{ vars.TRIBETIP_LIVE_CI == 'true' }}
     env:
       LIVE_API_URL: http://127.0.0.1:3001
       LIVE_WEB_URL: http://127.0.0.1:3000
@@ -241,7 +242,7 @@ jobs:
       - name: Require all checks to pass
         run: |
           if [[ "${{ needs.live.result }}" == "skipped" ]]; then
-            echo "::notice::Live tests skipped (set TRIBETIP_CHECKOUT_TOKEN to enable). See README."
+            echo "::notice::Live tests skipped (set TRIBETIP_LIVE_CI=true and TRIBETIP_CHECKOUT_TOKEN). See README."
           fi
 
           if [[ "${{ needs.lint.result }}" != "success" ||

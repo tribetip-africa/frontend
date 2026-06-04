@@ -72,18 +72,26 @@ Run against local API + Next dev servers:
 npm run test:live
 ```
 
-## CI — live job secret
+## CI — enabling live tests
 
-The **Live tests** workflow job checks out the private [`tribetip-africa/tribetip`](https://github.com/tribetip-africa/tribetip) API repo. GitHub’s default `GITHUB_TOKEN` only has access to this frontend repository, so cross-repo checkout returns **Not Found** unless you add a PAT.
+The **Live tests** job checks out the private [`tribetip-africa/tribetip`](https://github.com/tribetip-africa/tribetip) API repo. GitHub’s default `GITHUB_TOKEN` cannot access other private repos, so you need a PAT plus a repo variable to opt in (workflow `if:` cannot reference `secrets`).
 
 1. Create a fine-grained personal access token with **read** access to `tribetip-africa/tribetip` (or a classic PAT with `repo` scope for that repository).
-2. In **tribetip-africa/frontend** → Settings → Secrets and variables → Actions, add:
+2. In **tribetip-africa/frontend** → Settings → Secrets and variables → Actions:
+
+   **Secret**
 
    | Name | Value |
    |------|--------|
    | `TRIBETIP_CHECKOUT_TOKEN` | your PAT |
 
-3. Re-run the workflow. Without this secret, the live job is **skipped** and other CI jobs still pass.
+   **Variable** (Repository variables tab)
+
+   | Name | Value |
+   |------|--------|
+   | `TRIBETIP_LIVE_CI` | `true` |
+
+3. Re-run the workflow. Without the variable, the live job is **skipped** and other CI jobs still pass.
 
 Run the same checks locally (without live Playwright):
 
