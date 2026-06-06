@@ -2,6 +2,8 @@ export type Tribe = {
   id: string;
   email: string;
   username: string;
+  role: "creator" | "admin";
+  account_status: "pending" | "active" | "suspended";
 };
 
 export type AuthResponse = {
@@ -23,6 +25,23 @@ export type SignUpPayload = {
 export type SignInPayload = {
   login: string;
   password: string;
+};
+
+export type CreatorProfile = Tribe & {
+  display_name: string | null;
+  bio: string | null;
+  country_code: string;
+  currency: string;
+  default_tip_amount_cents: number;
+  is_profile_public: boolean;
+};
+
+export type UpdateProfilePayload = {
+  display_name?: string;
+  bio?: string;
+  country_code?: string;
+  currency?: string;
+  default_tip_amount_cents?: number;
 };
 
 export type ApiErrorPayload = {
