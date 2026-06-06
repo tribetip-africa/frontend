@@ -1,0 +1,142 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+import { getDisplayMessage } from "@/lib/errors";
+import { publishMyProfile, updateMyProfile } from "@/lib/api";
+import type { CreatorProfile } from "@/types/api";
+import { Button } from "@/components/ui/button";
+
+type ProfileSettingsProps = {
+  token: string;
+  initialProfile: CreatorProfile;
+  onProfileChange: (profile: CreatorProfile) => void;
+};
+
+export function ProfileSettings({ token, initialProfile, onProfileChange }: ProfileSettingsProps) {
+  const [profile, setProfile] = useState(initialProfile);
+  const [displayName, setDisplayName] = useState(initialProfile.display_name ?? "");
+  const [bio, setBio] = useState(initialProfile.bio ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+
+  const canPublish =
+    profile.account_status === "active" &&
+    !profile.is_profile_public &&
+    displayName.trim().length > 0;
+
+  async function handleSave(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setMessage(null);
+    setSaving(true);
+
+    try {
+      const updated = await updateMyProfile(token, {
+        display_name: displayName.trim(),
+        bio: bio.trim(),
+      });
+      setProfile(updated);
+      onProfileChange(updated);
+      setMessage("Profile saved.");
+    } catch (err) {
+      setError(getDisplayMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handlePublish() {
+    setError(null);
+    setMessage(null);
+    setPublishing(true);
+
+    try {
+      const updated = await publishMyProfile(token);
+      setProfile(updated);
+      onProfileChange(updated);
+      setMessage("Your public page is live.");
+    } catch (err) {
+      setError(getDisplayMessage(err));
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  return (
+    <section className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
+      <h2 className="font-semibold text-brand-900">Profile settings</h2>
+      <p className="mt-1 text-sm text-brand-700">
+        Set how you appear on your public tip page.
+      </p>
+
+      <form onSubmit={handleSave} className="mt-5 space-y-4">
+        <div>
+          <label htmlFor="display_name" className="mb-1.5 block text-sm font-medium text-brand-800">
+            Display name
+          </label>
+          <input
+            id="display_name"
+            value={displayName}
+            onChange={(event) => setDisplayName(event.target.value)}
+            className="w-full rounded-xl border border-brand-200 px-3 py-2 text-sm text-brand-900"
+            placeholder="How supporters see you"
+            required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="bio" className="mb-1.5 block text-sm font-medium text-brand-800">
+            Bio
+          </label>
+          <textarea
+            id="bio"
+            value={bio}
+            onChange={(event) => setBio(event.target.value)}
+            rows={3}
+            maxLength={500}
+            className="w-full rounded-xl border border-brand-200 px-3 py-2 text-sm text-brand-900"
+            placeholder="Tell supporters what you create"
+          />
+        </div>
+
+        {error && (
+          <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+            {error}
+          </p>
+        )}
+
+        {message && (
+          <p className="rounded-xl bg-green-50 px-3 py-2 text-sm text-green-800" role="status">
+            {message}
+          </p>
+        )}
+
+        <div className="flex flex-wrap gap-3">
+          <Button type="submit" disabled={saving}>
+            {saving ? "Saving…" : "Save profile"}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={!canPublish || publishing}
+            onClick={handlePublish}
+          >
+            {profile.is_profile_public
+              ? "Published"
+              : publishing
+                ? "Publishing…"
+                : "Publish page"}
+          </Button>
+        </div>
+
+        {profile.account_status !== "active" && !profile.is_profile_public && (
+          <p className="text-xs text-brand-600">
+            Publishing unlocks after your account is active.
+          </p>
+        )}
+      </form>
+    </section>
+  );
+}
