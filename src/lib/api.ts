@@ -1,4 +1,4 @@
-import type { AuthResponse, SignInPayload, SignUpPayload } from "@/types/api";
+import type { AuthResponse, SignInPayload, SignUpPayload, CreatorProfile, UpdateProfilePayload } from "@/types/api";
 import {
   TribetipAuthError,
   TribetipNetworkError,
@@ -135,6 +135,52 @@ export async function signOut(token: string): Promise<void> {
       Authorization: `Bearer ${token}`,
     },
   });
+}
+
+function authHeaders(token: string): HeadersInit {
+  return {
+    Accept: "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+}
+
+export async function fetchMyProfile(token: string): Promise<CreatorProfile> {
+  const { data } = await requestJson<{ profile: CreatorProfile }>(`${API_BASE}/me/profile`, {
+    cachePolicy: "noStore",
+    headers: authHeaders(token),
+  });
+
+  return data.profile;
+}
+
+export async function updateMyProfile(
+  token: string,
+  payload: UpdateProfilePayload,
+): Promise<CreatorProfile> {
+  const { data } = await requestJson<{ profile: CreatorProfile }>(`${API_BASE}/me/profile`, {
+    method: "PATCH",
+    cachePolicy: "noStore",
+    headers: {
+      ...authHeaders(token),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ profile: payload }),
+  });
+
+  return data.profile;
+}
+
+export async function publishMyProfile(token: string): Promise<CreatorProfile> {
+  const { data } = await requestJson<{ profile: CreatorProfile }>(
+    `${API_BASE}/me/profile/publish`,
+    {
+      method: "POST",
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  return data.profile;
 }
 
 export { API_BASE };
