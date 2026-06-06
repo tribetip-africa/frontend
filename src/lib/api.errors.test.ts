@@ -60,7 +60,13 @@ describe("api error handling", () => {
     secureFetchMock.mockResolvedValue(
       jsonResponse({
         message: "Signed in successfully.",
-        tribe: { id: "1", email: "a@b.com", username: "demo" },
+        tribe: {
+          id: "1",
+          email: "a@b.com",
+          username: "demo",
+          role: "creator",
+          account_status: "pending",
+        },
       }),
     );
 
@@ -82,7 +88,13 @@ describe("api error handling", () => {
       jsonResponse(
         {
           message: "Signed in successfully.",
-          tribe: { id: "1", email: "a@b.com", username: "demo" },
+          tribe: {
+          id: "1",
+          email: "a@b.com",
+          username: "demo",
+          role: "creator",
+          account_status: "pending",
+        },
         },
         200,
         { Authorization: "Bearer test.jwt.token" },
