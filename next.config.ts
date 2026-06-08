@@ -16,6 +16,13 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: import.meta.dirname,
   },
+  async redirects() {
+    return [
+      { source: "/onboarding", destination: "/dashboard", permanent: false },
+      { source: "/admin", destination: "/dashboard", permanent: false },
+      { source: "/admin/:path*", destination: "/dashboard", permanent: false },
+    ];
+  },
   async headers() {
     return [
       {
