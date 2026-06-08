@@ -1,7 +1,6 @@
 import { chromium } from "playwright";
 import {
   WEB_BASE,
-  PAYSTACK_REGIONS,
   completeMpesaOnboardingUI,
   completeOnboardingFromPayload,
   paystackClientMode,
