@@ -68,10 +68,6 @@ export function DashboardMobileNav({ groups, quickLinks }: DashboardMobileNavPro
   const pageTitle = dashboardPageTitle(pathname, groups);
 
   useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
     if (!open) {
       return;
     }
