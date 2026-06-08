@@ -74,8 +74,13 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
     });
 
     if (mode === "sign-up") {
-      values.country_code = countryCode;
-      values.currency = selectedMarket.currency;
+      const selectEl = event.currentTarget.elements.namedItem(
+        "country_code",
+      ) as HTMLSelectElement | null;
+      const code = selectEl?.value || countryCode;
+      const market = AFRICAN_MARKETS.find((m) => m.code === code) ?? selectedMarket;
+      values.country_code = market.code;
+      values.currency = market.currency;
     }
 
     try {
@@ -99,6 +104,7 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
           </label>
           <select
             id="country_code"
+            name="country_code"
             value={countryCode}
             onChange={(e) => setCountryCode(e.target.value)}
             className="w-full rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-sm text-brand-900 outline-none ring-brand-500 focus:ring-2"
@@ -135,6 +141,11 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
           {field.name === "username" && (
             <p className="mt-1 text-xs text-brand-600/80">
               Lowercase letters, numbers, and underscores only (3–30 chars).
+            </p>
+          )}
+          {field.name === "email" && (
+            <p className="mt-1 text-xs text-brand-600/80">
+              Use a real email Paystack accepts (e.g. you@gmail.com). Test domains like .local won&apos;t work for payouts.
             </p>
           )}
         </div>
