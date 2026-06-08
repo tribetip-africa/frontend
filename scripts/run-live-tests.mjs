@@ -1,19 +1,38 @@
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { paystackClientMode } from "./live-helpers.mjs";
 
 const scriptsDir = path.dirname(fileURLToPath(import.meta.url));
+const mode = await paystackClientMode();
+
 // Errors test last: it exhausts the public profile rate limit for the runner IP.
 const tests = [
   "live-cache-test.mjs",
   "live-signup-test.mjs",
   "live-signin-test.mjs",
-  "live-errors-test.mjs",
+  "live-regions-test.mjs",
+  "live-tips-test.mjs",
 ];
 
-console.log("Running live test suite…\n");
+if (mode === "live") {
+  tests.push("live-ke-mpesa-e2e-test.mjs");
+}
 
-for (const script of tests) {
+tests.push("live-errors-test.mjs");
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+console.log(`Running live test suite (Paystack ${mode})…\n`);
+
+for (let index = 0; index < tests.length; index += 1) {
+  const script = tests[index];
+  if (mode === "live" && index > 0) {
+    await sleep(8_000);
+  }
+
   console.log(`\n=== ${script} ===`);
   const code = await new Promise((resolve) => {
     const child = spawn("node", [path.join(scriptsDir, script)], {
