@@ -1,7 +1,29 @@
-import type { AuthResponse, SignInPayload, SignUpPayload, CreatorProfile, UpdateProfilePayload } from "@/types/api";
+import { createIdempotencyKey } from "@/lib/idempotency-key";
+import { isCheckoutStillProcessing } from "@/lib/tip-checkout";
+import type {
+  AuthResponse,
+  SignInPayload,
+  SignUpPayload,
+  CreatorProfile,
+  UpdateProfilePayload,
+  Tip,
+  CreateTipPayload,
+  PaystackOnboarding,
+  PaystackOnboardingPayload,
+  PaystackMarket,
+  PaystackBank,
+  Tribe,
+  AdminTribesResponse,
+  AdminTribeSummary,
+  AdminPaystackEvent,
+  AdminPaystackEventsResponse,
+  PaystackAuditReport,
+  TipInvestigation,
+} from "@/types/api";
 import {
   TribetipAuthError,
   TribetipNetworkError,
+  getDisplayMessage,
   handleRequest,
   parseApiErrorBody,
 } from "@/lib/errors";
@@ -9,9 +31,6 @@ import { getApiBaseUrl } from "@/lib/platform";
 import { secureFetch } from "@/lib/secure-fetch";
 
 const API_BASE = getApiBaseUrl();
-
-/** @deprecated Use TribetipApiError from @/lib/errors */
-export { TribetipApiError as ApiRequestError } from "@/lib/errors";
 
 async function parseJson<T>(response: Response): Promise<T> {
   const text = await response.text();
@@ -181,6 +200,303 @@ export async function publishMyProfile(token: string): Promise<CreatorProfile> {
   );
 
   return data.profile;
+}
+
+type CompletePaystackOnboardingPayload = {
+  settlement_bank: string;
+  account_number: string;
+  business_name?: string;
+};
+
+type CreateTipOptions = {
+  idempotencyKey?: string;
+  onCheckoutPolling?: () => void;
+};
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function pollPaystackOnboardingComplete(
+  token: string,
+  { attempts = 60, intervalMs = 500 } = {},
+): Promise<PaystackOnboardingPayload> {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const payload = await fetchPaystackOnboarding(token);
+    if (payload.onboarding.provisioning_error) {
+      throw new Error(payload.onboarding.provisioning_error);
+    }
+    if (payload.onboarding.complete) return payload;
+    await sleep(intervalMs);
+  }
+
+  throw new Error("Payout setup is still processing. Please wait a moment and refresh.");
+}
+
+export async function createTip(
+  payload: CreateTipPayload,
+  options: CreateTipOptions = {},
+): Promise<Tip> {
+  const idempotencyKey = options.idempotencyKey ?? createIdempotencyKey();
+  const { data } = await requestJson<{ tip: Tip; message?: string }>(`${API_BASE}/tips`, {
+    method: "POST",
+    cachePolicy: "noStore",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "Idempotency-Key": idempotencyKey,
+    },
+    body: JSON.stringify({ tip: payload }),
+  });
+
+  const tip = data.tip;
+  if (tip.authorization_url) return tip;
+  if (tip.checkout_status === "failed") {
+    throw new Error("Unable to initialize Paystack checkout. Please try again.");
+  }
+
+  options.onCheckoutPolling?.();
+  return pollTipCheckout(tip.paystack_reference);
+}
+
+async function fetchTipCheckout(paystackReference: string): Promise<Tip> {
+  const { data } = await requestJson<{ tip: Tip }>(
+    `${API_BASE}/tips/checkout/${encodeURIComponent(paystackReference)}`,
+    {
+      cachePolicy: "noStore",
+      headers: {
+        Accept: "application/json",
+      },
+    },
+  );
+
+  return data.tip;
+}
+
+async function pollTipCheckout(paystackReference: string, attempts = 30): Promise<Tip> {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const tip = await fetchTipCheckout(paystackReference);
+    if (tip.authorization_url) return tip;
+    if (tip.checkout_status === "failed") {
+      throw new Error("Unable to initialize Paystack checkout. Please try again.");
+    }
+    await sleep(500);
+  }
+
+  throw new Error("Checkout could not be started. Please try again.");
+}
+
+export async function reconcileTipPayment(paystackReference: string): Promise<Tip> {
+  const { data } = await requestJson<{ tip: Tip; message?: string }>(
+    `${API_BASE}/tips/${encodeURIComponent(paystackReference)}/reconcile`,
+    {
+      method: "POST",
+      cachePolicy: "noStore",
+      headers: {
+        Accept: "application/json",
+      },
+    },
+  );
+
+  return data.tip;
+}
+
+export async function fetchMyTips(token: string): Promise<Tip[]> {
+  const { data } = await requestJson<{ tips: Tip[] }>(`${API_BASE}/me/tips`, {
+    cachePolicy: "noStore",
+    headers: authHeaders(token),
+  });
+
+  return data.tips;
+}
+
+type AdminTribesQuery = {
+  q?: string;
+  limit?: number;
+  offset?: number;
+};
+
+export async function fetchAdminTribes(
+  token: string,
+  query: AdminTribesQuery = {},
+): Promise<AdminTribesResponse> {
+  const params = new URLSearchParams();
+  if (query.q) params.set("q", query.q);
+  if (typeof query.limit === "number") params.set("limit", String(query.limit));
+  if (typeof query.offset === "number") params.set("offset", String(query.offset));
+
+  const suffix = params.toString();
+  const url = suffix ? `${API_BASE}/admin/tribes?${suffix}` : `${API_BASE}/admin/tribes`;
+
+  const { data } = await requestJson<AdminTribesResponse>(url, {
+    cachePolicy: "noStore",
+    headers: authHeaders(token),
+  });
+
+  return data;
+}
+
+export async function suspendAdminTribe(token: string, tribeId: string): Promise<AdminTribeSummary> {
+  const { data } = await requestJson<{ tribe: AdminTribeSummary }>(
+    `${API_BASE}/admin/tribes/${encodeURIComponent(tribeId)}/suspend`,
+    {
+      method: "PATCH",
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  return data.tribe;
+}
+
+export async function activateAdminTribe(token: string, tribeId: string): Promise<AdminTribeSummary> {
+  const { data } = await requestJson<{ tribe: AdminTribeSummary }>(
+    `${API_BASE}/admin/tribes/${encodeURIComponent(tribeId)}/activate`,
+    {
+      method: "PATCH",
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  return data.tribe;
+}
+
+type PaystackAuditOptions = {
+  sync?: boolean;
+};
+
+export async function fetchAdminPaystackEvents(
+  token: string,
+  query: { status?: string; limit?: number; offset?: number } = {},
+): Promise<AdminPaystackEventsResponse> {
+  const params = new URLSearchParams();
+  if (query.status) params.set("status", query.status);
+  if (typeof query.limit === "number") params.set("limit", String(query.limit));
+  if (typeof query.offset === "number") params.set("offset", String(query.offset));
+
+  const suffix = params.toString();
+  const url = suffix
+    ? `${API_BASE}/admin/paystack_events?${suffix}`
+    : `${API_BASE}/admin/paystack_events`;
+
+  const { data } = await requestJson<AdminPaystackEventsResponse>(url, {
+    cachePolicy: "noStore",
+    headers: authHeaders(token),
+  });
+
+  return data;
+}
+
+export async function investigateAdminTip(
+  token: string,
+  paystackReference: string,
+): Promise<TipInvestigation> {
+  const { data } = await requestJson<{ investigation: TipInvestigation }>(
+    `${API_BASE}/admin/tips/${encodeURIComponent(paystackReference)}/investigate`,
+    {
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  return data.investigation;
+}
+
+export async function replayAdminPaystackEvent(
+  token: string,
+  eventId: string,
+): Promise<AdminPaystackEvent> {
+  const { data } = await requestJson<{ event: AdminPaystackEvent }>(
+    `${API_BASE}/admin/paystack_events/${encodeURIComponent(eventId)}/replay`,
+    {
+      method: "POST",
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  return data.event;
+}
+
+export async function fetchAdminPaystackAudit(
+  token: string,
+  tribeId: string,
+  options: PaystackAuditOptions = {},
+): Promise<PaystackAuditReport> {
+  const params = new URLSearchParams();
+  if (options.sync) params.set("sync", "true");
+  const suffix = params.toString();
+  const url = suffix
+    ? `${API_BASE}/admin/tribes/${encodeURIComponent(tribeId)}/paystack_audit?${suffix}`
+    : `${API_BASE}/admin/tribes/${encodeURIComponent(tribeId)}/paystack_audit`;
+
+  const { data } = await requestJson<{ audit: PaystackAuditReport }>(url, {
+    cachePolicy: "noStore",
+    headers: authHeaders(token),
+  });
+
+  return data.audit;
+}
+
+export async function fetchPaystackOnboarding(token: string): Promise<PaystackOnboardingPayload> {
+  const { data } = await requestJson<PaystackOnboardingPayload>(
+    `${API_BASE}/me/paystack/onboarding`,
+    {
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  return data;
+}
+
+export async function completePaystackOnboarding(
+  token: string,
+  payload: CompletePaystackOnboardingPayload,
+  idempotencyKey: string = createIdempotencyKey(),
+): Promise<{ onboarding: PaystackOnboarding; tribe: Tribe; market: PaystackMarket; banks: PaystackBank[] }> {
+  try {
+    const { data } = await requestJson<{
+      onboarding: PaystackOnboarding;
+      tribe: Tribe;
+      market: PaystackMarket;
+      banks: PaystackBank[];
+    }>(
+      `${API_BASE}/me/paystack/onboarding`,
+      {
+        method: "POST",
+        cachePolicy: "noStore",
+        headers: {
+          ...authHeaders(token),
+          "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey,
+        },
+        body: JSON.stringify({ onboarding: payload }),
+      },
+    );
+
+    return {
+      onboarding: data.onboarding,
+      tribe: data.tribe,
+      market: data.market,
+      banks: data.banks ?? [],
+    };
+  } catch (error) {
+    if (!isCheckoutStillProcessing(getDisplayMessage(error))) {
+      throw error;
+    }
+
+    const polled = await pollPaystackOnboardingComplete(token);
+    const profile = await fetchMyProfile(token);
+
+    return {
+      onboarding: polled.onboarding,
+      tribe: profile,
+      market: polled.market,
+      banks: polled.banks,
+    };
+  }
 }
 
 export { API_BASE };
