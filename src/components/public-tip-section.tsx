@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import type { PublicProfile } from "@/lib/api";
 import { TipForm } from "@/components/tip-form";
 import { TipSuccessConfetti } from "@/components/tip-success-confetti";
@@ -16,13 +15,7 @@ export function PublicTipSection({
   tipSuccess = false,
   celebrationKey,
 }: PublicTipSectionProps) {
-  const [introVisible, setIntroVisible] = useState(!tipSuccess);
-
-  useEffect(() => {
-    if (tipSuccess) {
-      setIntroVisible(false);
-    }
-  }, [tipSuccess]);
+  const introVisible = !tipSuccess;
 
   return (
     <>
