@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { isProtectedPath } from "@/lib/protected-routes";
+import { isProtectedPath, isMarketingPath } from "@/lib/protected-routes";
 import { AUTH_SESSION_COOKIE } from "@/lib/auth-cookie";
 import { cacheControlHeader, inferCachePolicy } from "@/lib/cache-policy";
 
@@ -11,6 +11,10 @@ export function proxy(request: NextRequest) {
     const signInUrl = new URL("/sign-in", request.url);
     signInUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(signInUrl);
+  }
+
+  if (isMarketingPath(pathname) && request.cookies.get(AUTH_SESSION_COOKIE)) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   const policy = inferCachePolicy(
