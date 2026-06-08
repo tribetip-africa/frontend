@@ -14,7 +14,11 @@ export default function SignUpPage() {
   async function handleSubmit(values: Record<string, string>) {
     const payload = values as unknown as SignUpPayload;
     const { confirmationRequired } = await signUp(payload);
-    router.push(confirmationRequired ? "/sign-in?confirm_email=1" : "/dashboard");
+    if (confirmationRequired) {
+      router.push("/sign-in?confirm_email=1");
+      return;
+    }
+    router.push("/dashboard");
   }
 
   return (
@@ -27,7 +31,10 @@ export default function SignUpPage() {
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-brand-900">Create your creator page</h1>
           <p className="mt-2 text-sm text-brand-700">
-            Free to start. Choose your African market and claim your username.
+            Free to start for creators. Choose your African market and claim your username.
+          </p>
+          <p className="mt-2 text-xs text-brand-600">
+            Platform admin accounts are provisioned separately and cannot receive tips.
           </p>
           <div className="mt-8 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
             <AuthForm mode="sign-up" onSubmit={handleSubmit} />
