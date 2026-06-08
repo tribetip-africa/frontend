@@ -8,6 +8,7 @@ import {
   suspendAdminTribe,
 } from "@/lib/api";
 import { getDisplayMessage } from "@/lib/errors";
+import { runAfterPaint } from "@/lib/run-after-paint";
 import { formatMoney } from "@/lib/money";
 import type { AdminOverview, AdminTribeSummary, PaystackAuditReport } from "@/types/api";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,7 @@ export function AdminAccountsPanel({ token, onOverviewChange }: AdminAccountsPan
   }, [token, search, onOverviewChange]);
 
   useEffect(() => {
-    void refresh();
+    runAfterPaint(() => refresh());
   }, [refresh]);
 
   async function handleSuspend(tribe: AdminTribeSummary) {
