@@ -10,6 +10,8 @@ export type StoredTribe = {
   username: string;
   role: Tribe["role"];
   account_status: Tribe["account_status"];
+  paystack_onboarding: Tribe["paystack_onboarding"];
+  public_page_shareable?: boolean;
 };
 
 export type AuthStorageSnapshot = {
@@ -51,7 +53,11 @@ function tribesEqual(a: StoredTribe | null, b: StoredTribe | null): boolean {
     a.email === b.email &&
     a.username === b.username &&
     a.role === b.role &&
-    a.account_status === b.account_status
+    a.account_status === b.account_status &&
+    a.paystack_onboarding.complete === b.paystack_onboarding.complete &&
+    (a.paystack_onboarding.subaccount_verified ?? false) ===
+      (b.paystack_onboarding.subaccount_verified ?? false) &&
+    a.public_page_shareable === b.public_page_shareable
   );
 }
 
@@ -69,12 +75,36 @@ function normalizeStoredTribe(raw: Record<string, unknown>): StoredTribe | null 
       ? raw.account_status
       : "pending";
 
+  const onboardingRaw = raw.paystack_onboarding;
+  const paystackOnboarding =
+    onboardingRaw &&
+    typeof onboardingRaw === "object" &&
+    typeof (onboardingRaw as { complete?: unknown }).complete === "boolean"
+      ? {
+          customer_ready: (onboardingRaw as { customer_ready?: boolean }).customer_ready === true,
+          subaccount_ready: (onboardingRaw as { subaccount_ready?: boolean }).subaccount_ready === true,
+          complete: (onboardingRaw as { complete: boolean }).complete,
+          subaccount_verified:
+            (onboardingRaw as { subaccount_verified?: boolean }).subaccount_verified === true ||
+            (onboardingRaw as { payout?: { subaccount_verified?: boolean } }).payout
+              ?.subaccount_verified === true,
+        }
+      : {
+          customer_ready: false,
+          subaccount_ready: false,
+          complete: false,
+          subaccount_verified: false,
+        };
+
   return {
     id,
     email,
     username,
     role,
     account_status: accountStatus,
+    paystack_onboarding: paystackOnboarding,
+    public_page_shareable:
+      (raw as { public_page_shareable?: boolean }).public_page_shareable === true,
   };
 }
 
@@ -106,9 +136,21 @@ export function getStoredToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
 
-export function setStoredAuth(token: string, tribe: StoredTribe) {
+export function setStoredAuth(token: string, tribe: StoredTribe | Record<string, unknown>) {
+  const normalized = normalizeStoredTribe(tribe as Record<string, unknown>);
+  if (!normalized) {
+    return;
+  }
+
+  const existingToken = getStoredToken();
+  const existingTribe = getStoredTribe();
+
+  if (existingToken === token && tribesEqual(existingTribe, normalized)) {
+    return;
+  }
+
   localStorage.setItem(TOKEN_KEY, token);
-  localStorage.setItem(TRIBE_KEY, JSON.stringify(tribe));
+  localStorage.setItem(TRIBE_KEY, JSON.stringify(normalized));
   setAuthSessionCookie();
   notifyAuthStorageChange();
 }
