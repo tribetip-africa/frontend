@@ -1,15 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import { clearStoredAuth, getStoredTribe, setStoredAuth } from "@/lib/auth-storage";
+import { clearStoredAuth, getStoredTribe } from "@/lib/auth-storage";
 import { isUnauthorizedError, validateStoredSession } from "@/lib/auth-session";
-import {
-  isMarketingPath,
-  isProtectedPath,
-  normalizeAuthRedirectPath,
-} from "@/lib/protected-routes";
+import { isMarketingPath, isProtectedPath } from "@/lib/protected-routes";
 
 type AuthGateProps = {
   children: React.ReactNode;
@@ -20,18 +16,12 @@ export function AuthGate({ children }: AuthGateProps) {
   const pathname = usePathname();
   const { token, isLoading } = useAuth();
   const [checking, setChecking] = useState(false);
-  const validatedToken = useRef<string | null>(null);
+  const [validatedToken, setValidatedToken] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || !token) return;
 
-    if (!token) {
-      validatedToken.current = null;
-      setChecking(false);
-      return;
-    }
-
-    if (validatedToken.current === token) {
+    if (validatedToken === token) {
       if (isMarketingPath(pathname) && getStoredTribe()) {
         router.replace("/dashboard");
       }
@@ -47,7 +37,7 @@ export function AuthGate({ children }: AuthGateProps) {
         await validateStoredSession(token);
         if (cancelled) return;
 
-        validatedToken.current = token;
+        setValidatedToken(token);
 
         if (isMarketingPath(pathname)) {
           router.replace("/dashboard");
@@ -56,7 +46,7 @@ export function AuthGate({ children }: AuthGateProps) {
         if (cancelled) return;
 
         if (isUnauthorizedError(error)) {
-          validatedToken.current = null;
+          setValidatedToken(null);
           clearStoredAuth();
           router.replace("/");
           return;
@@ -69,10 +59,9 @@ export function AuthGate({ children }: AuthGateProps) {
     return () => {
       cancelled = true;
     };
-  }, [isLoading, token, pathname, router]);
+  }, [isLoading, token, pathname, router, validatedToken]);
 
-  const sessionPendingValidation =
-    Boolean(token) && validatedToken.current !== token;
+  const sessionPendingValidation = Boolean(token) && validatedToken !== token;
 
   const shouldBlock =
     isLoading ||
