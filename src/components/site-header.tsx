@@ -36,14 +36,13 @@ export function SiteHeader() {
 
   const isAuthenticated = !isLoading && !!tribe;
   const isAdmin = isAuthenticated && isAdminRole(tribe.role);
+  const shouldLoadProfile = Boolean(token && tribe && !isAdmin);
+  const effectiveProfile = shouldLoadProfile ? profile : null;
   const publicPageShareable =
-    isAuthenticated && !isAdmin && canAccessCreatorPublicPage(tribe, profile);
+    isAuthenticated && !isAdmin && canAccessCreatorPublicPage(tribe, effectiveProfile);
 
   useEffect(() => {
-    if (!token || !tribe || isAdmin) {
-      setProfile(null);
-      return;
-    }
+    if (!shouldLoadProfile || !token) return;
 
     let cancelled = false;
 
@@ -58,7 +57,7 @@ export function SiteHeader() {
     return () => {
       cancelled = true;
     };
-  }, [token, tribe, isAdmin]);
+  }, [token, shouldLoadProfile]);
 
   const handleSignOut = () => {
     signOut().then(() => router.replace("/"));
