@@ -2,9 +2,17 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
+import { fetchMyProfile } from "@/lib/api";
+import { canAccessCreatorPublicPage } from "@/lib/creator-public-page";
 import { getCreatorPageUrl } from "@/lib/platform";
+import { isAdminRole } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
+import type { CreatorProfile } from "@/types/api";
+
+const LOCKED_PAGE_HINT =
+  "Publish your page and complete payout verification to unlock your public tip link.";
 
 const LANDING_NAV = [
   { href: "/#how-it-works", label: "How it works" },
@@ -13,16 +21,44 @@ const LANDING_NAV = [
 ] as const;
 
 function navLinkClass(isActive: boolean) {
-  return isActive
-    ? "text-brand-600"
-    : "text-brand-800/90 hover:text-brand-600";
+  return isActive ? "text-brand-600" : "text-brand-800/90 hover:text-brand-600";
+}
+
+function isDashboardPath(pathname: string): boolean {
+  return pathname === "/dashboard" || pathname.startsWith("/dashboard/");
 }
 
 export function SiteHeader() {
   const router = useRouter();
   const pathname = usePathname();
-  const { tribe, isLoading, signOut } = useAuth();
+  const { tribe, token, isLoading, signOut } = useAuth();
+  const [profile, setProfile] = useState<CreatorProfile | null>(null);
+
   const isAuthenticated = !isLoading && !!tribe;
+  const isAdmin = isAuthenticated && isAdminRole(tribe.role);
+  const publicPageShareable =
+    isAuthenticated && !isAdmin && canAccessCreatorPublicPage(tribe, profile);
+
+  useEffect(() => {
+    if (!token || !tribe || isAdmin) {
+      setProfile(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    fetchMyProfile(token)
+      .then((loaded) => {
+        if (!cancelled) setProfile(loaded);
+      })
+      .catch(() => {
+        if (!cancelled) setProfile(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, tribe, isAdmin]);
 
   const handleSignOut = () => {
     signOut().then(() => router.replace("/"));
@@ -44,18 +80,25 @@ export function SiteHeader() {
         <nav className="hidden items-center gap-8 text-sm font-medium md:flex">
           {isAuthenticated ? (
             <>
-              <Link
-                href="/dashboard"
-                className={navLinkClass(pathname === "/dashboard")}
-              >
+              <Link href="/dashboard" className={navLinkClass(isDashboardPath(pathname))}>
                 Dashboard
               </Link>
-              <Link
-                href={getCreatorPageUrl(tribe.username)}
-                className={navLinkClass(pathname === `/${tribe.username}`)}
-              >
-                My page
-              </Link>
+              {!isAdmin &&
+                (publicPageShareable ? (
+                  <Link
+                    href={getCreatorPageUrl(tribe.username)}
+                    className={navLinkClass(pathname === `/${tribe.username}`)}
+                  >
+                    My page
+                  </Link>
+                ) : (
+                  <span
+                    className="cursor-not-allowed text-brand-400"
+                    title={LOCKED_PAGE_HINT}
+                  >
+                    My page
+                  </span>
+                ))}
               <span className="text-brand-600/80">@{tribe.username}</span>
             </>
           ) : (
@@ -72,7 +115,7 @@ export function SiteHeader() {
             <>
               <Link
                 href="/dashboard"
-                className={`text-sm font-medium md:hidden ${navLinkClass(pathname === "/dashboard")}`}
+                className={`text-sm font-medium md:hidden ${navLinkClass(isDashboardPath(pathname))}`}
               >
                 Dashboard
               </Link>
