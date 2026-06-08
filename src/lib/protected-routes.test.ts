@@ -39,7 +39,7 @@ describe("auth session cookie", () => {
 
 describe("auth session validation", () => {
   it("detects 401 API errors", async () => {
-    const { isUnauthorizedError, isOnboardingRequiredError } = await import("@/lib/auth-session");
+    const { isUnauthorizedError } = await import("@/lib/auth-session");
 
     expect(isUnauthorizedError(new TribetipApiError(401, {}))).toBe(true);
     expect(isUnauthorizedError(new TribetipApiError(403, {}))).toBe(false);
