@@ -6,6 +6,7 @@ import Link from "next/link";
 import { AuthForm } from "@/components/auth-form";
 import { SiteHeader } from "@/components/site-header";
 import { useAuth } from "@/context/auth-context";
+import { normalizeAuthRedirectPath } from "@/lib/protected-routes";
 import type { SignInPayload } from "@/types/api";
 
 function SignInContent() {
@@ -16,7 +17,7 @@ function SignInContent() {
 
   async function handleSubmit(values: Record<string, string>) {
     await signIn(values as unknown as SignInPayload);
-    router.push("/dashboard");
+    router.push(normalizeAuthRedirectPath(searchParams.get("next")));
   }
 
   return (
