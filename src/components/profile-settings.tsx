@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { getDisplayMessage } from "@/lib/errors";
+import { isPaystackSubaccountVerified } from "@/lib/paystack-onboarding";
 import { publishMyProfile, updateMyProfile } from "@/lib/api";
 import type { CreatorProfile } from "@/types/api";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,15 @@ type ProfileSettingsProps = {
   token: string;
   initialProfile: CreatorProfile;
   onProfileChange: (profile: CreatorProfile) => void;
+  embedded?: boolean;
 };
 
-export function ProfileSettings({ token, initialProfile, onProfileChange }: ProfileSettingsProps) {
+export function ProfileSettings({
+  token,
+  initialProfile,
+  onProfileChange,
+  embedded = false,
+}: ProfileSettingsProps) {
   const [profile, setProfile] = useState(initialProfile);
   const [displayName, setDisplayName] = useState(initialProfile.display_name ?? "");
   const [bio, setBio] = useState(initialProfile.bio ?? "");
@@ -21,10 +28,12 @@ export function ProfileSettings({ token, initialProfile, onProfileChange }: Prof
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
+  const payoutVerified = isPaystackSubaccountVerified(profile);
   const canPublish =
     profile.account_status === "active" &&
     !profile.is_profile_public &&
-    displayName.trim().length > 0;
+    displayName.trim().length > 0 &&
+    payoutVerified;
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -64,14 +73,8 @@ export function ProfileSettings({ token, initialProfile, onProfileChange }: Prof
     }
   }
 
-  return (
-    <section className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
-      <h2 className="font-semibold text-brand-900">Profile settings</h2>
-      <p className="mt-1 text-sm text-brand-700">
-        Set how you appear on your public tip page.
-      </p>
-
-      <form onSubmit={handleSave} className="mt-5 space-y-4">
+  const form = (
+    <form onSubmit={handleSave} className={embedded ? "space-y-4" : "mt-5 space-y-4"}>
         <div>
           <label htmlFor="display_name" className="mb-1.5 block text-sm font-medium text-brand-800">
             Display name
@@ -133,10 +136,32 @@ export function ProfileSettings({ token, initialProfile, onProfileChange }: Prof
 
         {profile.account_status !== "active" && !profile.is_profile_public && (
           <p className="text-xs text-brand-600">
-            Publishing unlocks after your account is active.
+            Add a display name and save your profile. Publishing unlocks once payout setup is
+            complete.
           </p>
         )}
+
+        {profile.account_status === "active" &&
+          !profile.is_profile_public &&
+          !payoutVerified &&
+          profile.paystack_onboarding.complete && (
+            <p className="text-xs text-amber-800">
+              {profile.paystack_onboarding.payout?.publish_blocker ??
+                "Paystack is still verifying your payout account. Refresh payout status below, then try again."}
+            </p>
+          )}
       </form>
+  );
+
+  if (embedded) return form;
+
+  return (
+    <section className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
+      <h2 className="font-semibold text-brand-900">Profile settings</h2>
+      <p className="mt-1 text-sm text-brand-700">
+        Set how you appear on your public tip page.
+      </p>
+      {form}
     </section>
   );
 }
