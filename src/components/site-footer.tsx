@@ -1,8 +1,17 @@
 import Link from "next/link";
 
-export function SiteFooter() {
+type SiteFooterProps = {
+  fixed?: boolean;
+};
+
+export function SiteFooter({ fixed = false }: SiteFooterProps) {
   return (
-    <footer className="border-t border-brand-100 bg-white">
+    <footer
+      className={[
+        "border-t border-brand-100 bg-white/95 backdrop-blur-md",
+        fixed ? "fixed inset-x-0 bottom-0 z-40" : "",
+      ].join(" ")}
+    >
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:px-6 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="font-semibold text-brand-900">TribeTip</p>
