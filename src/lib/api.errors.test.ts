@@ -66,6 +66,11 @@ describe("api error handling", () => {
           username: "demo",
           role: "creator",
           account_status: "pending",
+          paystack_onboarding: {
+            customer_ready: true,
+            subaccount_ready: true,
+            complete: true,
+          },
         },
       }),
     );
@@ -94,6 +99,11 @@ describe("api error handling", () => {
           username: "demo",
           role: "creator",
           account_status: "pending",
+          paystack_onboarding: {
+            customer_ready: true,
+            subaccount_ready: true,
+            complete: true,
+          },
         },
         },
         200,
