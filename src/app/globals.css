@@ -45,3 +45,88 @@ body {
   background-image: radial-gradient(circle at 1px 1px, rgb(31 107 66 / 0.08) 1px, transparent 0);
   background-size: 24px 24px;
 }
+
+.success-icon-wrap {
+  color: var(--brand-600);
+  animation: success-pop 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .success-icon-wrap,
+  .success-check-circle,
+  .success-check-mark {
+    animation: none;
+  }
+
+  .success-check-circle,
+  .success-check-mark {
+    stroke-dashoffset: 0;
+  }
+}
+
+.success-check-circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  animation: success-circle-draw 0.65s ease forwards;
+}
+
+.success-check-mark {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: success-check-draw 0.45s 0.5s ease forwards;
+}
+
+@keyframes success-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes success-circle-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes success-check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.payout-card-scene {
+  perspective: 1200px;
+}
+
+.payout-card-inner {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.4, 0.2, 0.2, 1);
+}
+
+.payout-card.is-flipped .payout-card-inner {
+  transform: rotateY(180deg);
+}
+
+.payout-card-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.payout-card-back {
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .payout-card-inner {
+    transition: none;
+  }
+}
