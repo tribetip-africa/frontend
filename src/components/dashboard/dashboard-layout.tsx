@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PaystackOnboardingModal } from "@/components/paystack-onboarding-modal";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
@@ -38,7 +38,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     tribe && token && !isAdmin && onboardingSource && !isPaystackOnboardingComplete(onboardingSource),
   );
 
-  function handleProfileChange(loadedProfile: CreatorProfile) {
+  const handleProfileChange = useCallback((loadedProfile: CreatorProfile) => {
     setProfile(loadedProfile);
     if (tribe && token) {
       setStoredAuth(token, {
@@ -48,7 +48,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         public_page_shareable: isPublicPageShareable(loadedProfile),
       });
     }
-  }
+  }, [tribe, token]);
 
   useEffect(() => {
     if (!isLoading && !tribe && !signingOut.current) {
@@ -63,7 +63,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     fetchMyProfile(token)
       .then(handleProfileChange)
       .catch((error) => setProfileError(getDisplayMessage(error)));
-  }, [token, isAdmin, tribe?.paystack_onboarding.complete]);
+  }, [token, isAdmin, tribe, handleProfileChange]);
 
   useEffect(() => {
     checkApiHealth().then((ok) => {
