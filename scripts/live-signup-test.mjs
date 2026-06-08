@@ -1,8 +1,11 @@
 import { chromium } from "playwright";
 import {
   WEB_BASE,
+  fillSignupForm,
+  completeOnboardingAfterSignup,
   assertCspPresent,
   assertNoStore,
+  paystackClientMode,
   waitForServices,
 } from "./live-helpers.mjs";
 
@@ -12,9 +15,12 @@ const email = `live${ts}@tribetip.africa`;
 const password = "securepass123";
 
 await waitForServices();
+const mode = await paystackClientMode();
+const countryCode = mode === "live" ? "KE" : "NG";
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage();
+page.setDefaultTimeout(mode === "live" ? 60_000 : 30_000);
 
 try {
   console.log("1. Open sign-up page");
@@ -26,16 +32,19 @@ try {
   await page.waitForSelector("#username", { state: "visible" });
   await page.waitForSelector("#email", { state: "visible" });
 
-  console.log("2. Fill and submit sign-up form");
-  await page.selectOption("#country_code", "NG");
-  await page.fill("#username", username);
-  await page.fill("#email", email);
-  await page.fill("#password", password);
-  await page.fill("#password_confirmation", password);
+  console.log(`2. Fill and submit sign-up form (${countryCode})`);
+  await fillSignupForm(page, { username, email, password, countryCode });
   await page.getByRole("button", { name: /create my page/i }).click();
 
-  console.log("3. Wait for dashboard (dev skips email confirmation)");
-  await page.waitForURL("**/dashboard", { timeout: 15000 });
+  console.log(
+    mode === "live"
+      ? "3. Complete payout setup and reach dashboard (live Paystack)"
+      : "3. Complete payout setup and reach dashboard (stub Paystack)",
+  );
+  await page.waitForURL((url) => new URL(url).pathname === "/dashboard", { timeout: 30000 });
+
+  await completeOnboardingAfterSignup(page, { mode, countryCode });
+
   const dashboardResponse = await page.reload({ waitUntil: "domcontentloaded" });
   assertNoStore(dashboardResponse.headers(), "/dashboard");
 
@@ -48,7 +57,7 @@ try {
   await page.getByRole("main").getByRole("button", { name: /sign out/i }).click();
   await page.waitForURL("**/", { timeout: 10000 });
 
-  console.log("PASS: live sign-up → dashboard → sign-out");
+  console.log("PASS: live sign-up → payout setup → dashboard → sign-out");
 } catch (error) {
   const alert = await page.locator('[role="alert"]').textContent().catch(() => null);
   console.error("FAIL:", error.message);
