@@ -20,7 +20,7 @@ type AuthContextValue = {
   tribe: Tribe | null;
   token: string | null;
   isLoading: boolean;
-  signUp: (payload: SignUpPayload) => Promise<{ confirmationRequired: boolean }>;
+  signUp: (payload: SignUpPayload) => Promise<{ confirmationRequired: boolean; tribe: Tribe | null }>;
   signIn: (payload: SignInPayload) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -49,12 +49,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (data.confirmation_required) {
       clearStoredAuth();
-      return { confirmationRequired: true };
+      return { confirmationRequired: true, tribe: null };
     }
 
     if (jwt) {
       setStoredAuth(jwt, data.tribe);
-      return { confirmationRequired: false };
+      return { confirmationRequired: false, tribe: data.tribe };
     }
     // Registration does not issue JWT; sign in to obtain a session token.
     const { data: session, token: sessionToken } = await apiSignIn({
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password: payload.password,
     });
     setStoredAuth(sessionToken, session.tribe);
-    return { confirmationRequired: false };
+    return { confirmationRequired: false, tribe: session.tribe };
   }, []);
 
   const signIn = useCallback(async (payload: SignInPayload) => {
