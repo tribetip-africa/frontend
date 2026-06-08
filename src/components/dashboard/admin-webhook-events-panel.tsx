@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { fetchAdminPaystackEvents, replayAdminPaystackEvent } from "@/lib/api";
 import { getDisplayMessage } from "@/lib/errors";
+import { runAfterPaint } from "@/lib/run-after-paint";
 import type { AdminPaystackEvent } from "@/types/api";
 
 type AdminWebhookEventsPanelProps = {
@@ -38,7 +39,7 @@ export function AdminWebhookEventsPanel({ token }: AdminWebhookEventsPanelProps)
   }, [token]);
 
   useEffect(() => {
-    void loadEvents();
+    runAfterPaint(() => loadEvents());
   }, [loadEvents]);
 
   async function handleReplay(event: AdminPaystackEvent) {
