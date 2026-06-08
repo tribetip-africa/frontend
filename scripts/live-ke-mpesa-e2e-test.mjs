@@ -7,7 +7,6 @@ import {
   apiRequest,
   apiSignIn,
   apiSignUp,
-  assertPaystackAccounts,
   assertPaystackOnboarding,
   assertRealPaystackCode,
   assertRegionMarket,
