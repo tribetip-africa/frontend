@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchPaystackOnboarding } from "@/lib/api";
 import { getDisplayMessage } from "@/lib/errors";
+import { runAfterPaint } from "@/lib/run-after-paint";
 import type { PaystackOnboardingPayload } from "@/types/api";
 
 export function usePaystackPayout(token: string) {
@@ -25,7 +26,7 @@ export function usePaystackPayout(token: string) {
   }, [token]);
 
   useEffect(() => {
-    void refresh();
+    runAfterPaint(() => refresh());
   }, [refresh]);
 
   return { payload, error, loading, refresh };
