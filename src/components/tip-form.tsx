@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useMemo, useRef, useState } from "react";
 import { createTip } from "@/lib/api";
 import { createIdempotencyKey } from "@/lib/idempotency-key";
 import { checkoutPhaseLabel, type TipCheckoutPhase } from "@/lib/tip-checkout";
@@ -34,13 +34,7 @@ function presetButtonClass(active: boolean, disabled: boolean) {
 }
 
 export function TipForm({ profile, showSuccess = false }: TipFormProps) {
-  const [successVisible, setSuccessVisible] = useState(showSuccess);
-
-  useEffect(() => {
-    if (showSuccess) {
-      setSuccessVisible(true);
-    }
-  }, [showSuccess]);
+  const successVisible = showSuccess;
 
   const presets = useMemo(
     () => buildTipPresets(profile.default_tip_amount_cents, profile.currency),
