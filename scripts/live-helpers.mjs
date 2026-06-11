@@ -95,7 +95,7 @@ export async function apiSignUp({
   username,
   email,
   password = "securepass123",
-  country_code = "NG",
+  country_code = "KE",
   currency,
 }) {
   const region = PAYSTACK_REGIONS.find((entry) => entry.code === country_code) ?? PAYSTACK_REGIONS[0];
