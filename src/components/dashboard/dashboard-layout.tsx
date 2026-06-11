@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PaystackOnboardingModal } from "@/components/paystack-onboarding-modal";
+import { PayoutSetupSuccess } from "@/components/payout-setup-success";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { DashboardNotifications } from "@/components/dashboard/dashboard-notifications";
 import { DashboardRoleGuard } from "@/components/dashboard/dashboard-role-guard";
 import { DashboardProvider } from "@/context/dashboard-context";
 import { useAuth } from "@/context/auth-context";
@@ -16,7 +18,7 @@ import { canAccessCreatorPublicPage } from "@/lib/creator-public-page";
 import { setStoredAuth } from "@/lib/auth-storage";
 import { getCreatorPageUrl } from "@/lib/platform";
 import { isAdminRole } from "@/lib/roles";
-import type { CreatorProfile } from "@/types/api";
+import type { CreatorProfile, Tribe } from "@/types/api";
 
 const LOCKED_PAGE_HINT =
   "Publish your page and complete payout verification to unlock your public tip link.";
@@ -31,12 +33,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const signingOut = useRef(false);
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [payoutSuccessVisible, setPayoutSuccessVisible] = useState(false);
 
   const isAdmin = isAdminRole(tribe?.role);
-  const onboardingSource = profile ?? tribe;
-  const showOnboardingModal = Boolean(
-    tribe && token && !isAdmin && onboardingSource && !isPaystackOnboardingComplete(onboardingSource),
-  );
+  const onboardingComplete =
+    isPaystackOnboardingComplete(tribe) || isPaystackOnboardingComplete(profile);
+  const showOnboardingModal = Boolean(tribe && token && !isAdmin && !onboardingComplete);
 
   const handleProfileChange = useCallback((loadedProfile: CreatorProfile) => {
     setProfile(loadedProfile);
@@ -49,6 +51,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       });
     }
   }, [tribe, token]);
+
+  const handleOnboardingComplete = useCallback(
+    (updatedTribe: Tribe) => {
+      if (token) {
+        setStoredAuth(token, updatedTribe);
+      }
+
+      setPayoutSuccessVisible(true);
+
+      fetchMyProfile(token!)
+        .then(handleProfileChange)
+        .catch((error) => setProfileError(getDisplayMessage(error)));
+    },
+    [token, handleProfileChange],
+  );
 
   useEffect(() => {
     if (!isLoading && !tribe && !signingOut.current) {
@@ -111,13 +128,28 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     >
       <DashboardRoleGuard isAdmin={isAdmin}>
         <DashboardShell navGroups={navGroups} quickLinks={quickLinks} blurred={showOnboardingModal}>
+          {!isAdmin && (
+            <div className="pointer-events-auto fixed right-4 top-20 z-[60] sm:right-6">
+              <DashboardNotifications token={token} enabled={!showOnboardingModal} />
+            </div>
+          )}
           {children}
         </DashboardShell>
       </DashboardRoleGuard>
 
       {showOnboardingModal && (
-        <PaystackOnboardingModal open token={token} username={tribe.username} />
+        <PaystackOnboardingModal
+          open
+          token={token}
+          username={tribe.username}
+          onComplete={handleOnboardingComplete}
+        />
       )}
+
+      <PayoutSetupSuccess
+        visible={payoutSuccessVisible}
+        onDismiss={() => setPayoutSuccessVisible(false)}
+      />
     </DashboardProvider>
   );
 }
