@@ -125,6 +125,40 @@ describe("auth storage paystack onboarding", () => {
     unsubscribe();
   });
 
+  it("notifies subscribers when subaccount_ready changes", () => {
+    setStoredAuth("token", {
+      id: "1",
+      email: "creator@tribetip.africa",
+      username: "creator",
+      role: "creator",
+      account_status: "active",
+      paystack_onboarding: {
+        customer_ready: true,
+        subaccount_ready: false,
+        complete: false,
+      },
+    });
+
+    const listener = jest.fn();
+    const unsubscribe = subscribeAuthStorage(listener);
+
+    setStoredAuth("token", {
+      id: "1",
+      email: "creator@tribetip.africa",
+      username: "creator",
+      role: "creator",
+      account_status: "active",
+      paystack_onboarding: {
+        customer_ready: true,
+        subaccount_ready: true,
+        complete: false,
+      },
+    });
+
+    expect(listener).toHaveBeenCalled();
+    unsubscribe();
+  });
+
   it("does not notify subscribers when stored auth is unchanged", () => {
     const tribe = {
       id: "1",
