@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { getDisplayMessage, isTribetipError } from "@/lib/errors";
-import { AFRICAN_MARKETS } from "@/lib/constants";
+import { defaultMarket, enabledMarkets } from "@/lib/region-flags";
 import { Button } from "@/components/ui/button";
 
 type Field = {
@@ -22,9 +22,11 @@ type AuthFormProps = {
 export function AuthForm({ mode, onSubmit }: AuthFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [countryCode, setCountryCode] = useState("NG");
+  const signupMarkets = enabledMarkets();
+  const [countryCode, setCountryCode] = useState(defaultMarket().code);
 
-  const selectedMarket = AFRICAN_MARKETS.find((m) => m.code === countryCode) ?? AFRICAN_MARKETS[0];
+  const selectedMarket =
+    signupMarkets.find((market) => market.code === countryCode) ?? defaultMarket();
 
   const fields: Field[] =
     mode === "sign-up"
@@ -78,7 +80,7 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
         "country_code",
       ) as HTMLSelectElement | null;
       const code = selectEl?.value || countryCode;
-      const market = AFRICAN_MARKETS.find((m) => m.code === code) ?? selectedMarket;
+      const market = signupMarkets.find((entry) => entry.code === code) ?? selectedMarket;
       values.country_code = market.code;
       values.currency = market.currency;
     }
@@ -97,7 +99,7 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {mode === "sign-up" && (
+      {mode === "sign-up" && signupMarkets.length > 1 && (
         <div>
           <label htmlFor="country_code" className="mb-1.5 block text-sm font-medium text-brand-800">
             Your market
@@ -109,13 +111,25 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
             onChange={(e) => setCountryCode(e.target.value)}
             className="w-full rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-sm text-brand-900 outline-none ring-brand-500 focus:ring-2"
           >
-            {AFRICAN_MARKETS.map((market) => (
+            {signupMarkets.map((market) => (
               <option key={market.code} value={market.code}>
                 {market.flag} {market.name} ({market.currency})
               </option>
             ))}
           </select>
         </div>
+      )}
+
+      {mode === "sign-up" && signupMarkets.length === 1 && (
+        <>
+          <input type="hidden" name="country_code" value={selectedMarket.code} />
+          <p className="rounded-xl border border-brand-100 bg-brand-50/70 px-3 py-2.5 text-sm text-brand-800">
+            Launch market:{" "}
+            <span className="font-medium">
+              {selectedMarket.flag} {selectedMarket.name} ({selectedMarket.currency})
+            </span>
+          </p>
+        </>
       )}
 
       {fields.map((field) => (
