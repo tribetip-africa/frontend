@@ -2,7 +2,7 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
-import { AFRICAN_MARKETS } from "@/lib/constants";
+import { enabledMarkets } from "@/lib/region-flags";
 import { getPlatformHostLabel } from "@/lib/platform";
 
 const steps = [
@@ -146,14 +146,17 @@ export default function HomePage() {
         <section id="markets" className="border-b border-brand-100 py-16 sm:py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <h2 className="text-3xl font-bold text-brand-900 sm:text-4xl">
-              Launch markets across Africa
+              {enabledMarkets().length === 1
+                ? `Launching first in ${enabledMarkets()[0]?.name}`
+                : "Launch markets across Africa"}
             </h2>
             <p className="mt-3 max-w-2xl text-brand-700">
-              We&apos;re starting where mobile money and creator economies are booming — with more
-              countries coming soon.
+              {enabledMarkets().length === 1
+                ? "We're starting in Kenya with M-Pesa and bank payouts via Paystack — more African markets are coming soon."
+                : "We're starting where mobile money and creator economies are booming — with more countries coming soon."}
             </p>
             <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              {AFRICAN_MARKETS.map((market) => (
+              {enabledMarkets().map((market) => (
                 <li
                   key={market.code}
                   className="flex items-center gap-3 rounded-2xl border border-brand-100 bg-white px-4 py-4 shadow-sm"
