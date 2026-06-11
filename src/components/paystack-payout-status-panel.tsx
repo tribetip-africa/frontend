@@ -72,6 +72,12 @@ export function PaystackPayoutStatusPanel({
 
       {payout && market.subaccount_supported && onboarding.subaccount_ready && (
         <dl className="grid gap-2 text-sm sm:grid-cols-2">
+          {payout.settlement_schedule_label && (
+            <div className="rounded-xl border border-brand-100 px-3 py-2 sm:col-span-2">
+              <dt className="text-brand-600">Settlement schedule</dt>
+              <dd className="font-medium text-brand-900">{payout.settlement_schedule_label}</dd>
+            </div>
+          )}
           {payout.settlement_bank && (
             <div className="rounded-xl border border-brand-100 px-3 py-2">
               <dt className="text-brand-600">Settlement method</dt>
@@ -84,8 +90,17 @@ export function PaystackPayoutStatusPanel({
               <dd className="font-medium text-brand-900">{payout.account_number}</dd>
             </div>
           )}
+          {typeof payout.available_to_settle_cents === "number" && (
+            <div className="rounded-xl border border-brand-100 px-3 py-2">
+              <dt className="text-brand-600">Awaiting settlement</dt>
+              <dd className="font-medium text-brand-900">
+                {formatMoney(payout.available_to_settle_cents, currency)}
+              </dd>
+            </div>
+          )}
           {typeof payout.pending_settlement_cents === "number" &&
-            payout.pending_settlement_cents > 0 && (
+            payout.pending_settlement_cents > 0 &&
+            payout.pending_settlement_cents !== payout.available_to_settle_cents && (
               <div className="rounded-xl border border-brand-100 px-3 py-2">
                 <dt className="text-brand-600">Pending settlement</dt>
                 <dd className="font-medium text-brand-900">
