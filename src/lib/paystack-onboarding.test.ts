@@ -17,6 +17,18 @@ describe("paystack onboarding helpers", () => {
     ).toBe(true);
   });
 
+  it("treats a linked subaccount as complete enough to unlock the dashboard", () => {
+    expect(
+      isPaystackOnboardingComplete({
+        paystack_onboarding: {
+          customer_ready: true,
+          subaccount_ready: true,
+          complete: false,
+        },
+      }),
+    ).toBe(true);
+  });
+
   it("treats missing onboarding data as incomplete", () => {
     expect(isPaystackOnboardingComplete(null)).toBe(false);
     expect(isPaystackOnboardingComplete(undefined)).toBe(false);
