@@ -55,6 +55,8 @@ function tribesEqual(a: StoredTribe | null, b: StoredTribe | null): boolean {
     a.role === b.role &&
     a.account_status === b.account_status &&
     a.paystack_onboarding.complete === b.paystack_onboarding.complete &&
+    a.paystack_onboarding.customer_ready === b.paystack_onboarding.customer_ready &&
+    a.paystack_onboarding.subaccount_ready === b.paystack_onboarding.subaccount_ready &&
     (a.paystack_onboarding.subaccount_verified ?? false) ===
       (b.paystack_onboarding.subaccount_verified ?? false) &&
     a.public_page_shareable === b.public_page_shareable
