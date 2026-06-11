@@ -33,8 +33,8 @@ export function buildPayoutCardData(
     payout?.pending_settlement_cents ?? profile?.metrics?.pending_settlement_cents;
 
   return {
-    countryCode: profile?.country_code ?? market?.country_code ?? "NG",
-    currency: profile?.currency ?? payout?.currency ?? market?.currency ?? "NGN",
+    countryCode: profile?.country_code ?? market?.country_code ?? "KE",
+    currency: profile?.currency ?? payout?.currency ?? market?.currency ?? "KES",
     displayName: profile?.display_name?.trim() || username,
     username,
     settlementBank: payout?.settlement_bank,
