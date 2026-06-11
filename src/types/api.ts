@@ -31,12 +31,135 @@ export type PaystackPayoutStatus = {
   account_number?: string;
   account_name?: string;
   settlement_schedule?: string;
+  settlement_schedule_label?: string;
   pending_settlement_cents?: number;
+  available_to_settle_cents?: number;
   total_transactions?: number;
   total_volume_cents?: number;
   currency?: string;
   can_publish?: boolean;
   publish_blocker?: string;
+  refreshed_at?: string;
+};
+
+export type PaystackSettlement = {
+  id: string;
+  amount_cents: number;
+  currency: string;
+  status: "pending" | "processing" | "success" | "failed" | "reversed" | string;
+  settled_at?: string;
+  destination?: string;
+  reference?: string;
+  source?: "sync" | "webhook" | "manual_withdrawal" | string;
+  updated_at?: string;
+  paystack_transfer_code?: string;
+  tip_id?: string;
+};
+
+export type SettlementBreakdown = {
+  gross_cents?: number;
+  platform_fee_cents?: number;
+  platform_fee_percent: number;
+  net_cents: number;
+  currency: string;
+};
+
+export type SettlementTipSummary = {
+  id: string;
+  paystack_reference: string;
+  amount_cents: number;
+  currency: string;
+  supporter_email: string;
+  supporter_name?: string | null;
+  message?: string | null;
+  paid_at?: string;
+};
+
+export type SettlementDetailPayload = {
+  settlement: PaystackSettlement;
+  breakdown: SettlementBreakdown;
+  tip?: SettlementTipSummary;
+};
+
+export type CreatorNotification = {
+  id: string;
+  kind: "settlement_paid" | "settlement_failed" | string;
+  title: string;
+  body: string;
+  metadata: Record<string, unknown>;
+  read_at?: string | null;
+  created_at: string;
+};
+
+export type CreatorNotificationsPayload = {
+  notifications: CreatorNotification[];
+  unread_count: number;
+};
+
+export type PaystackRepairResult = {
+  settlements_synced_at?: string;
+  settlements_count: number;
+  settlement_summary?: SettlementSummary;
+  tips_examined: number;
+  tips_reconciled: number;
+  tips_still_pending: number;
+  payout?: PaystackPayoutStatus;
+  earnings?: CreatorMetrics;
+  refreshed_at?: string;
+};
+
+export type PaystackRepairPayload = {
+  message: string;
+  repair: PaystackRepairResult;
+};
+
+export type WithdrawalStatus = {
+  payout_mode: "auto" | "manual" | "both" | string;
+  configured_payout_mode?: "auto" | "manual" | "both" | string;
+  effective_payout_mode?: "auto" | "manual" | "both" | string;
+  transfers_supported?: boolean;
+  business_tier?: "starter" | "registered" | "unknown" | string;
+  auto_settlement_active?: boolean;
+  available_to_withdraw_cents: number;
+  min_withdrawal_cents: number;
+  can_withdraw: boolean;
+  withdraw_blocker?: string | null;
+  destination?: string;
+  currency: string;
+  pending_withdrawal?: PaystackSettlement | null;
+  cooldown_ends_at?: string | null;
+};
+
+export type PaystackWithdrawalsPayload = {
+  status: WithdrawalStatus;
+  withdrawals: PaystackSettlement[];
+};
+
+export type AdminPaystackRepairPayload = PaystackRepairPayload & {
+  tribe_id: string;
+  username: string;
+};
+
+export type SettlementSummary = {
+  total_settled_cents: number;
+  successful_settlements_count: number;
+  failed_settlements_count: number;
+  last_settled_at?: string | null;
+  currency: string;
+};
+
+export type PaystackSettlementsPayload = {
+  settlements: PaystackSettlement[];
+  summary?: SettlementSummary;
+  source?: "database" | string;
+  refreshed_at?: string;
+  synced_at?: string;
+};
+
+export type AdminSettlementsPayload = PaystackSettlementsPayload & {
+  tribe_id: string;
+  username: string;
+  summary?: SettlementSummary;
 };
 
 export type PaystackBank = {
@@ -53,6 +176,7 @@ export type PaystackMarket = {
   currency: string;
   paystack_bank_country: string;
   subaccount_supported: boolean;
+  mobile_money_supported?: boolean;
 };
 
 export type PaystackOnboardingPayload = {
@@ -60,6 +184,9 @@ export type PaystackOnboardingPayload = {
   payout?: PaystackPayoutStatus;
   market: PaystackMarket;
   banks: PaystackBank[];
+  earnings?: CreatorMetrics;
+  settlements_summary?: SettlementSummary;
+  refreshed_at?: string;
 };
 
 export type AdminOverview = {
