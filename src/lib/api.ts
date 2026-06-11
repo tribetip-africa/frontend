@@ -10,6 +10,16 @@ import type {
   CreateTipPayload,
   PaystackOnboarding,
   PaystackOnboardingPayload,
+  PaystackSettlementsPayload,
+  PaystackSettlement,
+  AdminSettlementsPayload,
+  SettlementDetailPayload,
+  CreatorNotificationsPayload,
+  CreatorNotification,
+  PaystackRepairPayload,
+  PaystackWithdrawalsPayload,
+  WithdrawalStatus,
+  AdminPaystackRepairPayload,
   PaystackMarket,
   PaystackBank,
   Tribe,
@@ -437,6 +447,171 @@ export async function fetchAdminPaystackAudit(
   });
 
   return data.audit;
+}
+
+export async function fetchPaystackSettlements(
+  token: string,
+  options?: { refresh?: boolean },
+): Promise<PaystackSettlementsPayload> {
+  const query = options?.refresh ? "?refresh=true" : "";
+  const { data } = await requestJson<PaystackSettlementsPayload>(
+    `${API_BASE}/me/paystack/settlements${query}`,
+    {
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  return data;
+}
+
+export async function fetchPaystackSettlementDetail(
+  token: string,
+  settlementId: string,
+): Promise<SettlementDetailPayload> {
+  const { data } = await requestJson<SettlementDetailPayload>(
+    `${API_BASE}/me/paystack/settlements/${encodeURIComponent(settlementId)}`,
+    {
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  return data;
+}
+
+export async function fetchCreatorNotifications(
+  token: string,
+  options?: { limit?: number },
+): Promise<CreatorNotificationsPayload> {
+  const params = new URLSearchParams();
+  if (options?.limit) params.set("limit", String(options.limit));
+  const suffix = params.toString();
+  const url = suffix ? `${API_BASE}/me/notifications?${suffix}` : `${API_BASE}/me/notifications`;
+
+  const { data } = await requestJson<CreatorNotificationsPayload>(url, {
+    cachePolicy: "noStore",
+    headers: authHeaders(token),
+  });
+
+  return data;
+}
+
+export async function markCreatorNotificationRead(
+  token: string,
+  notificationId: string,
+): Promise<CreatorNotification> {
+  const { data } = await requestJson<{ notification: CreatorNotification }>(
+    `${API_BASE}/me/notifications/${encodeURIComponent(notificationId)}/read`,
+    {
+      method: "PATCH",
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  return data.notification;
+}
+
+export async function markAllCreatorNotificationsRead(token: string): Promise<void> {
+  await requestJson(`${API_BASE}/me/notifications/read_all`, {
+    method: "PATCH",
+    cachePolicy: "noStore",
+    headers: authHeaders(token),
+  });
+}
+
+export async function fetchPaystackWithdrawals(
+  token: string,
+  options?: { refresh?: boolean },
+): Promise<PaystackWithdrawalsPayload> {
+  const query = options?.refresh ? "?refresh=true" : "";
+  const { data } = await requestJson<PaystackWithdrawalsPayload>(
+    `${API_BASE}/me/paystack/withdrawals${query}`,
+    {
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  return data;
+}
+
+export async function createPaystackWithdrawal(token: string): Promise<{
+  message: string;
+  withdrawal: PaystackSettlement;
+  status: WithdrawalStatus;
+}> {
+  const { data } = await requestJson<{
+    message: string;
+    withdrawal: PaystackSettlement;
+    status: WithdrawalStatus;
+  }>(`${API_BASE}/me/paystack/withdrawals`, {
+    method: "POST",
+    cachePolicy: "noStore",
+    headers: {
+      ...authHeaders(token),
+      "Idempotency-Key": createIdempotencyKey(),
+    },
+  });
+
+  return data;
+}
+
+export async function repairPaystackData(token: string): Promise<PaystackRepairPayload> {
+  const { data } = await requestJson<PaystackRepairPayload>(`${API_BASE}/me/paystack/repair`, {
+    method: "POST",
+    cachePolicy: "noStore",
+    headers: authHeaders(token),
+  });
+
+  return data;
+}
+
+export async function reconcileMyTip(token: string, tipId: string): Promise<Tip> {
+  const { data } = await requestJson<{ message: string; tip: Tip }>(
+    `${API_BASE}/me/tips/${encodeURIComponent(tipId)}/reconcile`,
+    {
+      method: "POST",
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  return data.tip;
+}
+
+export async function repairAdminPaystackData(
+  token: string,
+  tribeId: string,
+): Promise<AdminPaystackRepairPayload> {
+  const { data } = await requestJson<AdminPaystackRepairPayload>(
+    `${API_BASE}/admin/tribes/${encodeURIComponent(tribeId)}/repair`,
+    {
+      method: "POST",
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  return data;
+}
+
+export async function fetchAdminSettlements(
+  token: string,
+  tribeId: string,
+  options?: { refresh?: boolean },
+): Promise<AdminSettlementsPayload> {
+  const query = options?.refresh ? "?refresh=true" : "";
+  const { data } = await requestJson<AdminSettlementsPayload>(
+    `${API_BASE}/admin/tribes/${encodeURIComponent(tribeId)}/settlements${query}`,
+    {
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  return data;
 }
 
 export async function fetchPaystackOnboarding(token: string): Promise<PaystackOnboardingPayload> {
