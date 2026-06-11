@@ -5,3 +5,5 @@ export const AFRICAN_MARKETS = [
   { code: "ZA", name: "South Africa", currency: "ZAR", flag: "🇿🇦" },
   { code: "CI", name: "Côte d'Ivoire", currency: "XOF", flag: "🇨🇮" },
 ] as const;
+
+export type AfricanMarket = (typeof AFRICAN_MARKETS)[number];
