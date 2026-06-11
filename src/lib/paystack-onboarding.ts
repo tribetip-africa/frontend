@@ -1,4 +1,4 @@
-import type { CreatorProfile, Tribe } from "@/types/api";
+import type { CreatorProfile, PaystackOnboarding, Tribe } from "@/types/api";
 
 export type AccountStatusBanner = {
   tone: "info" | "warning" | "danger";
@@ -15,7 +15,24 @@ export type AccountStatusBannerInput = {
 export function isPaystackOnboardingComplete(
   tribe: Pick<Tribe, "paystack_onboarding"> | null | undefined,
 ): boolean {
-  return tribe?.paystack_onboarding?.complete === true;
+  const onboarding = tribe?.paystack_onboarding;
+  if (!onboarding) return false;
+
+  return onboarding.complete === true || onboarding.subaccount_ready === true;
+}
+
+export function mergeTribeOnboarding(
+  tribe: Tribe,
+  onboarding: PaystackOnboarding,
+): Tribe {
+  return {
+    ...tribe,
+    paystack_onboarding: {
+      ...tribe.paystack_onboarding,
+      ...onboarding,
+      complete: onboarding.complete === true || onboarding.subaccount_ready === true,
+    },
+  };
 }
 
 export function isPaystackSubaccountVerified(
