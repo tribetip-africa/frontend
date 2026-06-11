@@ -56,7 +56,7 @@ const REGION_THEMES: Record<string, Omit<PayoutCardTheme, "countryCode" | "marke
   },
 };
 
-const DEFAULT_THEME = REGION_THEMES.NG!;
+const DEFAULT_THEME = REGION_THEMES.KE!;
 
 export function payoutCardTheme(countryCode: string, currency: string): PayoutCardTheme {
   const market = AFRICAN_MARKETS.find((entry) => entry.code === countryCode);
