@@ -4,13 +4,26 @@ import { useCallback, useEffect, useState } from "react";
 import {
   activateAdminTribe,
   fetchAdminPaystackAudit,
+  fetchAdminSettlements,
   fetchAdminTribes,
+  repairAdminPaystackData,
   suspendAdminTribe,
 } from "@/lib/api";
 import { getDisplayMessage } from "@/lib/errors";
 import { runAfterPaint } from "@/lib/run-after-paint";
 import { formatMoney } from "@/lib/money";
-import type { AdminOverview, AdminTribeSummary, PaystackAuditReport } from "@/types/api";
+import {
+  formatSettlementDate,
+  settlementStatusLabel,
+  settlementStatusTone,
+} from "@/lib/settlement-status";
+import type {
+  AdminOverview,
+  AdminSettlementsPayload,
+  AdminTribeSummary,
+  PaystackAuditReport,
+  PaystackRepairResult,
+} from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { PaystackVerificationChecks } from "@/components/paystack-verification-checks";
 
@@ -28,6 +41,11 @@ export function AdminAccountsPanel({ token, onOverviewChange }: AdminAccountsPan
   const [actionId, setActionId] = useState<string | null>(null);
   const [audit, setAudit] = useState<PaystackAuditReport | null>(null);
   const [auditLoading, setAuditLoading] = useState<string | null>(null);
+  const [auditTribeId, setAuditTribeId] = useState<string | null>(null);
+  const [settlements, setSettlements] = useState<AdminSettlementsPayload | null>(null);
+  const [repairLoading, setRepairLoading] = useState<string | null>(null);
+  const [repairResult, setRepairResult] = useState<PaystackRepairResult | null>(null);
+  const [repairUsername, setRepairUsername] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -79,14 +97,44 @@ export function AdminAccountsPanel({ token, onOverviewChange }: AdminAccountsPan
   async function handleAudit(tribe: AdminTribeSummary) {
     setAuditLoading(tribe.id);
     setError(null);
+    setRepairResult(null);
+    setRepairUsername(null);
 
     try {
-      const report = await fetchAdminPaystackAudit(token, tribe.id, { sync: true });
+      const [report, settlementPayload] = await Promise.all([
+        fetchAdminPaystackAudit(token, tribe.id, { sync: true }),
+        fetchAdminSettlements(token, tribe.id, { refresh: true }),
+      ]);
       setAudit(report);
+      setAuditTribeId(tribe.id);
+      setSettlements(settlementPayload);
     } catch (err) {
       setError(getDisplayMessage(err));
     } finally {
       setAuditLoading(null);
+    }
+  }
+
+  async function handleRepair(tribe: AdminTribeSummary) {
+    setRepairLoading(tribe.id);
+    setError(null);
+
+    try {
+      const payload = await repairAdminPaystackData(token, tribe.id);
+      setRepairResult(payload.repair);
+      setRepairUsername(payload.username);
+      setAuditTribeId(tribe.id);
+
+      if (audit && audit.username === tribe.username) {
+        const settlementPayload = await fetchAdminSettlements(token, tribe.id, { refresh: true });
+        setSettlements(settlementPayload);
+      }
+
+      await refresh();
+    } catch (err) {
+      setError(getDisplayMessage(err));
+    } finally {
+      setRepairLoading(null);
     }
   }
 
@@ -203,6 +251,16 @@ export function AdminAccountsPanel({ token, onOverviewChange }: AdminAccountsPan
                       >
                         {auditLoading === tribe.id ? "Auditing…" : "Paystack audit"}
                       </Button>
+                      {tribe.role === "creator" && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          disabled={repairLoading === tribe.id}
+                          onClick={() => void handleRepair(tribe)}
+                        >
+                          {repairLoading === tribe.id ? "Syncing…" : "Sync Paystack"}
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -221,11 +279,109 @@ export function AdminAccountsPanel({ token, onOverviewChange }: AdminAccountsPan
                 {audit.healthy ? "Healthy" : "Needs attention"}
               </p>
             </div>
-            <Button type="button" variant="ghost" onClick={() => setAudit(null)}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setAudit(null);
+                setAuditTribeId(null);
+                setSettlements(null);
+                setRepairResult(null);
+                setRepairUsername(null);
+              }}
+            >
               Close
             </Button>
           </div>
           <PaystackVerificationChecks checks={audit.checks} />
+          {repairResult && repairUsername === audit.username && (
+            <div className="mt-4 rounded-xl border border-green-100 bg-green-50/60 px-4 py-3 text-sm text-brand-800">
+              <p className="font-medium text-brand-900">Last Paystack sync</p>
+              <ul className="mt-2 space-y-1">
+                <li>{repairResult.settlements_count} settlement records checked</li>
+                <li>
+                  {repairResult.tips_reconciled} of {repairResult.tips_examined} pending tips
+                  updated
+                  {repairResult.tips_still_pending > 0
+                    ? ` · ${repairResult.tips_still_pending} still pending`
+                    : ""}
+                </li>
+              </ul>
+            </div>
+          )}
+          {settlements && auditTribeId && (
+            <div className="mt-4 space-y-3 border-t border-brand-100 pt-4">
+              <div>
+                <h4 className="font-medium text-brand-900">Settlement history</h4>
+                <p className="mt-1 text-xs text-brand-600">
+                  {settlements.refreshed_at
+                    ? `Last updated ${formatSettlementDate(settlements.refreshed_at)}`
+                    : "Stored settlement records"}
+                  {settlements.synced_at
+                    ? ` · Synced with Paystack ${formatSettlementDate(settlements.synced_at)}`
+                    : null}
+                </p>
+              </div>
+              {settlements.settlements.length === 0 ? (
+                <p className="text-sm text-brand-700">No settlement records yet.</p>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-brand-100">
+                  <table className="min-w-full divide-y divide-brand-100 text-sm">
+                    <thead className="bg-brand-50/80 text-left text-brand-600">
+                      <tr>
+                        <th className="px-3 py-2 font-medium">Date</th>
+                        <th className="px-3 py-2 font-medium">Amount</th>
+                        <th className="px-3 py-2 font-medium">Destination</th>
+                        <th className="px-3 py-2 font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-brand-100 bg-white">
+                      {settlements.settlements.map((settlement) => (
+                        <tr key={settlement.id}>
+                          <td className="px-3 py-2 text-brand-800">
+                            {formatSettlementDate(settlement.settled_at)}
+                          </td>
+                          <td className="px-3 py-2 font-medium text-brand-900">
+                            {formatMoney(
+                              settlement.amount_cents,
+                              settlement.currency ||
+                                tribes.find((row) => row.id === auditTribeId)?.currency ||
+                                "KES",
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-brand-700">
+                            {settlement.destination ?? "Linked payout account"}
+                          </td>
+                          <td className="px-3 py-2">
+                            <span
+                              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${settlementStatusTone(settlement.status)}`}
+                            >
+                              {settlementStatusLabel(settlement.status)}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!audit && repairResult && repairUsername && (
+        <div className="rounded-xl border border-green-100 bg-green-50/60 p-4 text-sm text-brand-800">
+          <p className="font-medium text-brand-900">Paystack sync · @{repairUsername}</p>
+          <ul className="mt-2 space-y-1">
+            <li>{repairResult.settlements_count} settlement records checked</li>
+            <li>
+              {repairResult.tips_reconciled} of {repairResult.tips_examined} pending tips updated
+              {repairResult.tips_still_pending > 0
+                ? ` · ${repairResult.tips_still_pending} still pending`
+                : ""}
+            </li>
+          </ul>
         </div>
       )}
     </div>
