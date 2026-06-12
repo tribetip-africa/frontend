@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { Logo } from "@/components/brand/logo";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import type { DashboardNavGroup } from "@/lib/dashboard-nav";
 import { flattenDashboardNav } from "@/lib/dashboard-nav";
+import { useAuth } from "@/context/auth-context";
+import { Button } from "@/components/ui/button";
 
 type DashboardMobileNavProps = {
   groups: DashboardNavGroup[];
@@ -64,6 +67,8 @@ function CloseIcon() {
 
 export function DashboardMobileNav({ groups, quickLinks }: DashboardMobileNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { tribe, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const pageTitle = dashboardPageTitle(pathname, groups);
 
@@ -89,27 +94,36 @@ export function DashboardMobileNav({ groups, quickLinks }: DashboardMobileNavPro
     };
   }, [open]);
 
+  const handleSignOut = () => {
+    signOut().then(() => router.replace("/"));
+  };
+
   return (
     <>
-      <div className="mb-5 flex items-center gap-3 lg:hidden">
-        <button
-          type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-brand-200 bg-white text-brand-800 shadow-sm"
-          aria-label="Open dashboard menu"
-          aria-expanded={open}
-          aria-controls="dashboard-mobile-drawer"
-          onClick={() => setOpen(true)}
-        >
-          <MenuIcon />
-        </button>
-        <p className="min-w-0 truncate text-sm font-semibold text-brand-900">{pageTitle}</p>
+      <div className="mb-6 flex items-center justify-between gap-3 lg:hidden">
+        <div className="flex min-w-0 items-center gap-3">
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-900/10 bg-white text-brand-800 shadow-sm"
+            aria-label="Open dashboard menu"
+            aria-expanded={open}
+            aria-controls="dashboard-mobile-drawer"
+            onClick={() => setOpen(true)}
+          >
+            <MenuIcon />
+          </button>
+          <p className="min-w-0 truncate font-display text-sm font-bold text-brand-900">
+            {pageTitle}
+          </p>
+        </div>
+        <Logo href="/dashboard" size="sm" className="shrink-0" />
       </div>
 
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden" role="presentation">
           <button
             type="button"
-            className="absolute inset-0 bg-brand-950/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
             aria-label="Close dashboard menu"
             onClick={() => setOpen(false)}
           />
@@ -119,13 +133,13 @@ export function DashboardMobileNav({ groups, quickLinks }: DashboardMobileNavPro
             role="dialog"
             aria-modal="true"
             aria-label="Dashboard menu"
-            className="absolute inset-y-0 left-0 flex w-[min(100%,280px)] flex-col border-r border-brand-100 bg-cream shadow-xl"
+            className="absolute inset-y-0 left-0 flex w-[min(100%,300px)] flex-col bg-white shadow-2xl"
           >
-            <div className="flex items-center justify-between border-b border-brand-100 px-4 py-4">
-              <p className="text-sm font-semibold text-brand-900">Menu</p>
+            <div className="flex items-center justify-between px-4 py-4">
+              <Logo href="/dashboard" size="sm" />
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-brand-700 hover:bg-brand-100"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-sand"
                 aria-label="Close dashboard menu"
                 onClick={() => setOpen(false)}
               >
@@ -137,19 +151,26 @@ export function DashboardMobileNav({ groups, quickLinks }: DashboardMobileNavPro
               <DashboardNav
                 groups={groups}
                 quickLinks={quickLinks}
+                variant="light"
                 onNavigate={() => setOpen(false)}
               />
             </div>
 
-            <div className="border-t border-brand-100 px-4 py-3">
-              <Link
-                href="/"
-                className="block rounded-xl px-3 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50"
-                onClick={() => setOpen(false)}
-              >
-                Back to site
-              </Link>
-            </div>
+            {tribe && (
+              <div className="px-4 py-4">
+                <p className="mb-3 truncate text-sm font-semibold text-ink">@{tribe.username}</p>
+                <div className="flex gap-2">
+                  <Link href="/" className="flex-1" onClick={() => setOpen(false)}>
+                    <Button variant="ghost" type="button" className="w-full text-xs">
+                      Site
+                    </Button>
+                  </Link>
+                  <Button variant="ghost" type="button" className="flex-1 text-xs" onClick={handleSignOut}>
+                    Sign out
+                  </Button>
+                </div>
+              </div>
+            )}
           </aside>
         </div>
       )}
