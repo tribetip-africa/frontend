@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { AuthProvider } from "@/context/auth-context";
 import { AuthGate } from "@/components/auth-gate";
 import "./globals.css";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
     template: "%s | TribeTip",
   },
   description:
-    "Accept tips from your supporters in NGN, GHS, KES, and more. Built for African creators — like Buy Me a Coffee, made for the continent.",
+    "Accept tips from your supporters in KES, NGN, GHS, and more. Built for African creators — one link, local payments, payouts that reach your bank.",
 };
 
 export default function RootLayout({
@@ -24,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${outfit.variable} h-full`}>
+    <html lang="en" className={`${jakarta.variable} h-full`}>
       <body className="min-h-full flex flex-col antialiased">
         <AuthProvider>
           <AuthGate>{children}</AuthGate>
