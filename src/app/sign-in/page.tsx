@@ -2,8 +2,8 @@
 
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { AuthForm } from "@/components/auth-form";
+import { AuthPageShell } from "@/components/auth-page-shell";
 import { SiteHeader } from "@/components/site-header";
 import { useAuth } from "@/context/auth-context";
 import { normalizeAuthRedirectPath } from "@/lib/protected-routes";
@@ -21,23 +21,23 @@ function SignInContent() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <Link href="/" className="text-sm text-brand-600 hover:underline">
-          ← Back to home
-        </Link>
-        <h1 className="mt-4 text-2xl font-bold text-brand-900">Welcome back</h1>
-        <p className="mt-2 text-sm text-brand-700">Sign in to manage your tip page and payouts.</p>
-        {confirmEmail && (
-          <p className="mt-4 rounded-xl bg-accent-soft px-4 py-3 text-sm text-brand-800" role="status">
+    <AuthPageShell
+      mode="sign-in"
+      title="Log in"
+      description="Welcome back — manage your tip page and payouts."
+      banner={
+        confirmEmail ? (
+          <p
+            className="mt-4 rounded-2xl border border-accent/30 bg-accent-soft px-4 py-3 text-sm text-brand-800"
+            role="status"
+          >
             Account created. Check your email and confirm your address before signing in.
           </p>
-        )}
-        <div className="mt-8 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
-          <AuthForm mode="sign-in" onSubmit={handleSubmit} />
-        </div>
-      </div>
-    </main>
+        ) : undefined
+      }
+    >
+      <AuthForm mode="sign-in" onSubmit={handleSubmit} />
+    </AuthPageShell>
   );
 }
 
