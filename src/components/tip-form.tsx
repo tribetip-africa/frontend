@@ -27,8 +27,8 @@ function presetButtonClass(active: boolean, disabled: boolean) {
   return [
     "rounded-xl border py-2.5 text-sm font-semibold transition",
     active
-      ? "border-brand-600 bg-brand-600 text-white shadow-sm"
-      : "border-brand-200 bg-brand-50 text-brand-800 hover:border-brand-300 hover:bg-brand-100/80",
+      ? "border-accent bg-accent text-ink shadow-sm font-bold"
+      : "border-line bg-white text-ink hover:border-accent/50 hover:bg-accent-soft",
     disabled ? "cursor-not-allowed opacity-60" : "",
   ].join(" ");
 }
