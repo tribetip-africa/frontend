@@ -1,13 +1,15 @@
 import { ButtonHTMLAttributes } from "react";
 
-type Variant = "primary" | "secondary" | "ghost";
+type Variant = "primary" | "secondary" | "ghost" | "gold" | "dark";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-brand-600 text-white hover:bg-brand-700 shadow-sm shadow-brand-900/20",
+    "bg-accent text-ink hover:bg-accent-hover shadow-sm hover:shadow-md font-bold",
+  gold: "bg-accent text-ink hover:bg-accent-hover shadow-sm hover:shadow-md font-bold",
   secondary:
-    "bg-white text-brand-900 border border-brand-200 hover:bg-brand-50",
-  ghost: "text-brand-800 hover:bg-brand-100/80",
+    "bg-white text-ink border-2 border-line hover:border-ink/20 hover:bg-sand font-semibold",
+  ghost: "text-ink-soft hover:bg-sand font-medium",
+  dark: "bg-ink text-white hover:bg-ink-soft font-bold",
 };
 
 export function Button({
@@ -17,7 +19,7 @@ export function Button({
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
   return (
     <button
-      className={`inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed ${variants[variant]} ${className}`}
+      className={`inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-60 ${variants[variant]} ${className}`}
       {...props}
     />
   );
