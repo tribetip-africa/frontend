@@ -92,8 +92,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   if (isLoading || !tribe || !token) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-brand-700">
-        Loading…
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-cream text-brand-700">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" />
+        <p className="text-sm font-medium">Loading your workspace…</p>
       </div>
     );
   }
@@ -129,7 +130,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <DashboardRoleGuard isAdmin={isAdmin}>
         <DashboardShell navGroups={navGroups} quickLinks={quickLinks} blurred={showOnboardingModal}>
           {!isAdmin && (
-            <div className="pointer-events-auto fixed right-4 top-20 z-[60] sm:right-6">
+            <div className="pointer-events-auto fixed right-4 top-4 z-[60] sm:right-6 lg:top-6">
               <DashboardNotifications token={token} enabled={!showOnboardingModal} />
             </div>
           )}
