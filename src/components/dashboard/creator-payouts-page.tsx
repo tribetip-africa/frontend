@@ -65,11 +65,11 @@ export function CreatorPayoutsPage() {
         description="Track earnings, withdraw to your payout account, and monitor Paystack status."
       />
 
-      <div className="rounded-2xl border border-brand-100 bg-white px-3 py-5 shadow-sm sm:px-5 sm:py-6">
+      <div className="surface-panel rounded-3xl px-3 py-5 sm:px-5 sm:py-6">
         <PayoutCard data={cardData} />
       </div>
 
-      <div className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm sm:p-6">
+      <div className="surface-panel rounded-3xl p-5 sm:p-6">
         <PayoutEarningsSummary
           payload={payoutState.payload}
           profileMetrics={profile?.metrics}
@@ -78,7 +78,7 @@ export function CreatorPayoutsPage() {
       </div>
 
       {showWithdrawalPanel && (
-        <div className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm sm:p-6">
+        <div className="surface-panel rounded-3xl p-5 sm:p-6">
           <WithdrawalPanel
             payload={withdrawalsState.payload}
             error={withdrawalsState.error}
@@ -93,18 +93,18 @@ export function CreatorPayoutsPage() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm sm:p-6">
+      <div className="surface-panel rounded-3xl p-5 sm:p-6">
         <PaystackPayoutStatusPanel
           {...payoutState}
           onRefresh={() => void payoutState.refresh()}
         />
       </div>
 
-      <div className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm sm:p-6">
+      <div className="surface-panel rounded-3xl p-5 sm:p-6">
         <PayoutSyncRepairPanel token={token} onRepaired={handleRepairComplete} />
       </div>
 
-      <div className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm sm:p-6">
+      <div className="surface-panel rounded-3xl p-5 sm:p-6">
         <SettlementHistoryPanel
           settlements={settlementsState.payload?.settlements ?? []}
           currency={currency}
