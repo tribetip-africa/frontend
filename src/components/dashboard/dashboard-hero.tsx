@@ -16,21 +16,17 @@ export function DashboardHero({
   actions,
 }: DashboardHeroProps) {
   return (
-    <header className="rounded-2xl border border-brand-100 bg-gradient-to-br from-white via-white to-brand-50/80 p-6 shadow-sm sm:p-8">
+    <header className="surface-card rounded-2xl p-6 sm:p-8">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-        <div className="space-y-3">
+        <div className="space-y-2">
           {eyebrow && (
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">
-              {eyebrow}
-            </p>
+            <p className="text-xs font-bold uppercase tracking-wide text-brand-600">{eyebrow}</p>
           )}
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-brand-900 sm:text-3xl">
-              {title}
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm text-brand-700 sm:text-base">{description}</p>
+            <h1 className="font-display text-2xl font-extrabold text-ink sm:text-3xl">{title}</h1>
+            <p className="mt-1.5 max-w-2xl text-sm text-ink-soft sm:text-base">{description}</p>
           </div>
-          {badges && <div className="flex flex-wrap gap-2">{badges}</div>}
+          {badges && <div className="flex flex-wrap gap-2 pt-1">{badges}</div>}
         </div>
         {actions && <div className="flex shrink-0 flex-wrap gap-2">{actions}</div>}
       </div>
@@ -46,14 +42,14 @@ export function StatusBadge({
   children: React.ReactNode;
 }) {
   const styles = {
-    success: "border-green-200 bg-green-50 text-green-800",
-    warning: "border-amber-200 bg-amber-50 text-amber-900",
-    danger: "border-red-200 bg-red-50 text-red-800",
-    neutral: "border-brand-200 bg-brand-50 text-brand-800",
+    success: "bg-brand-50 text-brand-700",
+    warning: "bg-accent-soft text-ink",
+    danger: "bg-coral-soft text-coral",
+    neutral: "bg-sand text-ink-soft",
   }[tone];
 
   return (
-    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${styles}`}>
+    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${styles}`}>
       {children}
     </span>
   );
