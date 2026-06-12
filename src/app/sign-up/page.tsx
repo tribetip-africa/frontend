@@ -1,15 +1,18 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { AuthForm } from "@/components/auth-form";
+import { AuthPageShell } from "@/components/auth-page-shell";
 import { SiteHeader } from "@/components/site-header";
 import { useAuth } from "@/context/auth-context";
 import type { SignUpPayload } from "@/types/api";
 
-export default function SignUpPage() {
+function SignUpContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signUp } = useAuth();
+  const defaultUsername = searchParams.get("username") ?? "";
 
   async function handleSubmit(values: Record<string, string>) {
     const payload = values as unknown as SignUpPayload;
@@ -22,25 +25,34 @@ export default function SignUpPage() {
   }
 
   return (
+    <AuthPageShell
+      mode="sign-up"
+      title="Start my page"
+      description="It's free and takes less than a minute."
+      note={
+        <p className="mt-2 text-xs text-muted">
+          Platform admin accounts are provisioned separately and cannot receive tips.
+        </p>
+      }
+    >
+      <AuthForm mode="sign-up" onSubmit={handleSubmit} defaultUsername={defaultUsername} />
+    </AuthPageShell>
+  );
+}
+
+export default function SignUpPage() {
+  return (
     <>
       <SiteHeader />
-      <main className="flex flex-1 items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
-          <Link href="/" className="text-sm text-brand-600 hover:underline">
-            ← Back to home
-          </Link>
-          <h1 className="mt-4 text-2xl font-bold text-brand-900">Create your creator page</h1>
-          <p className="mt-2 text-sm text-brand-700">
-            Free to start for creators. Choose your African market and claim your username.
-          </p>
-          <p className="mt-2 text-xs text-brand-600">
-            Platform admin accounts are provisioned separately and cannot receive tips.
-          </p>
-          <div className="mt-8 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
-            <AuthForm mode="sign-up" onSubmit={handleSubmit} />
-          </div>
-        </div>
-      </main>
+      <Suspense
+        fallback={
+          <main className="flex flex-1 items-center justify-center px-4 py-12 text-muted">
+            Loading…
+          </main>
+        }
+      >
+        <SignUpContent />
+      </Suspense>
     </>
   );
 }
