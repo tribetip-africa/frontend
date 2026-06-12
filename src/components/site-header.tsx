@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Logo } from "@/components/brand/logo";
 import { useAuth } from "@/context/auth-context";
 import { fetchMyProfile } from "@/lib/api";
 import { canAccessCreatorPublicPage } from "@/lib/creator-public-page";
@@ -15,13 +16,14 @@ const LOCKED_PAGE_HINT =
   "Publish your page and complete payout verification to unlock your public tip link.";
 
 const LANDING_NAV = [
-  { href: "/#how-it-works", label: "How it works" },
-  { href: "/#markets", label: "Markets" },
   { href: "/#creators", label: "For creators" },
+  { href: "/#markets", label: "Markets" },
 ] as const;
 
 function navLinkClass(isActive: boolean) {
-  return isActive ? "text-brand-600" : "text-brand-800/90 hover:text-brand-600";
+  return isActive
+    ? "font-semibold text-ink"
+    : "text-ink-soft hover:text-ink transition-colors";
 }
 
 function isDashboardPath(pathname: string): boolean {
@@ -40,6 +42,7 @@ export function SiteHeader() {
   const effectiveProfile = shouldLoadProfile ? profile : null;
   const publicPageShareable =
     isAuthenticated && !isAdmin && canAccessCreatorPublicPage(tribe, effectiveProfile);
+  const onDashboard = isDashboardPath(pathname);
 
   useEffect(() => {
     if (!shouldLoadProfile || !token) return;
@@ -63,18 +66,14 @@ export function SiteHeader() {
     signOut().then(() => router.replace("/"));
   };
 
+  if (onDashboard) {
+    return null;
+  }
+
   return (
-    <header className="sticky top-0 z-50 border-b border-brand-100/80 bg-cream/90 backdrop-blur-md">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link
-          href={isAuthenticated ? "/dashboard" : "/"}
-          className="flex items-center gap-2 font-semibold text-brand-900"
-        >
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-sm text-white">
-            T
-          </span>
-          <span className="text-lg tracking-tight">TribeTip</span>
-        </Link>
+        <Logo href={isAuthenticated ? "/dashboard" : "/"} size="md" />
 
         <nav className="hidden items-center gap-8 text-sm font-medium md:flex">
           {isAuthenticated ? (
@@ -91,14 +90,10 @@ export function SiteHeader() {
                     My page
                   </Link>
                 ) : (
-                  <span
-                    className="cursor-not-allowed text-brand-400"
-                    title={LOCKED_PAGE_HINT}
-                  >
+                  <span className="cursor-not-allowed text-muted" title={LOCKED_PAGE_HINT}>
                     My page
                   </span>
                 ))}
-              <span className="text-brand-600/80">@{tribe.username}</span>
             </>
           ) : (
             LANDING_NAV.map(({ href, label }) => (
@@ -112,12 +107,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           {isAuthenticated ? (
             <>
-              <Link
-                href="/dashboard"
-                className={`text-sm font-medium md:hidden ${navLinkClass(isDashboardPath(pathname))}`}
-              >
-                Dashboard
-              </Link>
+              <span className="hidden text-sm text-muted sm:inline">@{tribe.username}</span>
               <Button variant="ghost" type="button" onClick={handleSignOut}>
                 Sign out
               </Button>
@@ -126,11 +116,13 @@ export function SiteHeader() {
             <>
               <Link href="/sign-in" className="hidden sm:block">
                 <Button variant="ghost" type="button">
-                  Sign in
+                  Log in
                 </Button>
               </Link>
               <Link href="/sign-up">
-                <Button type="button">Start free</Button>
+                <Button variant="primary" type="button">
+                  Start my page
+                </Button>
               </Link>
             </>
           )}
