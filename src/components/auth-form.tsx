@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { getDisplayMessage, isTribetipError } from "@/lib/errors";
+import type { AfricanMarket } from "@/lib/constants";
 import { defaultMarket, enabledMarkets } from "@/lib/region-flags";
 import { Button } from "@/components/ui/button";
 
@@ -17,9 +18,10 @@ type Field = {
 type AuthFormProps = {
   mode: "sign-up" | "sign-in";
   onSubmit: (values: Record<string, string>) => Promise<void>;
+  defaultUsername?: string;
 };
 
-export function AuthForm({ mode, onSubmit }: AuthFormProps) {
+export function AuthForm({ mode, onSubmit, defaultUsername = "" }: AuthFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const signupMarkets = enabledMarkets();
@@ -98,18 +100,18 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3.5">
       {mode === "sign-up" && signupMarkets.length > 1 && (
         <div>
-          <label htmlFor="country_code" className="mb-1.5 block text-sm font-medium text-brand-800">
+          <label htmlFor="country_code" className="mb-1 block text-sm font-medium text-brand-800">
             Your market
           </label>
           <select
             id="country_code"
             name="country_code"
             value={countryCode}
-            onChange={(e) => setCountryCode(e.target.value)}
-            className="w-full rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-sm text-brand-900 outline-none ring-brand-500 focus:ring-2"
+            onChange={(e) => setCountryCode(e.target.value as AfricanMarket["code"])}
+            className="w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none ring-accent focus:border-accent focus:ring-2 focus:ring-accent/30"
           >
             {signupMarkets.map((market) => (
               <option key={market.code} value={market.code}>
@@ -134,7 +136,7 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
 
       {fields.map((field) => (
         <div key={field.name}>
-          <label htmlFor={field.name} className="mb-1.5 block text-sm font-medium text-brand-800">
+          <label htmlFor={field.name} className="mb-1 block text-sm font-medium text-brand-800">
             {field.label}
           </label>
           <input
@@ -143,7 +145,8 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
             type={field.type ?? "text"}
             autoComplete={field.autoComplete}
             required={field.required}
-            className="w-full rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-sm text-brand-900 outline-none ring-brand-500 placeholder:text-brand-400 focus:ring-2"
+            className="w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none ring-accent placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/30"
+            defaultValue={field.name === "username" ? defaultUsername : undefined}
             placeholder={
               field.name === "username"
                 ? "e.g. ama_creates"
@@ -172,7 +175,7 @@ export function AuthForm({ mode, onSubmit }: AuthFormProps) {
       )}
 
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? "Please wait…" : mode === "sign-up" ? "Create my page" : "Sign in"}
+        {loading ? "Please wait…" : mode === "sign-up" ? "Start my page" : "Log in"}
       </Button>
 
       <p className="text-center text-sm text-brand-700">
