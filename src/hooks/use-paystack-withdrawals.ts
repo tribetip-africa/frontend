@@ -32,10 +32,10 @@ export function usePaystackWithdrawals(token: string) {
 
     try {
       const result = await createPaystackWithdrawal(token);
-      setPayload({
+      setPayload((current) => ({
         status: result.status,
-        withdrawals: [result.withdrawal, ...(payload?.withdrawals ?? [])],
-      });
+        withdrawals: [result.withdrawal, ...(current?.withdrawals ?? [])],
+      }));
       return result;
     } catch (err) {
       setError(getDisplayMessage(err));
@@ -43,7 +43,7 @@ export function usePaystackWithdrawals(token: string) {
     } finally {
       setWithdrawing(false);
     }
-  }, [token, payload?.withdrawals]);
+  }, [token]);
 
   useEffect(() => {
     runAfterPaint(() => refresh());
