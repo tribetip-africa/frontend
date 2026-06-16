@@ -41,9 +41,9 @@ export function PaystackOnboardingModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="paystack-onboarding-title"
-        className="relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-2xl sm:max-h-[min(94vh,920px)]"
+        className="relative z-10 flex max-h-[min(94dvh,920px)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-2xl"
       >
-        <div className="border-b border-brand-100 px-6 py-4 sm:px-8">
+        <div className="shrink-0 border-b border-brand-100 px-6 py-4 sm:px-8">
           <h2 id="paystack-onboarding-title" className="text-xl font-bold text-brand-900">
             Set up payouts
           </h2>
@@ -51,7 +51,7 @@ export function PaystackOnboardingModal({
             Link your Paystack customer profile and payout account before you can receive tips.
           </p>
         </div>
-        <div className="max-h-[calc(100dvh-2rem)] overflow-y-auto px-6 py-4 sm:max-h-none sm:overflow-visible sm:px-8 sm:py-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-4 sm:px-8 sm:py-5">
           <PaystackOnboardingWizard token={token} username={username} onComplete={onComplete} />
         </div>
       </div>
