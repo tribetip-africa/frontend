@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { PayoutCard } from "@/components/payout-card/payout-card";
@@ -22,7 +22,14 @@ export function CreatorPayoutsPage() {
   const payoutState = usePaystackPayout(token);
   const settlementsState = usePaystackSettlements(token);
   const withdrawalsState = usePaystackWithdrawals(token);
+  const settlementFromQuery = searchParams.get("settlement");
   const [selectedSettlementId, setSelectedSettlementId] = useState<string | null>(null);
+  const [ignoredQuerySettlement, setIgnoredQuerySettlement] = useState<string | null>(null);
+  const activeSettlementId =
+    selectedSettlementId ??
+    (settlementFromQuery && settlementFromQuery !== ignoredQuerySettlement
+      ? settlementFromQuery
+      : null);
   const cardData = buildPayoutCardData(profile, tribe.username, payoutState.payload);
   const currency =
     payoutState.payload?.payout?.currency ??
@@ -31,12 +38,16 @@ export function CreatorPayoutsPage() {
     "KES";
 
   const openSettlement = useCallback((settlementId: string) => {
+    setIgnoredQuerySettlement(null);
     setSelectedSettlementId(settlementId);
   }, []);
 
   const closeSettlement = useCallback(() => {
+    if (settlementFromQuery) {
+      setIgnoredQuerySettlement(settlementFromQuery);
+    }
     setSelectedSettlementId(null);
-  }, []);
+  }, [settlementFromQuery]);
 
   const handleRepairComplete = useCallback(() => {
     void payoutState.refresh();
@@ -48,13 +59,6 @@ export function CreatorPayoutsPage() {
     void payoutState.refresh();
     void settlementsState.refresh();
   }, [payoutState, settlementsState]);
-
-  useEffect(() => {
-    const settlementFromQuery = searchParams.get("settlement");
-    if (settlementFromQuery) {
-      setSelectedSettlementId(settlementFromQuery);
-    }
-  }, [searchParams]);
 
   const showWithdrawalPanel = isWithdrawalPanelVisible(withdrawalsState.payload?.status);
 
@@ -112,15 +116,16 @@ export function CreatorPayoutsPage() {
           loading={settlementsState.loading}
           refreshedAt={settlementsState.payload?.refreshed_at}
           syncedAt={settlementsState.payload?.synced_at}
-          selectedSettlementId={selectedSettlementId}
+          selectedSettlementId={activeSettlementId}
           onSelectSettlement={openSettlement}
           onRefresh={() => void settlementsState.refresh()}
         />
       </div>
 
       <SettlementDetailModal
+        key={activeSettlementId ?? "closed"}
         token={token}
-        settlementId={selectedSettlementId}
+        settlementId={activeSettlementId}
         onClose={closeSettlement}
       />
     </>
