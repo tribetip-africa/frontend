@@ -82,7 +82,7 @@ function extractToken(response: Response, data: AuthResponse): string | null {
 
 export async function checkApiHealth(): Promise<boolean> {
   try {
-    const { response } = await requestJson<Record<string, unknown>>(`${API_BASE}/up`, {
+    const response = await secureFetch(`${API_BASE}/up`, {
       cachePolicy: "noStore",
     });
     return response.ok;
