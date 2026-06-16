@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { fetchPaystackSettlementDetail } from "@/lib/api";
 import { getDisplayMessage } from "@/lib/errors";
+import { runAfterPaint } from "@/lib/run-after-paint";
 import { formatMoney } from "@/lib/money";
 import {
   formatSettlementDate,
@@ -28,26 +29,27 @@ export function SettlementDetailModal({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!settlementId) {
-      setDetail(null);
-      setError(null);
-      return;
-    }
+    if (!settlementId) return;
 
     let cancelled = false;
-    setLoading(true);
-    setError(null);
 
-    fetchPaystackSettlementDetail(token, settlementId)
-      .then((payload) => {
+    const loadDetail = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const payload = await fetchPaystackSettlementDetail(token, settlementId);
         if (!cancelled) setDetail(payload);
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!cancelled) setError(getDisplayMessage(err));
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    };
+
+    runAfterPaint(() => {
+      void loadDetail();
+    });
 
     return () => {
       cancelled = true;
