@@ -59,5 +59,5 @@ export function publicPageShareHint(
     return "Publish your page to reveal and share your public tip link.";
   }
 
-  return "Share this link so supporters can tip you.";
+  return "Share your link or QR code so supporters can tip you.";
 }
