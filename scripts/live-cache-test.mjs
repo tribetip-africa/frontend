@@ -16,7 +16,7 @@ const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage();
 
 try {
-  console.log("1. Auth pages use no-store (proxy)");
+  console.log("1. Auth pages use no-store");
   for (const path of ["/sign-up", "/sign-in", "/dashboard"]) {
     const response = await page.goto(`${WEB_BASE}${path}`, {
       waitUntil: "domcontentloaded",
