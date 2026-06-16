@@ -113,6 +113,50 @@ export async function fetchPublicProfile(username: string): Promise<PublicProfil
   return data.profile;
 }
 
+export async function fetchPublicProfileByShareToken(token: string): Promise<PublicProfile> {
+  const { data } = await requestJson<{ profile: PublicProfile }>(
+    `${API_BASE}/share/${encodeURIComponent(token)}`,
+    {
+      cachePolicy: "noStore",
+      headers: { Accept: "application/json" },
+    },
+  );
+
+  return data.profile;
+}
+
+export type ShareLinkPayload = {
+  token: string;
+  path: string;
+  url: string | null;
+  shareable: boolean;
+};
+
+export async function fetchMyShareLink(authToken: string): Promise<ShareLinkPayload> {
+  const { data } = await requestJson<{ share_link: ShareLinkPayload }>(
+    `${API_BASE}/me/share_link`,
+    {
+      cachePolicy: "noStore",
+      headers: authHeaders(authToken),
+    },
+  );
+
+  return data.share_link;
+}
+
+export async function rotateMyShareLink(authToken: string): Promise<ShareLinkPayload> {
+  const { data } = await requestJson<{ share_link: ShareLinkPayload; message?: string }>(
+    `${API_BASE}/me/share_link/rotate`,
+    {
+      method: "POST",
+      cachePolicy: "noStore",
+      headers: authHeaders(authToken),
+    },
+  );
+
+  return data.share_link;
+}
+
 export async function signUp(
   payload: SignUpPayload,
 ): Promise<{ data: AuthResponse; token: string | null }> {
