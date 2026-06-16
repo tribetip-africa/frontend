@@ -34,6 +34,7 @@ export function inferCachePolicy(pathname: string, hasAuthHeader = false): Cache
   }
   if (pathname.match(/^\/tribes\/[a-z0-9_]+$/)) return "publicShort";
   if (pathname.match(/^\/api\/tribes\/[a-z0-9_]+$/)) return "publicShort";
+  if (pathname.match(/^\/share\/[A-Za-z0-9_-]{20,48}$/)) return "noStore";
   if (pathname === "/") return "staticPage";
   return "noStore";
 }
