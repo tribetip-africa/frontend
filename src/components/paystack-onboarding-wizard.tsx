@@ -42,6 +42,7 @@ export function PaystackOnboardingWizard({ token, username, onComplete }: Paysta
   const [verification, setVerification] = useState<PaystackVerificationCheck[]>([]);
   const onboardingIdempotencyKey = useRef<string | null>(null);
   const completedRef = useRef(false);
+  const pollInFlightRef = useRef(false);
 
   const finishOnboarding = useCallback(
     (onboarding: PaystackOnboarding, tribe?: Tribe) => {
@@ -91,11 +92,16 @@ export function PaystackOnboardingWizard({ token, username, onComplete }: Paysta
   );
 
   const pollStatus = useCallback(async () => {
+    if (pollInFlightRef.current) return;
+
+    pollInFlightRef.current = true;
     try {
       const payload = await fetchPaystackOnboarding(token);
       applyPayload(payload);
     } catch (err) {
       setError(getDisplayMessage(err));
+    } finally {
+      pollInFlightRef.current = false;
     }
   }, [applyPayload, token]);
 
@@ -139,7 +145,7 @@ export function PaystackOnboardingWizard({ token, username, onComplete }: Paysta
 
     const timer = window.setInterval(() => {
       void pollStatus();
-    }, 4000);
+    }, 8000);
 
     return () => window.clearInterval(timer);
   }, [loading, customerReady, subaccountReady, pollStatus]);
