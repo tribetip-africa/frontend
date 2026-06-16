@@ -333,9 +333,9 @@ export type Tip = {
   currency: string;
   status: TipStatus;
   paystack_reference: string;
-  supporter_email: string;
-  supporter_name: string | null;
-  message: string | null;
+  supporter_email?: string;
+  supporter_name?: string | null;
+  message?: string | null;
   paid_at: string | null;
   paid_via?: TipPaidVia | null;
   failed_reason?: string | null;
