@@ -3,6 +3,7 @@
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { ProfileSettings } from "@/components/profile-settings";
 import { PublicPageUrlField } from "@/components/public-page-url-field";
+import { ShareQrPanel } from "@/components/share-qr-panel";
 import { Button } from "@/components/ui/button";
 import { useDashboard } from "@/context/dashboard-context";
 import { canAccessCreatorPublicPage } from "@/lib/creator-public-page";
@@ -38,6 +39,7 @@ export function CreatorPublicPageSettings() {
 
       <div className="space-y-5 rounded-2xl border border-brand-100 bg-white p-5 shadow-sm sm:p-6">
         <PublicPageUrlField username={tribe.username} profile={profile} shareable={shareable} />
+        <ShareQrPanel token={token} shareable={shareable} />
 
         {profile ? (
           <ProfileSettings
