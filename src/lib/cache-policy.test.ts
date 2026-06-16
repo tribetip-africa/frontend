@@ -15,6 +15,10 @@ describe("cache policy", () => {
     expect(cacheControlHeader("publicShort")).toContain("max-age=60");
   });
 
+  it("never caches revocable share links", () => {
+    expect(inferCachePolicy("/share/AAPb-WAjm626YAtTRbA05cc0TAgJMbvO")).toBe("noStore");
+  });
+
   it("uses static cache for landing page only", () => {
     expect(inferCachePolicy("/")).toBe("staticPage");
     expect(cacheControlHeader("staticPage")).toContain("max-age=300");
