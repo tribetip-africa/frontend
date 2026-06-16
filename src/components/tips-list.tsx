@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { fetchMyTips, reconcileMyTip } from "@/lib/api";
+import { runAfterPaint } from "@/lib/run-after-paint";
 import { formatMoney } from "@/lib/money";
 import { getDisplayMessage } from "@/lib/errors";
 import type { Tip } from "@/types/api";
@@ -50,7 +51,7 @@ export function TipsList({ token, refreshSignal = 0 }: TipsListProps) {
   }, [token]);
 
   useEffect(() => {
-    void loadTips();
+    runAfterPaint(() => loadTips());
   }, [loadTips, refreshSignal]);
 
   async function handleReconcile(tip: Tip) {
