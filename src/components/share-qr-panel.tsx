@@ -1,9 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { fetchMyShareLink, rotateMyShareLink, type ShareLinkPayload } from "@/lib/api";
 import { getDisplayMessage } from "@/lib/errors";
+import { runAfterPaint } from "@/lib/run-after-paint";
 import { shareLinkHint } from "@/lib/share-link";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -15,7 +17,7 @@ type ShareQrPanelProps = {
 
 export function ShareQrPanel({ token, shareable }: ShareQrPanelProps) {
   const [shareLink, setShareLink] = useState<ShareLinkPayload | null>(null);
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [generatedQrDataUrl, setGeneratedQrDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [rotating, setRotating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,14 +38,14 @@ export function ShareQrPanel({ token, shareable }: ShareQrPanelProps) {
   }, [token]);
 
   useEffect(() => {
-    void loadShareLink();
+    runAfterPaint(() => loadShareLink());
   }, [loadShareLink]);
 
+  const qrDataUrl =
+    shareLink?.url && shareLink.shareable ? generatedQrDataUrl : null;
+
   useEffect(() => {
-    if (!shareLink?.url || !shareLink.shareable) {
-      setQrDataUrl(null);
-      return;
-    }
+    if (!shareLink?.url || !shareLink.shareable) return;
 
     let cancelled = false;
 
@@ -53,7 +55,7 @@ export function ShareQrPanel({ token, shareable }: ShareQrPanelProps) {
       errorCorrectionLevel: "M",
     }).then((dataUrl) => {
       if (!cancelled) {
-        setQrDataUrl(dataUrl);
+        setGeneratedQrDataUrl(dataUrl);
       }
     });
 
@@ -99,11 +101,12 @@ export function ShareQrPanel({ token, shareable }: ShareQrPanelProps) {
         <p className="text-sm text-brand-700">Preparing your secure share code…</p>
       ) : shareable && shareLink?.url && qrDataUrl ? (
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-          <img
+          <Image
             src={qrDataUrl}
             alt="QR code to tip this creator"
             width={240}
             height={240}
+            unoptimized
             className="rounded-xl border border-brand-100 bg-white p-3 shadow-sm"
           />
           <div className="space-y-3 text-sm text-brand-700">
