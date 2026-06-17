@@ -13,9 +13,10 @@ import { Modal } from "@/components/ui/modal";
 type ShareQrPanelProps = {
   token: string;
   shareable: boolean;
+  compact?: boolean;
 };
 
-export function ShareQrPanel({ token, shareable }: ShareQrPanelProps) {
+export function ShareQrPanel({ token, shareable, compact = false }: ShareQrPanelProps) {
   const [shareLink, setShareLink] = useState<ShareLinkPayload | null>(null);
   const [generatedQrDataUrl, setGeneratedQrDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -89,9 +90,17 @@ export function ShareQrPanel({ token, shareable }: ShareQrPanelProps) {
   }, [qrDataUrl]);
 
   return (
-    <div className="space-y-4 rounded-2xl border border-brand-100 bg-brand-50/40 p-5">
+    <div
+      className={
+        compact
+          ? "space-y-4"
+          : "space-y-4 rounded-2xl border border-brand-100 bg-brand-50/40 p-5"
+      }
+    >
       <div>
-        <h3 className="font-semibold text-brand-900">QR tip code</h3>
+        <h3 className={compact ? "text-sm font-semibold text-brand-900" : "font-semibold text-brand-900"}>
+          QR tip code
+        </h3>
         <p className="mt-1 text-sm text-brand-700">{shareLinkHint(shareable)}</p>
       </div>
 
@@ -100,28 +109,38 @@ export function ShareQrPanel({ token, shareable }: ShareQrPanelProps) {
       {loading && !shareLink ? (
         <p className="text-sm text-brand-700">Preparing your secure share code…</p>
       ) : shareable && shareLink?.url && qrDataUrl ? (
-        <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+        <div
+          className={
+            compact
+              ? "flex items-center gap-4"
+              : "flex flex-col items-center gap-4 sm:flex-row sm:items-start"
+          }
+        >
           <Image
             src={qrDataUrl}
             alt="QR code to tip this creator"
-            width={240}
-            height={240}
+            width={compact ? 120 : 240}
+            height={compact ? 120 : 240}
             unoptimized
             className="rounded-xl border border-brand-100 bg-white p-3 shadow-sm"
           />
           <div className="space-y-3 text-sm text-brand-700">
-            <p>
-              Scanning opens your tip page directly. You can share this image instead of your public
-              username link.
-            </p>
+            {!compact && (
+              <p>
+                Scanning opens your tip page directly. You can share this image instead of your public
+                username link.
+              </p>
+            )}
             <p className="font-mono text-xs text-brand-600">{shareLink.path}</p>
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="secondary" onClick={handleDownload}>
                 Download PNG
               </Button>
-              <Button type="button" variant="ghost" onClick={() => setRotateOpen(true)}>
-                Rotate code
-              </Button>
+              {!compact && (
+                <Button type="button" variant="ghost" onClick={() => setRotateOpen(true)}>
+                  Rotate code
+                </Button>
+              )}
             </div>
           </div>
         </div>

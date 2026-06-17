@@ -19,12 +19,28 @@ The API lives in the sibling [`tribetip`](../tribetip) repository.
 | `/sign-in`, `/sign-up` | Creator auth |
 | `/[username]` | Public creator tip page |
 | `/t/[token]` | Opaque share-link tip page |
-| `/dashboard` | Creator home |
-| `/dashboard/tips` | Tip history |
-| `/dashboard/payouts` | Earnings, withdrawals, settlements |
-| `/dashboard/public-page` | Profile + QR share code |
+| `/dashboard` | Creator home (onboarding, earnings, tips preview, public page promo) |
+| `/dashboard/tips` | Tip history, filters, supporter CSV export |
+| `/dashboard/payouts` | Payout card, earnings, withdrawals, settlements |
+| `/dashboard/notifications` | Settlement notifications |
+| `/dashboard/public-page` | Profile, default tip amount, QR share code |
 | `/dashboard/account` | Account settings |
-| `/dashboard/accounts` | Admin tribe management |
+| `/dashboard/accounts` | Admin tribes, payment alerts, reconciliation |
+
+## Dashboard architecture
+
+Each route owns one concern. Shared building blocks:
+
+| Building block | Used on |
+|----------------|---------|
+| `CreatorEarningsPanel` | Overview (`variant="overview"`), Payouts (`variant="payouts"`) |
+| `TipsList` | Overview preview (`previewLimit={5}`), Tips page (full list + filters) |
+| `PublicPageActions` | Overview hero, Public page header |
+| `ShareQrPanel` | Public page only (QR lives here, not duplicated on overview) |
+| `PaystackSyncButton` | Needs attention, sync repair panel |
+| `RepairResultSummary` | Sync repair panel, admin Paystack repair |
+| `TipDetailDrawer` | Tips list (overview + tips page) |
+| `PayoutCard` | Payouts page only |
 
 ## Development
 

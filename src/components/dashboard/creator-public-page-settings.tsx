@@ -4,18 +4,13 @@ import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-heade
 import { ProfileSettings } from "@/components/profile-settings";
 import { PublicPageUrlField } from "@/components/public-page-url-field";
 import { ShareQrPanel } from "@/components/share-qr-panel";
-import { Button } from "@/components/ui/button";
+import { PublicPageActions } from "@/components/public-page-actions";
 import { useDashboard } from "@/context/dashboard-context";
 import { canAccessCreatorPublicPage } from "@/lib/creator-public-page";
-import { getCreatorPageUrl } from "@/lib/platform";
-
-const LOCKED_PAGE_HINT =
-  "Publish your page and complete payout verification to unlock your public tip link.";
 
 export function CreatorPublicPageSettings() {
   const { tribe, token, profile, onProfileChange } = useDashboard();
   const shareable = canAccessCreatorPublicPage(tribe, profile);
-  const publicPageUrl = getCreatorPageUrl(tribe.username);
 
   return (
     <>
@@ -23,17 +18,11 @@ export function CreatorPublicPageSettings() {
         title="Public page"
         description="How supporters find you and what they see on your tip page."
         action={
-          shareable ? (
-            <a href={publicPageUrl} target="_blank" rel="noopener noreferrer">
-              <Button variant="secondary" type="button">
-                Open live page
-              </Button>
-            </a>
-          ) : (
-            <Button variant="secondary" type="button" disabled title={LOCKED_PAGE_HINT}>
-              Open live page
-            </Button>
-          )
+          <PublicPageActions
+            username={tribe.username}
+            shareable={shareable}
+            viewLabel="Open live page"
+          />
         }
       />
 

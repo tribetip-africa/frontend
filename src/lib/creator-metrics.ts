@@ -1,16 +1,9 @@
 import type { CreatorMetrics } from "@/types/api";
 import {
-  MetricsGrid,
   formatOptionalDate,
   formatOptionalMoney,
   type MetricItem,
 } from "@/components/metrics-grid";
-
-type CreatorMetricsPanelProps = {
-  metrics: CreatorMetrics;
-  isProfilePublic: boolean;
-  embedded?: boolean;
-};
 
 export function buildCreatorMetrics(
   metrics: CreatorMetrics,
@@ -60,28 +53,4 @@ export function buildCreatorMetrics(
           : "Most recent successful payment",
     },
   ];
-}
-
-export function CreatorMetricsPanel({
-  metrics,
-  isProfilePublic,
-  embedded = false,
-}: CreatorMetricsPanelProps) {
-  const grid = (
-    <MetricsGrid metrics={buildCreatorMetrics(metrics, isProfilePublic)} columns={3} />
-  );
-
-  if (embedded) return grid;
-
-  return (
-    <section className="space-y-3">
-      <div>
-        <h2 className="font-semibold text-brand-900">Your metrics</h2>
-        <p className="mt-1 text-sm text-brand-700">
-          Tips, earnings, and payout status at a glance.
-        </p>
-      </div>
-      {grid}
-    </section>
-  );
 }

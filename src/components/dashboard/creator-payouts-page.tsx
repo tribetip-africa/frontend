@@ -4,17 +4,20 @@ import { useCallback, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { PayoutCard } from "@/components/payout-card/payout-card";
-import { PayoutEarningsSummary } from "@/components/payout-earnings-summary";
+import { CreatorEarningsPanel } from "@/components/creator-earnings-panel";
 import { PayoutSyncRepairPanel } from "@/components/payout-sync-repair-panel";
 import { PaystackPayoutStatusPanel } from "@/components/paystack-payout-status-panel";
+import { PayoutCapabilityBanner } from "@/components/payout-capability-banner";
 import { SettlementDetailModal } from "@/components/settlement-detail-modal";
 import { SettlementHistoryPanel } from "@/components/settlement-history-panel";
+import { WithdrawalHistoryPanel } from "@/components/withdrawal-history-panel";
 import { useDashboard } from "@/context/dashboard-context";
 import { usePaystackPayout } from "@/hooks/use-paystack-payout";
 import { usePaystackSettlements } from "@/hooks/use-paystack-settlements";
 import { isWithdrawalPanelVisible, WithdrawalPanel } from "@/components/withdrawal-panel";
 import { usePaystackWithdrawals } from "@/hooks/use-paystack-withdrawals";
 import { buildPayoutCardData } from "@/lib/payout-card-data";
+import { buildPayoutCapabilityMessage } from "@/lib/payout-capability";
 
 export function CreatorPayoutsPage() {
   const { token, tribe, profile } = useDashboard();
@@ -30,7 +33,12 @@ export function CreatorPayoutsPage() {
     (settlementFromQuery && settlementFromQuery !== ignoredQuerySettlement
       ? settlementFromQuery
       : null);
-  const cardData = buildPayoutCardData(profile, tribe.username, payoutState.payload);
+  const cardData = buildPayoutCardData(
+    profile,
+    tribe.username,
+    payoutState.payload,
+    withdrawalsState.payload?.status,
+  );
   const currency =
     payoutState.payload?.payout?.currency ??
     payoutState.payload?.market.currency ??
@@ -61,6 +69,7 @@ export function CreatorPayoutsPage() {
   }, [payoutState, settlementsState]);
 
   const showWithdrawalPanel = isWithdrawalPanelVisible(withdrawalsState.payload?.status);
+  const capabilityMessage = buildPayoutCapabilityMessage(withdrawalsState.payload?.status);
 
   return (
     <>
@@ -74,12 +83,19 @@ export function CreatorPayoutsPage() {
       </div>
 
       <div className="surface-panel rounded-3xl p-5 sm:p-6">
-        <PayoutEarningsSummary
+        <CreatorEarningsPanel
+          variant="payouts"
+          metrics={profile?.metrics}
           payload={payoutState.payload}
-          profileMetrics={profile?.metrics}
           withdrawalStatus={withdrawalsState.payload?.status}
         />
       </div>
+
+      {capabilityMessage && (
+        <div className="surface-panel rounded-3xl p-5 sm:p-6">
+          <PayoutCapabilityBanner status={withdrawalsState.payload?.status} />
+        </div>
+      )}
 
       {showWithdrawalPanel && (
         <div className="surface-panel rounded-3xl p-5 sm:p-6">
@@ -93,6 +109,16 @@ export function CreatorPayoutsPage() {
               await withdrawalsState.withdraw();
               handleWithdrawComplete();
             }}
+          />
+        </div>
+      )}
+
+      {(withdrawalsState.payload?.withdrawals.length ?? 0) > 0 && (
+        <div className="surface-panel rounded-3xl p-5 sm:p-6">
+          <WithdrawalHistoryPanel
+            withdrawals={withdrawalsState.payload?.withdrawals ?? []}
+            currency={currency}
+            loading={withdrawalsState.loading}
           />
         </div>
       )}

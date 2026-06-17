@@ -3,20 +3,29 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { DashboardHero, StatusBadge } from "@/components/dashboard/dashboard-hero";
-import { CreatorMetricsPanel } from "@/components/creator-metrics-panel";
-import { PayoutCard } from "@/components/payout-card/payout-card";
+import { CreatorEarningsPanel } from "@/components/creator-earnings-panel";
+import { CreatorLastSettlement } from "@/components/dashboard/creator-last-settlement";
+import { CreatorNeedsAttention } from "@/components/dashboard/creator-needs-attention";
+import { CreatorOnboardingStepper } from "@/components/dashboard/creator-onboarding-stepper";
+import { CreatorPrimaryCtaCard } from "@/components/dashboard/creator-primary-cta";
+import { CreatorSharePromo } from "@/components/dashboard/creator-share-promo";
+import { PublicPageActions } from "@/components/public-page-actions";
+import { TipsList } from "@/components/tips-list";
 import { Button } from "@/components/ui/button";
-import { useDashboard } from "@/context/dashboard-context";
-import { buildPayoutCardData } from "@/lib/payout-card-data";
+import { useCreatorTipsPreview } from "@/hooks/use-creator-tips-preview";
+import { usePaystackSettlements } from "@/hooks/use-paystack-settlements";
+import { usePaystackWithdrawals } from "@/hooks/use-paystack-withdrawals";
+import {
+  buildCreatorOnboardingSteps,
+  buildCreatorPrimaryCta,
+  isCreatorFullyLive,
+} from "@/lib/creator-onboarding-progress";
 import { accountStatusBannerForCreator } from "@/lib/paystack-onboarding";
 import { canAccessCreatorPublicPage, isPublicPageShareable } from "@/lib/creator-public-page";
-import { getCreatorPageUrl } from "@/lib/platform";
-import { fetchAdminTribes } from "@/lib/api";
+import { fetchAdminTribes, fetchMyProfile } from "@/lib/api";
 import { AdminMetricsPanel } from "@/components/admin-metrics-panel";
+import { useDashboard } from "@/context/dashboard-context";
 import type { AdminOverview } from "@/types/api";
-
-const LOCKED_PAGE_HINT =
-  "Publish your page and complete payout verification to unlock your public tip link.";
 
 function accountStatusTone(
   status: "active" | "pending" | "suspended",
@@ -27,23 +36,30 @@ function accountStatusTone(
 }
 
 export function CreatorOverviewPage() {
-  const { tribe, profile, profileError } = useDashboard();
-  const [copied, setCopied] = useState(false);
+  const { token, tribe, profile, profileError, onProfileChange } = useDashboard();
+  const settlementsState = usePaystackSettlements(token, { refresh: false });
+  const withdrawalsState = usePaystackWithdrawals(token);
+  const [tipsRefreshSignal, setTipsRefreshSignal] = useState(0);
+  const { tips, loading: tipsLoading, error: tipsError } = useCreatorTipsPreview(
+    token,
+    tipsRefreshSignal,
+  );
   const shareable = canAccessCreatorPublicPage(tribe, profile);
-  const publicPageUrl = getCreatorPageUrl(tribe.username);
   const statusBanner = accountStatusBannerForCreator(tribe, profile);
-  const cardData = buildPayoutCardData(profile, tribe.username, null);
   const accountStatus = profile?.account_status ?? tribe.account_status;
+  const onboardingSteps = buildCreatorOnboardingSteps({ tribe, profile });
+  const primaryCta = buildCreatorPrimaryCta({ tribe, profile });
+  const fullyLive = isCreatorFullyLive({ tribe, profile });
+  const currency = profile?.currency ?? withdrawalsState.payload?.status.currency ?? "KES";
+  const availableToWithdrawCents = withdrawalsState.payload?.status.available_to_withdraw_cents;
 
-  async function copyPublicLink() {
-    if (!shareable) return;
+  async function handleRepairComplete() {
+    setTipsRefreshSignal((current) => current + 1);
 
     try {
-      await navigator.clipboard.writeText(publicPageUrl);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
+      onProfileChange(await fetchMyProfile(token));
     } catch {
-      setCopied(false);
+      // Profile refresh is best-effort after sync.
     }
   }
 
@@ -68,38 +84,13 @@ export function CreatorOverviewPage() {
             )}
           </div>
         </div>
-        <div className="mx-auto w-full max-w-full px-1 sm:max-w-[520px] lg:px-0">
-          <PayoutCard data={cardData} />
-        </div>
-        <div className="mt-4 flex flex-wrap justify-center gap-2 lg:hidden">
-          {shareable ? (
-            <a href={publicPageUrl} target="_blank" rel="noopener noreferrer">
-              <Button variant="secondary" type="button">
-                View public page
-              </Button>
-            </a>
-          ) : (
-            <Button variant="secondary" type="button" disabled title={LOCKED_PAGE_HINT}>
-              View public page
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            type="button"
-            disabled={!shareable}
-            title={shareable ? undefined : LOCKED_PAGE_HINT}
-            onClick={() => void copyPublicLink()}
-          >
-            {copied ? "Link copied" : "Copy page link"}
-          </Button>
-        </div>
       </div>
 
       <div className="order-2 hidden lg:order-1 lg:block">
         <DashboardHero
           eyebrow="Creator workspace"
           title={`Welcome back, @${tribe.username}`}
-          description="Your earnings snapshot and page readiness at a glance."
+          description="Earnings, recent tips, payouts, and your public page in one place."
           badges={
             <>
               <StatusBadge tone={accountStatusTone(accountStatus)}>
@@ -115,36 +106,58 @@ export function CreatorOverviewPage() {
               )}
             </>
           }
-          actions={
-            <>
-              {shareable ? (
-                <a href={publicPageUrl} target="_blank" rel="noopener noreferrer">
-                  <Button variant="secondary" type="button">
-                    View public page
-                  </Button>
-                </a>
-              ) : (
-                <Button variant="secondary" type="button" disabled title={LOCKED_PAGE_HINT}>
-                  View public page
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                type="button"
-                disabled={!shareable}
-                title={shareable ? undefined : LOCKED_PAGE_HINT}
-                onClick={() => void copyPublicLink()}
-              >
-                {copied ? "Link copied" : "Copy page link"}
-              </Button>
-            </>
-          }
+          actions={<PublicPageActions username={tribe.username} shareable={shareable} />}
+        />
+      </div>
+
+      {!fullyLive && (
+        <div className="order-3 space-y-4">
+          <CreatorOnboardingStepper steps={onboardingSteps} />
+          {primaryCta && <CreatorPrimaryCtaCard cta={primaryCta} />}
+        </div>
+      )}
+
+      <div className="order-4">
+        <CreatorNeedsAttention
+          token={token}
+          metrics={profile?.metrics}
+          tips={tips}
+          onRepaired={() => void handleRepairComplete()}
+        />
+      </div>
+
+      <div className="order-5 rounded-2xl border border-brand-100 bg-white p-5 shadow-sm sm:p-6">
+        <CreatorEarningsPanel
+          variant="overview"
+          metrics={profile?.metrics}
+          availableToWithdrawCents={availableToWithdrawCents}
+          currencyFallback={currency}
+        />
+      </div>
+
+      <div className="order-6 grid gap-6 lg:grid-cols-2 lg:items-start">
+        <TipsList
+          token={token}
+          refreshSignal={tipsRefreshSignal}
+          previewLimit={5}
+          tips={tips}
+          loading={tipsLoading}
+          error={tipsError}
+        />
+        <CreatorSharePromo username={tribe.username} profile={profile} shareable={shareable} />
+      </div>
+
+      <div className="order-7">
+        <CreatorLastSettlement
+          payload={settlementsState.payload}
+          loading={settlementsState.loading}
+          error={settlementsState.error}
         />
       </div>
 
       {statusBanner && (
         <div
-          className={`order-3 rounded-2xl border px-4 py-3 text-sm ${
+          className={`order-8 rounded-2xl border px-4 py-3 text-sm ${
             statusBanner.tone === "danger"
               ? "border-red-200 bg-red-50 text-red-800"
               : statusBanner.tone === "warning"
@@ -159,34 +172,12 @@ export function CreatorOverviewPage() {
 
       {profileError && (
         <p
-          className="order-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          className="order-9 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
           role="alert"
         >
           {profileError}
         </p>
       )}
-
-      <div className="order-5 rounded-2xl border border-brand-100 bg-white p-5 shadow-sm sm:p-6">
-        {profile && !shareable && (
-          <div className="mb-5 flex justify-end">
-            <Link href="/dashboard/public-page">
-              <Button variant="secondary" type="button">
-                Finish public page
-              </Button>
-            </Link>
-          </div>
-        )}
-
-        {profile?.metrics ? (
-          <CreatorMetricsPanel
-            metrics={profile.metrics}
-            isProfilePublic={profile.is_profile_public}
-            embedded
-          />
-        ) : (
-          <p className="text-sm text-brand-700">Complete payout setup to unlock your metrics.</p>
-        )}
-      </div>
     </div>
   );
 }

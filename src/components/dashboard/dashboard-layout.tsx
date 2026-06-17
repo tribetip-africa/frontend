@@ -12,16 +12,12 @@ import { useAuth } from "@/context/auth-context";
 import { API_BASE, checkApiHealth, fetchMyProfile } from "@/lib/api";
 import { isPaystackOnboardingComplete } from "@/lib/paystack-onboarding";
 import { getDisplayMessage } from "@/lib/errors";
-import { isPublicPageShareable } from "@/lib/creator-public-page";
+import { canAccessCreatorPublicPage, isPublicPageShareable, LOCKED_PAGE_HINT } from "@/lib/creator-public-page";
 import { dashboardNavGroupsForRole } from "@/lib/dashboard-nav";
-import { canAccessCreatorPublicPage } from "@/lib/creator-public-page";
 import { setStoredAuth } from "@/lib/auth-storage";
 import { getCreatorPageUrl } from "@/lib/platform";
 import { isAdminRole } from "@/lib/roles";
 import type { CreatorProfile, Tribe } from "@/types/api";
-
-const LOCKED_PAGE_HINT =
-  "Publish your page and complete payout verification to unlock your public tip link.";
 
 type DashboardLayoutProps = {
   children: React.ReactNode;

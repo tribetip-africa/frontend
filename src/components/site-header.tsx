@@ -6,14 +6,11 @@ import { useEffect, useState } from "react";
 import { Logo } from "@/components/brand/logo";
 import { useAuth } from "@/context/auth-context";
 import { fetchMyProfile } from "@/lib/api";
-import { canAccessCreatorPublicPage } from "@/lib/creator-public-page";
+import { canAccessCreatorPublicPage, LOCKED_PAGE_HINT } from "@/lib/creator-public-page";
 import { getCreatorPageUrl } from "@/lib/platform";
 import { isAdminRole } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import type { CreatorProfile } from "@/types/api";
-
-const LOCKED_PAGE_HINT =
-  "Publish your page and complete payout verification to unlock your public tip link.";
 
 const LANDING_NAV = [
   { href: "/#creators", label: "For creators" },

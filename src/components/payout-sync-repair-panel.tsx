@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { repairPaystackData } from "@/lib/api";
-import { getDisplayMessage } from "@/lib/errors";
 import type { PaystackRepairResult } from "@/types/api";
-import { Button } from "@/components/ui/button";
+import { PaystackSyncButton } from "@/components/paystack-sync-button";
+import { RepairResultSummary } from "@/components/repair-result-summary";
 
 type PayoutSyncRepairPanelProps = {
   token: string;
@@ -12,24 +11,8 @@ type PayoutSyncRepairPanelProps = {
 };
 
 export function PayoutSyncRepairPanel({ token, onRepaired }: PayoutSyncRepairPanelProps) {
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PaystackRepairResult | null>(null);
-
-  async function handleRepair() {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const payload = await repairPaystackData(token);
-      setResult(payload.repair);
-      onRepaired?.(payload.repair);
-    } catch (err) {
-      setError(getDisplayMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  }
 
   return (
     <section className="space-y-4">
@@ -58,24 +41,17 @@ export function PayoutSyncRepairPanel({ token, onRepaired }: PayoutSyncRepairPan
         </p>
       )}
 
-      {result && (
-        <div className="rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3 text-sm text-brand-800">
-          <p className="font-medium text-brand-900">Sync complete</p>
-          <ul className="mt-2 space-y-1">
-            <li>{result.settlements_count} settlement records checked</li>
-            <li>
-              {result.tips_reconciled} of {result.tips_examined} pending tips updated
-              {result.tips_still_pending > 0
-                ? ` · ${result.tips_still_pending} still pending`
-                : ""}
-            </li>
-          </ul>
-        </div>
-      )}
+      {result && <RepairResultSummary result={result} />}
 
-      <Button type="button" variant="secondary" disabled={loading} onClick={() => void handleRepair()}>
-        {loading ? "Syncing with Paystack…" : "Sync with Paystack"}
-      </Button>
+      <PaystackSyncButton
+        token={token}
+        syncingLabel="Syncing with Paystack…"
+        onRepaired={(repair) => {
+          setResult(repair);
+          onRepaired?.(repair);
+        }}
+        onError={setError}
+      />
     </section>
   );
 }

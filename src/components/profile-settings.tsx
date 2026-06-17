@@ -4,6 +4,14 @@ import { FormEvent, useState } from "react";
 import { getDisplayMessage } from "@/lib/errors";
 import { isPaystackSubaccountVerified } from "@/lib/paystack-onboarding";
 import { publishMyProfile, updateMyProfile } from "@/lib/api";
+import {
+  MIN_TIP_UNITS,
+  centsToUnits,
+  parseAmountInput,
+  unitsToCents,
+  formatMoneyUnits,
+} from "@/lib/money";
+import { buildTipPresets } from "@/lib/tip-amounts";
 import type { CreatorProfile } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
@@ -23,12 +31,20 @@ export function ProfileSettings({
   const [profile, setProfile] = useState(initialProfile);
   const [displayName, setDisplayName] = useState(initialProfile.display_name ?? "");
   const [bio, setBio] = useState(initialProfile.bio ?? "");
+  const [defaultTipAmountInput, setDefaultTipAmountInput] = useState(
+    String(centsToUnits(initialProfile.default_tip_amount_cents)),
+  );
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
   const payoutVerified = isPaystackSubaccountVerified(profile);
+  const previewDefaultCents = (() => {
+    const units = parseAmountInput(defaultTipAmountInput);
+    return units ? unitsToCents(units) : profile.default_tip_amount_cents;
+  })();
+  const tipPresets = buildTipPresets(previewDefaultCents, profile.currency);
   const canPublish =
     profile.account_status === "active" &&
     !profile.is_profile_public &&
@@ -42,9 +58,16 @@ export function ProfileSettings({
     setSaving(true);
 
     try {
+      const defaultTipUnits = parseAmountInput(defaultTipAmountInput);
+      if (defaultTipUnits === null || defaultTipUnits < MIN_TIP_UNITS) {
+        setError(`Enter a default tip amount of at least ${MIN_TIP_UNITS} ${profile.currency}.`);
+        return;
+      }
+
       const updated = await updateMyProfile(token, {
         display_name: displayName.trim(),
         bio: bio.trim(),
+        default_tip_amount_cents: unitsToCents(defaultTipUnits),
       });
       setProfile(updated);
       onProfileChange(updated);
@@ -102,6 +125,39 @@ export function ProfileSettings({
             className="w-full rounded-xl border border-brand-200 px-3 py-2 text-sm text-brand-900"
             placeholder="Tell supporters what you create"
           />
+        </div>
+
+        <div>
+          <label
+            htmlFor="default_tip_amount"
+            className="mb-1.5 block text-sm font-medium text-brand-800"
+          >
+            Default tip amount ({profile.currency})
+          </label>
+          <input
+            id="default_tip_amount"
+            type="number"
+            min={MIN_TIP_UNITS}
+            step="1"
+            value={defaultTipAmountInput}
+            onChange={(event) => setDefaultTipAmountInput(event.target.value)}
+            className="w-full rounded-xl border border-brand-200 px-3 py-2 text-sm text-brand-900"
+            placeholder="Suggested amount on your public page"
+            required
+          />
+          <p className="mt-1.5 text-xs text-brand-600">
+            Supporters see presets based on this amount:{" "}
+            {tipPresets
+              .filter((preset) => preset.cents !== null)
+              .map((preset) => preset.label)
+              .join(" · ")}
+            {defaultTipAmountInput.trim() && (
+              <>
+                {" "}
+                · custom from {formatMoneyUnits(parseAmountInput(defaultTipAmountInput) ?? 0, profile.currency)}
+              </>
+            )}
+          </p>
         </div>
 
         {error && (

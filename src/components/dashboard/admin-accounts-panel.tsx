@@ -26,6 +26,9 @@ import type {
 } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { PaystackVerificationChecks } from "@/components/paystack-verification-checks";
+import { RepairResultSummary } from "@/components/repair-result-summary";
+
+const PAGE_SIZE = 25;
 
 type AdminAccountsPanelProps = {
   token: string;
@@ -46,21 +49,28 @@ export function AdminAccountsPanel({ token, onOverviewChange }: AdminAccountsPan
   const [repairLoading, setRepairLoading] = useState<string | null>(null);
   const [repairResult, setRepairResult] = useState<PaystackRepairResult | null>(null);
   const [repairUsername, setRepairUsername] = useState<string | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [total, setTotal] = useState(0);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const payload = await fetchAdminTribes(token, { q: search || undefined });
+      const payload = await fetchAdminTribes(token, {
+        q: search || undefined,
+        limit: PAGE_SIZE,
+        offset,
+      });
       setTribes(payload.tribes);
+      setTotal(payload.pagination.total);
       onOverviewChange?.(payload.overview);
     } catch (err) {
       setError(getDisplayMessage(err));
     } finally {
       setLoading(false);
     }
-  }, [token, search, onOverviewChange]);
+  }, [token, search, offset, onOverviewChange]);
 
   useEffect(() => {
     runAfterPaint(() => refresh());
@@ -144,6 +154,7 @@ export function AdminAccountsPanel({ token, onOverviewChange }: AdminAccountsPan
         className="flex flex-col gap-3 sm:flex-row"
         onSubmit={(event) => {
           event.preventDefault();
+          setOffset(0);
           setSearch(query.trim());
         }}
       >
@@ -270,6 +281,32 @@ export function AdminAccountsPanel({ token, onOverviewChange }: AdminAccountsPan
         </table>
       </div>
 
+      {total > PAGE_SIZE && (
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-brand-700">
+          <p>
+            Showing {offset + 1}–{Math.min(offset + tribes.length, total)} of {total}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={loading || offset === 0}
+              onClick={() => setOffset((current) => Math.max(0, current - PAGE_SIZE))}
+            >
+              Previous
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={loading || offset + PAGE_SIZE >= total}
+              onClick={() => setOffset((current) => current + PAGE_SIZE)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+
       {audit && (
         <div className="rounded-xl border border-brand-100 bg-brand-50/40 p-4">
           <div className="flex items-start justify-between gap-4">
@@ -295,18 +332,8 @@ export function AdminAccountsPanel({ token, onOverviewChange }: AdminAccountsPan
           </div>
           <PaystackVerificationChecks checks={audit.checks} />
           {repairResult && repairUsername === audit.username && (
-            <div className="mt-4 rounded-xl border border-green-100 bg-green-50/60 px-4 py-3 text-sm text-brand-800">
-              <p className="font-medium text-brand-900">Last Paystack sync</p>
-              <ul className="mt-2 space-y-1">
-                <li>{repairResult.settlements_count} settlement records checked</li>
-                <li>
-                  {repairResult.tips_reconciled} of {repairResult.tips_examined} pending tips
-                  updated
-                  {repairResult.tips_still_pending > 0
-                    ? ` · ${repairResult.tips_still_pending} still pending`
-                    : ""}
-                </li>
-              </ul>
+            <div className="mt-4">
+              <RepairResultSummary result={repairResult} />
             </div>
           )}
           {settlements && auditTribeId && (
@@ -371,17 +398,9 @@ export function AdminAccountsPanel({ token, onOverviewChange }: AdminAccountsPan
       )}
 
       {!audit && repairResult && repairUsername && (
-        <div className="rounded-xl border border-green-100 bg-green-50/60 p-4 text-sm text-brand-800">
-          <p className="font-medium text-brand-900">Paystack sync · @{repairUsername}</p>
-          <ul className="mt-2 space-y-1">
-            <li>{repairResult.settlements_count} settlement records checked</li>
-            <li>
-              {repairResult.tips_reconciled} of {repairResult.tips_examined} pending tips updated
-              {repairResult.tips_still_pending > 0
-                ? ` · ${repairResult.tips_still_pending} still pending`
-                : ""}
-            </li>
-          </ul>
+        <div className="mt-4">
+          <p className="mb-2 text-sm font-medium text-brand-900">Paystack sync · @{repairUsername}</p>
+          <RepairResultSummary result={repairResult} />
         </div>
       )}
     </div>

@@ -29,6 +29,8 @@ import type {
   AdminPaystackEventsResponse,
   PaystackAuditReport,
   TipInvestigation,
+  PaymentAlertsResponse,
+  PlatformReconciliationResponse,
 } from "@/types/api";
 import {
   TribetipAuthError,
@@ -364,6 +366,18 @@ export async function fetchMyTips(token: string): Promise<Tip[]> {
   return data.tips;
 }
 
+export async function fetchMyTip(token: string, tipId: string): Promise<Tip> {
+  const { data } = await requestJson<{ tip: Tip }>(
+    `${API_BASE}/me/tips/${encodeURIComponent(tipId)}`,
+    {
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  return data.tip;
+}
+
 type AdminTribesQuery = {
   q?: string;
   limit?: number;
@@ -652,6 +666,71 @@ export async function fetchAdminSettlements(
     {
       cachePolicy: "noStore",
       headers: authHeaders(token),
+    },
+  );
+
+  return data;
+}
+
+type PaymentAlertsQuery = {
+  unresolved?: boolean;
+  limit?: number;
+  offset?: number;
+};
+
+export async function fetchAdminPaymentAlerts(
+  token: string,
+  query: PaymentAlertsQuery = {},
+): Promise<PaymentAlertsResponse> {
+  const params = new URLSearchParams();
+  if (query.unresolved) params.set("unresolved", "true");
+  if (typeof query.limit === "number") params.set("limit", String(query.limit));
+  if (typeof query.offset === "number") params.set("offset", String(query.offset));
+
+  const suffix = params.toString();
+  const url = suffix
+    ? `${API_BASE}/admin/payment_alerts?${suffix}`
+    : `${API_BASE}/admin/payment_alerts`;
+
+  const { data } = await requestJson<PaymentAlertsResponse>(url, {
+    cachePolicy: "noStore",
+    headers: authHeaders(token),
+  });
+
+  return data;
+}
+
+export async function fetchAdminPlatformReconciliation(
+  token: string,
+): Promise<PlatformReconciliationResponse> {
+  const { data } = await requestJson<PlatformReconciliationResponse>(
+    `${API_BASE}/admin/paystack/reconciliation`,
+    {
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  return data;
+}
+
+export async function runAdminPlatformReconciliation(
+  token: string,
+  options?: { autoRepair?: boolean },
+): Promise<PlatformReconciliationResponse> {
+  const { data } = await requestJson<PlatformReconciliationResponse>(
+    `${API_BASE}/admin/paystack/reconciliation`,
+    {
+      method: "POST",
+      cachePolicy: "noStore",
+      headers: {
+        ...authHeaders(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        auto_repair: options?.autoRepair ?? true,
+        async: false,
+      }),
     },
   );
 

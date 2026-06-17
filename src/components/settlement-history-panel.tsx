@@ -6,6 +6,10 @@ import {
   settlementStatusLabel,
   settlementStatusTone,
 } from "@/lib/settlement-status";
+import {
+  settlementSourceLabel,
+  settlementSourceTone,
+} from "@/lib/settlement-source";
 import type { PaystackSettlement } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
@@ -74,6 +78,7 @@ export function SettlementHistoryPanel({
                 <th className="px-4 py-3 font-medium">Date</th>
                 <th className="px-4 py-3 font-medium">Amount</th>
                 <th className="px-4 py-3 font-medium">Destination</th>
+                <th className="px-4 py-3 font-medium">Source</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Details</th>
               </tr>
@@ -92,6 +97,13 @@ export function SettlementHistoryPanel({
                   </td>
                   <td className="px-4 py-3 text-brand-700">
                     {settlement.destination ?? "Linked payout account"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${settlementSourceTone(settlement.source)}`}
+                    >
+                      {settlementSourceLabel(settlement.source)}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
                     <span

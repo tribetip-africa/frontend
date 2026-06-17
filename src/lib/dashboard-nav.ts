@@ -25,6 +25,7 @@ export const CREATOR_DASHBOARD_NAV: DashboardNavGroup[] = [
     label: "Money & account",
     items: [
       { id: "payouts", href: "/dashboard/payouts", label: "Payouts" },
+      { id: "notifications", href: "/dashboard/notifications", label: "Notifications" },
       { id: "account", href: "/dashboard/account", label: "Account" },
     ],
   },
@@ -44,6 +45,7 @@ export const CREATOR_DASHBOARD_PATHS = [
   "/dashboard/tips",
   "/dashboard/public-page",
   "/dashboard/payouts",
+  "/dashboard/notifications",
   "/dashboard/account",
 ] as const;
 

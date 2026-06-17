@@ -16,7 +16,18 @@ import type { CreatorNotification } from "@/types/api";
 
 const POLL_INTERVAL_MS = 45_000;
 
-export function useNotifications(token: string, enabled: boolean) {
+type UseNotificationsOptions = {
+  limit?: number;
+  poll?: boolean;
+};
+
+export function useNotifications(
+  token: string,
+  enabled: boolean,
+  options: UseNotificationsOptions = {},
+) {
+  const limit = options.limit ?? 20;
+  const poll = options.poll ?? true;
   const [notifications, setNotifications] = useState<CreatorNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [toastNotification, setToastNotification] = useState<CreatorNotification | null>(null);
@@ -31,7 +42,7 @@ export function useNotifications(token: string, enabled: boolean) {
     setError(null);
 
     try {
-      const payload = await fetchCreatorNotifications(token, { limit: 20 });
+      const payload = await fetchCreatorNotifications(token, { limit });
       setNotifications(payload.notifications);
       setUnreadCount(payload.unread_count);
 
@@ -56,7 +67,7 @@ export function useNotifications(token: string, enabled: boolean) {
     } finally {
       setLoading(false);
     }
-  }, [enabled, token]);
+  }, [enabled, limit, token]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -64,14 +75,14 @@ export function useNotifications(token: string, enabled: boolean) {
   }, [enabled, refresh]);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !poll) return;
 
     const timer = window.setInterval(() => {
       void refresh();
     }, POLL_INTERVAL_MS);
 
     return () => window.clearInterval(timer);
-  }, [enabled, refresh]);
+  }, [enabled, poll, refresh]);
 
   const markRead = useCallback(
     async (notificationId: string) => {

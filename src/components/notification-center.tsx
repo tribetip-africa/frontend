@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { formatSettlementDate } from "@/lib/settlement-status";
+import { settlementNotificationHref } from "@/lib/notification-links";
 import type { CreatorNotification } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
@@ -15,12 +16,7 @@ type NotificationCenterProps = {
 };
 
 function settlementHref(notification: CreatorNotification): string {
-  const transferCode = notification.metadata.paystack_transfer_code;
-  if (typeof transferCode === "string" && transferCode.length > 0) {
-    return `/dashboard/payouts?settlement=${encodeURIComponent(transferCode)}`;
-  }
-
-  return "/dashboard/payouts";
+  return settlementNotificationHref(notification);
 }
 
 export function NotificationCenter({
@@ -124,6 +120,16 @@ export function NotificationCenter({
                 </div>
               ))
             )}
+          </div>
+
+          <div className="border-t border-brand-100 px-4 py-3">
+            <Link
+              href="/dashboard/notifications"
+              className="text-sm font-medium text-brand-600 hover:text-brand-800"
+              onClick={() => setOpen(false)}
+            >
+              View all notifications
+            </Link>
           </div>
         </div>
       )}

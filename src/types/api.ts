@@ -140,6 +140,59 @@ export type AdminPaystackRepairPayload = PaystackRepairPayload & {
   username: string;
 };
 
+export type PaymentAlert = {
+  id: string;
+  kind: string;
+  severity: "warning" | "critical" | string;
+  title: string;
+  body: string;
+  metadata: Record<string, unknown>;
+  resolved_at?: string | null;
+  created_at: string;
+};
+
+export type PaymentAlertsResponse = {
+  alerts: PaymentAlert[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
+};
+
+export type PlatformReconciliationFinding = {
+  kind: string;
+  severity: string;
+  title: string;
+  body: string;
+  metadata: Record<string, unknown>;
+};
+
+export type PlatformReconciliationReport = {
+  checked_at?: string;
+  auto_repair?: boolean;
+  repairs?: {
+    pending_tips_reconciled: number;
+    creators_synced: number;
+  };
+  summary?: {
+    findings_count: number;
+    critical_count: number;
+    warning_count: number;
+    creators_examined: number;
+    tips_verified: number;
+  };
+  findings?: PlatformReconciliationFinding[];
+  status?: string;
+  message?: string;
+};
+
+export type PlatformReconciliationResponse = {
+  reconciliation: PlatformReconciliationReport;
+  message?: string;
+  auto_repair?: boolean;
+};
+
 export type SettlementSummary = {
   total_settled_cents: number;
   successful_settlements_count: number;

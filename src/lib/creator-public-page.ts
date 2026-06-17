@@ -2,6 +2,9 @@ import type { CreatorProfile, Tribe } from "@/types/api";
 import { isPaystackSubaccountVerified } from "@/lib/paystack-onboarding";
 import { getCreatorPageDisplayUrl } from "@/lib/platform";
 
+export const LOCKED_PAGE_HINT =
+  "Publish your page and complete payout verification to unlock your public tip link.";
+
 export type PublicPageReadiness = Pick<
   CreatorProfile,
   "is_profile_public" | "paystack_onboarding" | "metrics"

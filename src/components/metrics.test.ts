@@ -1,4 +1,4 @@
-import { buildCreatorMetrics } from "@/components/creator-metrics-panel";
+import { buildCreatorMetrics } from "@/lib/creator-metrics";
 import { buildAdminMetrics } from "@/components/admin-metrics-panel";
 import type { AdminOverview, CreatorMetrics } from "@/types/api";
 

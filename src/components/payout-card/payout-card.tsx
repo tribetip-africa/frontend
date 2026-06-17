@@ -53,7 +53,15 @@ export function PayoutCard({ data }: PayoutCardProps) {
       : "Pending verification";
 
   const totalEarned = typeof data.totalEarnedCents === "number" ? data.totalEarnedCents : 0;
-  const canFlip = data.linked || typeof data.totalEarnedCents === "number";
+  const availableToWithdraw =
+    typeof data.availableToWithdrawCents === "number" ? data.availableToWithdrawCents : 0;
+  const pendingTips =
+    typeof data.pendingTipsCents === "number" ? data.pendingTipsCents : 0;
+  const balanceLabel = data.manualWithdrawMode ? "Available to withdraw" : "Awaiting settlement";
+  const canFlip =
+    data.linked ||
+    typeof data.totalEarnedCents === "number" ||
+    typeof data.availableToWithdrawCents === "number";
 
   function toggleFlip() {
     if (!canFlip) return;
@@ -85,8 +93,8 @@ export function PayoutCard({ data }: PayoutCardProps) {
           aria-label={
             canFlip
               ? flipped
-                ? "Hide total earned"
-                : "Show total earned"
+                ? "Hide available balance"
+                : "Show available balance"
               : "Payout card preview — complete setup to view earnings"
           }
         >
@@ -149,12 +157,32 @@ export function PayoutCard({ data }: PayoutCardProps) {
                 <div className="mt-4 flex flex-1 flex-col justify-between">
                   <div className="rounded-xl border border-white/10 bg-black/20 p-4 backdrop-blur-sm">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">
-                      Total earned
+                      {balanceLabel}
                     </p>
                     <p className="mt-3 text-3xl font-bold tabular-nums tracking-tight text-white">
-                      {formatMoney(totalEarned, theme.currency)}
+                      {formatMoney(availableToWithdraw, theme.currency)}
                     </p>
-                    <p className="mt-2 text-xs text-white/60">Lifetime paid tips</p>
+                    <p className="mt-2 text-xs text-white/60">
+                      {data.manualWithdrawMode
+                        ? "Ready to send to your payout account"
+                        : "Queued with Paystack for payout"}
+                    </p>
+                    {totalEarned > 0 && (
+                      <p className="mt-3 border-t border-white/10 pt-3 text-xs text-white/70">
+                        <span className="text-white/55">Total earned </span>
+                        <span className="font-semibold tabular-nums text-white">
+                          {formatMoney(totalEarned, theme.currency)}
+                        </span>
+                      </p>
+                    )}
+                    {pendingTips > 0 && (
+                      <p className="mt-2 text-xs text-white/70">
+                        <span className="text-white/55">Pending tips </span>
+                        <span className="font-semibold tabular-nums text-white">
+                          {formatMoney(pendingTips, theme.currency)}
+                        </span>
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-end justify-between gap-3">
@@ -180,7 +208,7 @@ export function PayoutCard({ data }: PayoutCardProps) {
         {canFlip
           ? flipped
             ? "Auto-hides in 5 seconds · Tap the card to return to account details"
-            : "Tap the card to reveal total earned"
+            : "Tap the card to reveal your available balance"
           : "Complete payout setup to unlock your earnings view"}
       </p>
     </div>
