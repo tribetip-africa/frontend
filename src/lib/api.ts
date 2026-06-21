@@ -119,7 +119,7 @@ export async function fetchPublicProfileByShareToken(token: string): Promise<Pub
   const { data } = await requestJson<{ profile: PublicProfile }>(
     `${API_BASE}/share/${encodeURIComponent(token)}`,
     {
-      cachePolicy: "noStore",
+      cachePolicy: "publicShort",
       headers: { Accept: "application/json" },
     },
   );
