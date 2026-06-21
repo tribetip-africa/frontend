@@ -373,13 +373,6 @@ export type UpdateProfilePayload = {
   default_tip_amount_cents?: number;
 };
 
-export type {
-  WidgetEmbedConfig,
-  WidgetEmbedPayload,
-  WidgetPosition,
-  UpdateWidgetEmbedPayload,
-} from "@/widget/types";
-
 export type TipStatus = "pending" | "paid" | "failed";
 
 export type TipCheckoutStatus = "processing" | "ready" | "failed";
