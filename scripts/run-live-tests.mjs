@@ -29,8 +29,8 @@ console.log(`Running live test suite (Paystack ${mode})…\n`);
 
 for (let index = 0; index < tests.length; index += 1) {
   const script = tests[index];
-  if (mode === "live" && index > 0) {
-    await sleep(8_000);
+  if (index > 0) {
+    await sleep(mode === "live" ? 8_000 : 12_000);
   }
 
   console.log(`\n=== ${script} ===`);
