@@ -22,6 +22,10 @@ export const CREATOR_DASHBOARD_NAV: DashboardNavGroup[] = [
     items: [{ id: "public-page", href: "/dashboard/public-page", label: "Public page" }],
   },
   {
+    label: "Integrations",
+    items: [{ id: "widget", href: "/dashboard/widget", label: "Website widget" }],
+  },
+  {
     label: "Money & account",
     items: [
       { id: "payouts", href: "/dashboard/payouts", label: "Payouts" },
@@ -44,6 +48,7 @@ export const ADMIN_DASHBOARD_NAV: DashboardNavGroup[] = [
 export const CREATOR_DASHBOARD_PATHS = [
   "/dashboard/tips",
   "/dashboard/public-page",
+  "/dashboard/widget",
   "/dashboard/payouts",
   "/dashboard/notifications",
   "/dashboard/account",
