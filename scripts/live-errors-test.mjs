@@ -2,9 +2,7 @@ import { chromium } from "playwright";
 import {
   WEB_BASE,
   apiRequest,
-  apiSignUp,
   assertStructuredError,
-  enablePublicProfile,
   waitForServices,
 } from "./live-helpers.mjs";
 
@@ -50,31 +48,7 @@ if (signOut.data.error.message !== "No active session.") {
   throw new Error(`Unexpected auth message: ${signOut.data.error.message}`);
 }
 
-console.log("4. API rate limit errors use structured payload");
-const ts = Date.now();
-const username = `err_rate_${ts}`;
-await apiSignUp({
-  username,
-  email: `err_rate${ts}@tribetip.africa`,
-});
-await enablePublicProfile(username);
-
-let rateLimited = null;
-for (let attempt = 1; attempt <= 65; attempt++) {
-  const { response, data } = await apiRequest("GET", `/tribes/${username}`, {
-    headers: { Accept: "application/json" },
-  });
-  if (response.status === 429) {
-    rateLimited = { response, data };
-    break;
-  }
-}
-if (!rateLimited) {
-  throw new Error("Expected rate limit 429 after repeated profile reads");
-}
-assertStructuredError(rateLimited.data, { code: "rate_limited" });
-
-console.log("5. Sign-up UI surfaces structured validation errors");
+console.log("4. Sign-up UI surfaces structured validation errors");
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage();
 const uiTs = Date.now();
@@ -82,12 +56,15 @@ const uiTs = Date.now();
 try {
   await page.goto(`${WEB_BASE}/sign-up`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector("#username", { state: "visible" });
-  await page.selectOption("#country_code", "NG");
+  const countrySelect = page.locator("#country_code");
+  if (await countrySelect.isVisible()) {
+    await countrySelect.selectOption("KE");
+  }
   await page.fill("#username", "ab");
   await page.fill("#email", `errors_ui_${uiTs}@tribetip.africa`);
   await page.fill("#password", "securepass123");
   await page.fill("#password_confirmation", "securepass123");
-  await page.getByRole("button", { name: /create my page/i }).click();
+  await page.getByRole("main").getByRole("button", { name: /start my page/i }).click();
 
   const alert = page.locator('[role="alert"]');
   await alert.filter({ hasText: /validation failed/i }).waitFor({
@@ -97,5 +74,21 @@ try {
 } finally {
   await browser.close();
 }
+
+console.log("5. API rate limit errors use structured payload");
+let rateLimited = null;
+for (let attempt = 1; attempt <= 12; attempt++) {
+  const { response, data } = await apiRequest("POST", "/tribes/sign_in.json", {
+    body: { tribe: { login: "nobody@tribetip.africa", password: "wrong-password" } },
+  });
+  if (response.status === 429) {
+    rateLimited = { response, data };
+    break;
+  }
+}
+if (!rateLimited) {
+  throw new Error("Expected rate limit 429 after repeated sign-in attempts");
+}
+assertStructuredError(rateLimited.data, { code: "rate_limited" });
 
 console.log("PASS: live structured error handling");
