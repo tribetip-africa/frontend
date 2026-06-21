@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { ProfileSettings } from "@/components/profile-settings";
 import { PublicPageUrlField } from "@/components/public-page-url-field";
@@ -29,6 +30,14 @@ export function CreatorPublicPageSettings() {
       <div className="space-y-5 rounded-2xl border border-brand-100 bg-white p-5 shadow-sm sm:p-6">
         <PublicPageUrlField username={tribe.username} profile={profile} shareable={shareable} />
         <ShareQrPanel token={token} shareable={shareable} />
+
+        <p className="text-sm text-brand-700">
+          Want a mini tip card on your own website?{" "}
+          <Link href="/dashboard/widget" className="font-medium text-brand-700 underline">
+            Set up the website widget
+          </Link>
+          .
+        </p>
 
         {profile ? (
           <ProfileSettings

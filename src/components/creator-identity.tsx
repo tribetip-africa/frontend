@@ -1,22 +1,13 @@
 import type { PublicProfile } from "@/lib/api";
-import { AFRICAN_MARKETS } from "@/lib/constants";
+import { creatorInitials } from "@/lib/creator-initials";
+import { creatorLocationLabel } from "@/lib/market-label";
 
 type CreatorIdentityProps = {
   profile: PublicProfile;
 };
 
-function creatorInitials(displayName: string): string {
-  return displayName
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("")
-    .slice(0, 2);
-}
-
 export function CreatorIdentity({ profile }: CreatorIdentityProps) {
-  const market = AFRICAN_MARKETS.find((entry) => entry.code === profile.country_code);
-  const locationLabel = market ? `${market.flag} ${market.name}` : profile.country_code;
+  const locationLabel = creatorLocationLabel(profile.country_code);
 
   return (
     <div className="flex items-start gap-4">

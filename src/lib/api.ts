@@ -32,45 +32,12 @@ import type {
   PaymentAlertsResponse,
   PlatformReconciliationResponse,
 } from "@/types/api";
-import {
-  TribetipAuthError,
-  TribetipNetworkError,
-  getDisplayMessage,
-  handleRequest,
-  parseApiErrorBody,
-} from "@/lib/errors";
+import { authHeaders, requestJson } from "@/lib/api-request";
+import { TribetipAuthError, getDisplayMessage } from "@/lib/errors";
 import { getApiBaseUrl } from "@/lib/platform";
 import { secureFetch } from "@/lib/secure-fetch";
 
 const API_BASE = getApiBaseUrl();
-
-async function parseJson<T>(response: Response): Promise<T> {
-  const text = await response.text();
-  if (!text) return {} as T;
-  return JSON.parse(text) as T;
-}
-
-async function requestJson<T>(
-  input: string,
-  init: Parameters<typeof secureFetch>[1] = {},
-): Promise<{ response: Response; data: T }> {
-  return handleRequest(async () => {
-    let response: Response;
-
-    try {
-      response = await secureFetch(input, init);
-    } catch (error) {
-      throw new TribetipNetworkError(undefined, error);
-    }
-
-    const data = await parseJson<T & Record<string, unknown>>(response);
-    if (!response.ok) {
-      throw parseApiErrorBody(response.status, data);
-    }
-
-    return { response, data };
-  }, { url: input, method: init.method ?? "GET" });
-}
 
 function parseBearerToken(authorization: string | null): string | null {
   if (!authorization?.startsWith("Bearer ")) return null;
@@ -119,7 +86,7 @@ export async function fetchPublicProfileByShareToken(token: string): Promise<Pub
   const { data } = await requestJson<{ profile: PublicProfile }>(
     `${API_BASE}/share/${encodeURIComponent(token)}`,
     {
-      cachePolicy: "noStore",
+      cachePolicy: "publicShort",
       headers: { Accept: "application/json" },
     },
   );
@@ -210,13 +177,6 @@ export async function signOut(token: string): Promise<void> {
       Authorization: `Bearer ${token}`,
     },
   });
-}
-
-function authHeaders(token: string): HeadersInit {
-  return {
-    Accept: "application/json",
-    Authorization: `Bearer ${token}`,
-  };
 }
 
 export async function fetchMyProfile(token: string): Promise<CreatorProfile> {

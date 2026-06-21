@@ -2,6 +2,8 @@ import { chromium } from "playwright";
 import {
   WEB_BASE,
   completeOnboardingAfterSignup,
+  assertDashboardShowsUsername,
+  waitForDashboardOnboardingClear,
   apiSignUp,
   assertNoStore,
   paystackClientMode,
@@ -15,7 +17,7 @@ const password = "securepass123";
 
 await waitForServices();
 const mode = await paystackClientMode();
-const countryCode = mode === "live" ? "KE" : "NG";
+const countryCode = "KE";
 
 const { response: signup } = await apiSignUp({
   username,
@@ -39,12 +41,12 @@ try {
   console.log("2. Sign in via UI with username");
   await page.fill("#login", username);
   await page.fill("#password", password);
-  await page.getByRole("main").getByRole("button", { name: /^sign in$/i }).click();
+  await page.getByRole("main").getByRole("button", { name: /^log in$/i }).click();
   await page.waitForURL("**/dashboard", { timeout: 30000 });
   await completeOnboardingAfterSignup(page, { mode, countryCode });
+  await waitForDashboardOnboardingClear(page, { mode, countryCode, username });
 
-  const text = await page.textContent("main");
-  if (!text?.includes(`@${username}`)) throw new Error("Dashboard missing username");
+  await assertDashboardShowsUsername(page, username);
 
   console.log("PASS: live sign-in → payout setup → dashboard");
 } catch (error) {

@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/widget": ["./widget/index.ts"],
+      "@/widget/*": ["./widget/*"]
     }
   },
   "include": [

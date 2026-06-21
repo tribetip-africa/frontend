@@ -265,7 +265,7 @@ try {
   await page.fill("#email", `${uiUser}@tribetip.africa`);
   await page.fill("#password", password);
   await page.fill("#password_confirmation", password);
-  await page.getByRole("button", { name: /create my page/i }).click();
+  await page.getByRole("main").getByRole("button", { name: /start my page/i }).click();
   await page.waitForURL("**/dashboard", { timeout: 30000 });
   await page.getByRole("dialog").getByRole("heading", { name: /set up payouts/i }).waitFor();
 

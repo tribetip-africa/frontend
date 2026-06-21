@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CreatorPublicPage } from "@/components/creator-public-page";
 import { fetchPublicProfile, reconcileTipPayment } from "@/lib/api";
 import { TribetipApiError } from "@/lib/errors";
+import { isValidPublicUsername } from "@/lib/public-tip-path";
 
 const loadPublicProfile = cache(async (username: string) => fetchPublicProfile(username));
 
@@ -13,6 +14,10 @@ type CreatorPageProps = {
 
 export async function generateMetadata({ params }: CreatorPageProps) {
   const { username } = await params;
+
+  if (!isValidPublicUsername(username)) {
+    notFound();
+  }
 
   try {
     const profile = await loadPublicProfile(username);
@@ -28,6 +33,11 @@ export async function generateMetadata({ params }: CreatorPageProps) {
 
 export default async function CreatorPage({ params, searchParams }: CreatorPageProps) {
   const { username } = await params;
+
+  if (!isValidPublicUsername(username)) {
+    notFound();
+  }
+
   const { tip: tipStatus, reference, trxref } = await searchParams;
   const paystackReference = trxref || reference;
 

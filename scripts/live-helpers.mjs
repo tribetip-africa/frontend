@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import { existsSync } from "node:fs";
 
 export const API_BASE = process.env.LIVE_API_URL ?? "http://127.0.0.1:3001";
@@ -16,6 +17,27 @@ export function resolveTribetipDir() {
   }
 
   throw new Error("tribetip API directory not found (set TRIBETIP_DIR)");
+}
+
+function dockerRailsContainer() {
+  return process.env.TRIBETIP_DOCKER_CONTAINER ?? "tribetip-api-1";
+}
+
+function isDockerRailsRunner() {
+  return process.env.LIVE_API_RUNNER === "docker";
+}
+
+function runRailsRunner(script, { encoding } = {}) {
+  const command = isDockerRailsRunner()
+    ? `docker exec ${dockerRailsContainer()} bin/rails runner ${JSON.stringify(script)}`
+    : `bin/rails runner ${JSON.stringify(script)}`;
+  const options = { stdio: "pipe", ...(encoding ? { encoding } : {}) };
+
+  if (!isDockerRailsRunner()) {
+    options.cwd = resolveTribetipDir();
+  }
+
+  return execSync(command, options);
 }
 
 export function assertStructuredError(body, { code, status }) {
@@ -97,32 +119,46 @@ export async function apiSignUp({
   password = "securepass123",
   country_code = "KE",
   currency,
-}) {
+  retries = 5,
+} = {}) {
   const region = PAYSTACK_REGIONS.find((entry) => entry.code === country_code) ?? PAYSTACK_REGIONS[0];
-  const response = await fetch(`${API_BASE}/tribes.json`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Origin: WEB_BASE,
-    },
-    body: JSON.stringify({
-      tribe: {
-        email,
-        password,
-        password_confirmation: password,
-        username,
-        country_code: region.code,
-        currency: currency ?? region.currency,
-      },
-    }),
-  });
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    const response = await fetch(`${API_BASE}/tribes.json`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Origin: WEB_BASE,
+      },
+      body: JSON.stringify({
+        tribe: {
+          email,
+          password,
+          password_confirmation: password,
+          username,
+          country_code: region.code,
+          currency: currency ?? region.currency,
+        },
+      }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (response.ok) {
+      return { response, data };
+    }
+
+    if (response.status === 429 && attempt < retries) {
+      const waitMs = 8_000 * (attempt + 1);
+      console.log(`   … signup rate limited, retrying in ${waitMs / 1000}s`);
+      await sleep(waitMs);
+      continue;
+    }
+
     throw new Error(`API signup failed (${response.status}): ${JSON.stringify(data)}`);
   }
-  return { response, data };
+
+  throw new Error("API signup failed after retries");
 }
 
 export async function apiSignIn({ login, password = "securepass123" }) {
@@ -154,9 +190,7 @@ export async function apiSignIn({ login, password = "securepass123" }) {
 }
 
 export async function railsRunner(script) {
-  const { execSync } = await import("node:child_process");
-  const tribetipDir = resolveTribetipDir();
-  execSync(`bin/rails runner ${JSON.stringify(script)}`, { cwd: tribetipDir, stdio: "pipe" });
+  runRailsRunner(script);
 }
 
 export async function clearPaystackOnboarding(username) {
@@ -173,19 +207,41 @@ export async function clearPaystackSubaccount(username) {
 
 export async function enablePublicProfile(username) {
   await railsRunner(
-    `t = Tribe.find_by!(username: ${JSON.stringify(username)}); t.update!(display_name: 'Live Test', is_profile_public: true, account_status: 'active')`,
+    [
+      "t = Tribe.find_by!(username: " + JSON.stringify(username) + ")",
+      "t.update!(display_name: 'Live Test', is_profile_public: true, account_status: 'active')",
+      "t.mark_paystack_onboarding_complete! if t.paystack_subaccount_ready?",
+    ].join("; "),
   );
 }
 
 export function assertPaystackOnboarding(data, { complete = true } = {}) {
-  const onboarding = data?.tribe?.paystack_onboarding ?? data?.paystack_onboarding;
+  const onboarding =
+    data?.onboarding ?? data?.tribe?.paystack_onboarding ?? data?.paystack_onboarding;
   if (!onboarding) {
     throw new Error(`Expected paystack_onboarding in payload: ${JSON.stringify(data)}`);
   }
-  if (onboarding.complete !== complete) {
+  if (complete) {
+    if (onboarding.complete !== true) {
+      throw new Error(
+        `Expected paystack_onboarding.complete=true, got: ${JSON.stringify(onboarding)}`,
+      );
+    }
+    return;
+  }
+
+  if (onboarding.complete !== false) {
     throw new Error(
-      `Expected paystack_onboarding.complete=${complete}, got: ${JSON.stringify(onboarding)}`,
+      `Expected paystack_onboarding.complete=false, got: ${JSON.stringify(onboarding)}`,
     );
+  }
+}
+
+export function assertPaystackOnboardingLinked(data) {
+  const onboarding =
+    data?.onboarding ?? data?.tribe?.paystack_onboarding ?? data?.paystack_onboarding;
+  if (!isOnboardingLinked(onboarding)) {
+    throw new Error(`Expected linked paystack onboarding, got: ${JSON.stringify(onboarding)}`);
   }
 }
 
@@ -220,17 +276,12 @@ export function supportedRegions() {
 }
 
 export async function fetchPaystackAccounts(username) {
-  const { execSync } = await import("node:child_process");
-  const tribetipDir = resolveTribetipDir();
   const script = [
     "t = Tribe.find_by!(username: " + JSON.stringify(username) + ")",
     "puts [t.paystack_customer_code, t.paystack_subaccount_code, t.country_code, t.currency, t.onboarding_completed_at.present?].join('|')",
   ].join("; ");
 
-  const output = execSync(`bin/rails runner ${JSON.stringify(script)}`, {
-    cwd: tribetipDir,
-    encoding: "utf-8",
-  }).trim();
+  const output = runRailsRunner(script, { encoding: "utf-8" }).trim();
 
   const [customerCode, subaccountCode, countryCode, currency, onboardingComplete] =
     output.split("|");
@@ -293,12 +344,17 @@ export function createIdempotencyKey() {
   );
 }
 
+function onboardingScope(page) {
+  return page.getByRole("dialog");
+}
+
 export async function completeStubOnboardingUI(page, { countryCode = "NG" } = {}) {
+  await onboardingScope(page).waitFor({ state: "visible", timeout: 30_000 });
   await page.getByText("Checking Paystack setup…").waitFor({ state: "hidden", timeout: 90_000 });
   await waitForPaystackCustomerReady(page);
 
   const region = PAYSTACK_REGIONS.find((entry) => entry.code === countryCode) ?? PAYSTACK_REGIONS[0];
-  const bankField = page.locator("#settlement_bank");
+  const bankField = onboardingScope(page).locator("#settlement_bank");
   await bankField.waitFor({ state: "visible", timeout: 30_000 });
 
   const fieldTag = await bankField.evaluate((node) => node.tagName.toLowerCase());
@@ -315,13 +371,16 @@ export async function completeStubOnboardingUI(page, { countryCode = "NG" } = {}
 
   await setReactInput(page, "#account_number", "0000000000");
 
-  const submit = page.getByRole("button", { name: /link payout account/i });
+  const submit = onboardingScope(page).getByRole("button", { name: /link payout account/i });
   await submit.waitFor({ state: "visible", timeout: 30_000 });
   await page.waitForFunction(
     () => {
-      const button = [...document.querySelectorAll("button")].find((node) =>
-        /link payout account/i.test(node.textContent ?? ""),
-      );
+      const dialog = document.querySelector('[role="dialog"]');
+      const button = dialog
+        ? [...dialog.querySelectorAll("button")].find((node) =>
+            /link payout account/i.test(node.textContent ?? ""),
+          )
+        : null;
       return button && !button.disabled;
     },
     { timeout: 90_000 },
@@ -352,14 +411,64 @@ export async function completeOnboardingAfterSignup(page, { mode, countryCode })
   const path = new URL(page.url()).pathname;
   if (path !== "/dashboard") return;
 
-  const setupButton = page.getByRole("button", { name: /link payout account/i });
-  if ((await setupButton.count()) === 0) return;
+  const dialog = page.getByRole("dialog");
+  const openSetup = page.getByRole("button", { name: /link payout account/i });
+
+  if ((await dialog.count()) === 0 && (await openSetup.count()) === 0) {
+    await Promise.race([
+      dialog.waitFor({ state: "visible", timeout: 30_000 }),
+      openSetup.first().waitFor({ state: "visible", timeout: 30_000 }),
+    ]).catch(() => {});
+  }
+
+  if ((await dialog.count()) === 0) {
+    if ((await openSetup.count()) === 0) return;
+    await openSetup.first().click();
+    await dialog.waitFor({ state: "visible", timeout: 30_000 });
+  }
 
   if (mode === "live") {
     await completeMpesaOnboardingUI(page);
   } else {
     await completeStubOnboardingUI(page, { countryCode });
   }
+}
+
+export async function assertDashboardShowsUsername(page, username) {
+  const handle = username.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  await page.getByText(new RegExp(`@${handle}`)).first().waitFor({
+    state: "visible",
+    timeout: 30_000,
+  });
+}
+
+export async function clickDashboardSignOut(page) {
+  await page.getByRole("dialog").waitFor({ state: "hidden", timeout: 60_000 });
+  const button = page.getByRole("button", { name: /sign out/i }).first();
+  await button.waitFor({ state: "visible", timeout: 30_000 });
+  await button.click();
+}
+
+export async function waitForDashboardOnboardingClear(
+  page,
+  { mode, countryCode, username, timeoutMs = 120_000 } = {},
+) {
+  if (mode === "live" && username) {
+    await waitForPaystackSubaccountLinked(username, { timeoutMs });
+  }
+
+  const dialog = page.getByRole("dialog");
+  if ((await dialog.count()) === 0) return;
+
+  try {
+    await dialog.waitFor({ state: "hidden", timeout: timeoutMs });
+    return;
+  } catch {
+    if ((await dialog.count()) === 0) return;
+  }
+
+  await completeOnboardingAfterSignup(page, { mode, countryCode });
+  await dialog.waitFor({ state: "hidden", timeout: timeoutMs });
 }
 
 export async function completeRegionOnboarding(token, region, { bankCode, accountNumber, idempotencyKey } = {}) {
@@ -406,6 +515,18 @@ export async function waitForPaystackCustomer(username, { timeoutMs = 30_000 } =
   throw new Error(`Timed out waiting for Paystack customer for ${username}`);
 }
 
+export async function waitForPaystackSubaccountLinked(username, { timeoutMs = 60_000 } = {}) {
+  const started = Date.now();
+
+  while (Date.now() - started < timeoutMs) {
+    const accounts = await fetchPaystackAccounts(username);
+    if (accounts.customerCode && accounts.subaccountCode) return accounts;
+    await sleep(500);
+  }
+
+  throw new Error(`Timed out waiting for Paystack subaccount for ${username}`);
+}
+
 export async function waitForPaystackOnboarding(username, { timeoutMs = 60_000 } = {}) {
   const started = Date.now();
 
@@ -430,29 +551,49 @@ export function assertRealPaystackCode(code, { label, allowStub = false } = {}) 
   }
 }
 
+export async function fetchLaunchRegions() {
+  const response = await fetch(`${API_BASE}/regions`, {
+    headers: { Accept: "application/json", Origin: WEB_BASE },
+  });
+  if (!response.ok) {
+    throw new Error(`regions API failed (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function enabledPaystackRegions() {
+  const payload = await fetchLaunchRegions();
+  const enabledCodes = new Set(
+    payload.regions.filter((region) => region.enabled).map((region) => region.code),
+  );
+  return PAYSTACK_REGIONS.filter((region) => enabledCodes.has(region.code));
+}
+
 export async function regionsForLiveTests() {
   const mode = await paystackClientMode();
+  const enabled = await enabledPaystackRegions();
   if (mode === "live") {
-    return PAYSTACK_REGIONS.filter((region) => region.code === "KE" || !region.subaccountSupported);
+    return enabled.filter((region) => region.code === "KE" || !region.subaccountSupported);
   }
-  return PAYSTACK_REGIONS;
+  return enabled;
 }
 
 export async function supportedRegionsForLiveTests() {
   const mode = await paystackClientMode();
+  const enabled = await enabledPaystackRegions();
   if (mode === "live") {
-    return PAYSTACK_REGIONS.filter((region) => region.code === "KE" && region.subaccountSupported);
+    return enabled.filter((region) => region.code === "KE" && region.subaccountSupported);
   }
-  return supportedRegions();
+  return enabled.filter((region) => region.subaccountSupported);
 }
 
 export async function paystackClientMode() {
-  const { execSync } = await import("node:child_process");
-  const tribetipDir = resolveTribetipDir();
-  const output = execSync(
-    'bin/rails runner "puts Tribetip::Paystack::Client.new.stub_mode?"',
-    { cwd: tribetipDir, encoding: "utf-8" },
-  ).trim();
+  if (process.env.LIVE_PAYSTACK_MODE === "stub") return "stub";
+  if (process.env.LIVE_PAYSTACK_MODE === "live") return "live";
+
+  const output = runRailsRunner("puts Tribetip::Paystack::Client.new.stub_mode?", {
+    encoding: "utf-8",
+  }).trim();
   return output === "false" ? "live" : "stub";
 }
 
@@ -463,31 +604,21 @@ export async function apiPublishProfile(token) {
 }
 
 export async function auditPaystackOnboarding(username, { sync = false } = {}) {
-  const { execSync } = await import("node:child_process");
-  const tribetipDir = resolveTribetipDir();
   const script = `puts Tribetip::Paystack::AuditOnboarding.call(Tribe.find_by!(username: ${JSON.stringify(username)}), sync: ${sync}).as_json.to_json`;
 
-  const output = execSync(`bin/rails runner ${JSON.stringify(script)}`, {
-    cwd: tribetipDir,
-    encoding: "utf-8",
-  }).trim();
+  const output = runRailsRunner(script, { encoding: "utf-8" }).trim();
 
   return JSON.parse(output);
 }
 
 export async function fetchLatestTip(username) {
-  const { execSync } = await import("node:child_process");
-  const tribetipDir = resolveTribetipDir();
   const script = [
     "t = Tribe.find_by!(username: " + JSON.stringify(username) + ")",
     "tip = t.tips.order(created_at: :desc).first",
     "puts [tip&.currency, tip&.amount_cents, tip&.status].join('|')",
   ].join("; ");
 
-  const output = execSync(`bin/rails runner ${JSON.stringify(script)}`, {
-    cwd: tribetipDir,
-    encoding: "utf-8",
-  }).trim();
+  const output = runRailsRunner(script, { encoding: "utf-8" }).trim();
 
   const [currency, amountCents, status] = output.split("|");
   if (!currency) return null;
@@ -503,15 +634,16 @@ export async function setupTippableCreator(region, { prefix = "tips" } = {}) {
   const password = "securepass123";
   const username = regionUsername(prefix, region.code);
   const email = `${username}@tribetip.africa`;
+  const mode = await paystackClientMode();
 
   await apiSignUp({ username, email, password, country_code: region.code });
 
   if (region.subaccountSupported) {
-    const accounts = await fetchPaystackAccounts(username);
-    if (!accounts.subaccountCode || !accounts.onboardingComplete) {
+    let accounts = await fetchPaystackAccounts(username);
+    if (!accounts.subaccountCode) {
       const { token } = await apiSignIn({ login: username, password });
       let linked;
-      if ((await paystackClientMode()) === "live" && region.code === "KE") {
+      if (mode === "live" && region.code === "KE") {
         const status = await apiRequest("GET", "/me/paystack/onboarding", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -526,9 +658,16 @@ export async function setupTippableCreator(region, { prefix = "tips" } = {}) {
       }
     }
 
-    const audit = await auditPaystackOnboarding(username, { sync: true });
-    if (!audit.healthy) {
-      throw new Error(`Paystack audit unhealthy for ${region.code}: ${JSON.stringify(audit.checks)}`);
+    if (mode === "live") {
+      accounts = await waitForPaystackSubaccountLinked(username);
+      if (!accounts.subaccountCode) {
+        throw new Error(`Expected Paystack subaccount for ${region.code}`);
+      }
+    } else {
+      const audit = await auditPaystackOnboarding(username, { sync: true });
+      if (!audit.healthy) {
+        throw new Error(`Paystack audit unhealthy for ${region.code}: ${JSON.stringify(audit.checks)}`);
+      }
     }
   }
 
@@ -555,9 +694,11 @@ async function setReactInput(page, selector, value) {
 async function waitForPaystackCustomerReady(page) {
   const linked = page.getByText("✓ Paystack customer linked");
   const retry = page.getByRole("button", { name: /retry customer check/i });
+  const bankField = page.locator("#settlement_bank");
 
-  for (let attempt = 0; attempt < 8; attempt += 1) {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
     if (await linked.isVisible().catch(() => false)) return;
+    if (await bankField.isVisible().catch(() => false)) return;
 
     if (await retry.isVisible().catch(() => false)) {
       await retry.click();
@@ -567,7 +708,8 @@ async function waitForPaystackCustomerReady(page) {
     }
   }
 
-  await linked.waitFor({ timeout: 30_000 });
+  if (await linked.isVisible().catch(() => false)) return;
+  await bankField.waitFor({ state: "visible", timeout: 30_000 });
 }
 
 export async function completeMpesaOnboardingUI(
@@ -625,13 +767,16 @@ export async function completeMpesaOnboardingUI(
 
   await setReactInput(page, "#account_number", line);
 
-  const submit = page.getByRole("button", { name: /link payout account/i });
+  const submit = onboardingScope(page).getByRole("button", { name: /link payout account/i });
   await submit.waitFor({ state: "visible", timeout: 30_000 });
   await page.waitForFunction(
     () => {
-      const button = [...document.querySelectorAll("button")].find((node) =>
-        /link payout account/i.test(node.textContent ?? ""),
-      );
+      const dialog = document.querySelector('[role="dialog"]');
+      const button = dialog
+        ? [...dialog.querySelectorAll("button")].find((node) =>
+            /link payout account/i.test(node.textContent ?? ""),
+          )
+        : null;
       return button && !button.disabled;
     },
     { timeout: 90_000 },
@@ -651,12 +796,12 @@ export async function completeMpesaOnboardingUI(
     const message = payload?.error?.message ?? `HTTP ${response.status()}`;
     throw new Error(`Onboarding API failed: ${message}`);
   }
-  if (!payload?.onboarding?.complete) {
+  if (!isOnboardingLinked(payload?.onboarding)) {
     throw new Error(`Onboarding API incomplete: ${JSON.stringify(payload?.onboarding)}`);
   }
 
   try {
-    await page.getByRole("dialog").waitFor({ state: "hidden", timeout: 30_000 });
+    await page.getByRole("dialog").waitFor({ state: "hidden", timeout: 60_000 });
   } catch (error) {
     const alert = await page.locator('[role="alert"]').textContent().catch(() => null);
     const buttonText = await submit.textContent().catch(() => null);
@@ -670,6 +815,14 @@ export async function completeMpesaOnboardingUI(
       .join(" | ");
     throw new Error(details || error.message);
   }
+}
+
+function isOnboardingLinked(onboarding) {
+  if (!onboarding) return false;
+  return (
+    onboarding.complete === true ||
+    (onboarding.customer_ready === true && onboarding.subaccount_ready === true)
+  );
 }
 
 function isPaystackRateLimitResponse({ response, data }) {
@@ -715,7 +868,6 @@ export async function fillSignupForm(page, { username, email, password, countryC
   await page.fill("#email", email);
   await page.fill("#password", password);
   await page.fill("#password_confirmation", password);
-  await selectSignupMarket(page, countryCode);
 }
 
 export async function selectSignupMarket(page, countryCode) {
@@ -727,8 +879,27 @@ export async function selectSignupMarket(page, countryCode) {
     CI: /Côte d'Ivoire \(XOF\)|Ivory Coast \(XOF\)/i,
   };
 
+  const select = page.locator("#country_code");
+  const hidden = page.locator('input[name="country_code"]');
+
+  await Promise.race([
+    select.waitFor({ state: "visible", timeout: 30_000 }),
+    hidden.waitFor({ state: "attached", timeout: 30_000 }),
+  ]).catch(() => {});
+
+  if (!(await select.isVisible())) {
+    if ((await hidden.count()) > 0) {
+      const value = await hidden.inputValue();
+      if (value !== countryCode) {
+        throw new Error(`Expected signup market ${countryCode}, hidden input shows ${value}`);
+      }
+      return;
+    }
+
+    throw new Error(`Expected signup market ${countryCode}, but no market selector is visible`);
+  }
+
   for (let attempt = 0; attempt < 5; attempt += 1) {
-    const select = page.locator("#country_code");
     await select.waitFor({ state: "visible" });
 
     try {

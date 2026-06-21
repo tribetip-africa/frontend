@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { useDashboard } from "@/context/dashboard-context";
 
@@ -34,6 +35,14 @@ export function CreatorAccountPage() {
             <dd className="mt-1 truncate font-mono text-xs text-brand-800">{tribe.id}</dd>
           </div>
         </dl>
+
+        <p className="mt-5 text-sm text-brand-700">
+          Looking to embed Tribetip on your own site?{" "}
+          <Link href="/dashboard/widget" className="font-medium text-brand-700 underline">
+            Open website widget settings
+          </Link>
+          .
+        </p>
       </div>
     </>
   );

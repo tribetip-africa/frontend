@@ -1,10 +1,8 @@
 import type { NextConfig } from "next";
-import { buildContentSecurityPolicy, cspHeaderName } from "./src/lib/csp";
+import { buildContentSecurityPolicy, buildEmbeddableContentSecurityPolicy, cspHeaderName } from "./src/lib/csp";
 
-const securityHeaders = [
-  { key: cspHeaderName(), value: buildContentSecurityPolicy() },
+const sharedSecurityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
-  { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
   ...(process.env.NODE_ENV === "production"
@@ -12,7 +10,18 @@ const securityHeaders = [
     : []),
 ];
 
+const lockedSecurityHeaders = [
+  { key: cspHeaderName(), value: buildContentSecurityPolicy() },
+  ...sharedSecurityHeaders,
+];
+
+const embeddableSecurityHeaders = [
+  { key: cspHeaderName(), value: buildEmbeddableContentSecurityPolicy() },
+  ...sharedSecurityHeaders,
+];
+
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   turbopack: {
     root: import.meta.dirname,
   },
@@ -26,8 +35,17 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/(.*)",
-        headers: securityHeaders,
+        source: "/t/:path*",
+        headers: embeddableSecurityHeaders,
+      },
+      {
+        // Public creator pages — embeddable (frame-ancestors *), no X-Frame-Options.
+        source: "/:username((?!dashboard|sign-in|sign-up|t|api|_next|favicon\\.ico|robots\\.txt|sitemap\\.xml)[a-z0-9_]+)",
+        headers: embeddableSecurityHeaders,
+      },
+      {
+        source: "/((?!t/).*)",
+        headers: lockedSecurityHeaders,
       },
     ];
   },
