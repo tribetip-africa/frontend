@@ -9,7 +9,6 @@ export const WIDGET_POSITIONS = [
 
 export type WidgetPosition = (typeof WIDGET_POSITIONS)[number];
 
-export const DEFAULT_WIDGET_ACCENT_COLOR = "#f5b942";
 /** Landing-style yellow for tip chips and the support pill. */
 export const WIDGET_HIGHLIGHT_COLOR = "#f5b942";
 export const DEFAULT_WIDGET_CTA_TEXT = "Tip me";
@@ -41,35 +40,7 @@ export function widgetSupportLabel(username: string, ctaText?: string | null): s
   return `Support @${username}`;
 }
 
-export function widgetCountryLabel(countryCode: string): string {
-  const markets: Record<string, { flag: string; name: string }> = {
-    NG: { flag: "🇳🇬", name: "Nigeria" },
-    GH: { flag: "🇬🇭", name: "Ghana" },
-    KE: { flag: "🇰🇪", name: "Kenya" },
-    ZA: { flag: "🇿🇦", name: "South Africa" },
-    CI: { flag: "🇨🇮", name: "Côte d'Ivoire" },
-  };
-
-  const market = markets[countryCode.toUpperCase()];
-  if (!market) return "Creator";
-
-  return `Creator · ${market.flag} ${market.name}`;
-}
-
-export function widgetPaymentHint(countryCode: string): string {
-  switch (countryCode.toUpperCase()) {
-    case "KE":
-      return "No account needed · Pay with M-Pesa or card";
-    case "NG":
-      return "No account needed · Pay with card or bank transfer";
-    case "GH":
-      return "No account needed · Pay with mobile money or card";
-    case "ZA":
-      return "No account needed · Pay with card or EFT";
-    default:
-      return "No account needed · Pay securely online";
-  }
-}
+export { creatorCountryLabel as widgetCountryLabel, widgetPaymentHint } from "@/lib/market-label";
 
 export function widgetSetupHint(active: boolean): string {
   if (!active) {
