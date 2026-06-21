@@ -1,4 +1,5 @@
 import { buildTipPresets } from "@/lib/tip-amounts";
+import { creatorInitials } from "@/lib/creator-initials";
 import { WIDGET_HIGHLIGHT_COLOR, type WidgetPosition } from "@/widget/embed";
 
 export type WidgetMiniCardProps = {
@@ -11,20 +12,11 @@ export type WidgetMiniCardProps = {
   ctaText: string;
   iconUrl?: string | null;
   paymentHint?: string;
-  position?: WidgetPosition;
+  position?: WidgetPosition | null;
   className?: string;
   interactive?: boolean;
   onOpen?: () => void;
 };
-
-function creatorInitials(displayName: string): string {
-  return displayName
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("")
-    .slice(0, 2);
-}
 
 function positionClass(position: WidgetPosition): string {
   switch (position) {
@@ -49,7 +41,7 @@ export function WidgetMiniCard({
   ctaText,
   iconUrl,
   paymentHint = "No account needed · Pay securely online",
-  position = "bottom-right",
+  position,
   className = "",
   interactive = false,
   onOpen,
@@ -120,7 +112,7 @@ export function WidgetMiniCard({
     </div>
   );
 
-  if (position) {
+  if (position != null) {
     return <div className={`absolute ${positionClass(position)}`}>{card}</div>;
   }
 
