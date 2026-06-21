@@ -5,7 +5,9 @@ import {
   apiSignUp,
   clearPaystackOnboarding,
   enablePublicProfile,
+  fetchLaunchRegions,
   fetchLatestTip,
+  fetchPaystackAccounts,
   postTipCheckout,
   regionUsername,
   setupTippableCreator,
@@ -92,13 +94,20 @@ for (const region of tipRegions) {
       throw new Error(`expected pending tip, got ${storedTip.status}`);
     }
 
-    const audit = await auditPaystackOnboarding(username);
-    if (!audit.healthy) {
-      throw new Error(`audit unhealthy after checkout: ${JSON.stringify(audit.checks)}`);
+    if (mode === "live") {
+      const accounts = await fetchPaystackAccounts(username);
+      if (!accounts.subaccountCode) {
+        throw new Error("expected linked subaccount after checkout");
+      }
+      record.steps = { checkout: "ok", persisted: "ok", audit: "linked" };
+    } else {
+      const audit = await auditPaystackOnboarding(username);
+      if (!audit.healthy) {
+        throw new Error(`audit unhealthy after checkout: ${JSON.stringify(audit.checks)}`);
+      }
+      record.steps = { checkout: "ok", persisted: "ok", audit: "ok" };
     }
-
     record.status = "ok";
-    record.steps = { checkout: "ok", persisted: "ok", audit: "ok" };
     console.log(`   ✓ ${region.code} tip checkout passed (${region.currency})`);
   } catch (error) {
     record.error = error.message;
@@ -109,7 +118,14 @@ for (const region of tipRegions) {
 }
 
 console.log("\n3. Unsupported region tips remain blocked");
-const unsupportedRegion = PAYSTACK_REGIONS.find((region) => !region.subaccountSupported);
+const launchRegions = await fetchLaunchRegions();
+const enabledCodes = new Set(
+  launchRegions.regions.filter((region) => region.enabled).map((region) => region.code),
+);
+const unsupportedRegion = PAYSTACK_REGIONS.find(
+  (region) => !region.subaccountSupported && enabledCodes.has(region.code),
+);
+
 if (unsupportedRegion) {
   const record = { case: "unsupported_region", region: unsupportedRegion.code, status: "failed" };
 
@@ -149,6 +165,41 @@ if (unsupportedRegion) {
   }
 
   results.push(record);
+} else {
+  const disabledUnsupported = PAYSTACK_REGIONS.find((region) => !region.subaccountSupported);
+  if (disabledUnsupported) {
+    const record = {
+      case: "unsupported_region",
+      region: disabledUnsupported.code,
+      status: "failed",
+    };
+
+    try {
+      const username = regionUsername("tips_ci", disabledUnsupported.code);
+      await apiSignUp({
+        username,
+        email: `${username}@tribetip.africa`,
+        country_code: disabledUnsupported.code,
+      });
+      throw new Error(`expected signup blocked for ${disabledUnsupported.code}`);
+    } catch (error) {
+      if (!error.message.includes("(422)")) {
+        record.error = error.message;
+        console.error(
+          `   ✗ ${disabledUnsupported.code} unsupported region check failed: ${error.message}`,
+        );
+      } else {
+        record.status = "ok";
+        console.log(
+          `   ✓ ${disabledUnsupported.code} unavailable at signup (tips implicitly blocked)`,
+        );
+      }
+    }
+
+    results.push(record);
+  } else {
+    console.log("   — no unsupported regions configured");
+  }
 }
 
 console.log("\n4. Tips matrix summary");
