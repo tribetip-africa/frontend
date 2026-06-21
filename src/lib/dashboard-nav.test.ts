@@ -10,6 +10,7 @@ describe("dashboard nav", () => {
     expect(CREATOR_DASHBOARD_NAV.map((group) => group.label)).toEqual([
       "Earnings",
       "Your page",
+      "Integrations",
       "Money & account",
     ]);
   });
@@ -21,6 +22,7 @@ describe("dashboard nav", () => {
   it("identifies role-specific dashboard paths", () => {
     expect(isCreatorDashboardPath("/dashboard/tips")).toBe(true);
     expect(isCreatorDashboardPath("/dashboard/public-page")).toBe(true);
+    expect(isCreatorDashboardPath("/dashboard/widget")).toBe(true);
     expect(isAdminDashboardPath("/dashboard/accounts")).toBe(true);
     expect(isCreatorDashboardPath("/dashboard/accounts")).toBe(false);
     expect(isAdminDashboardPath("/dashboard/tips")).toBe(false);
