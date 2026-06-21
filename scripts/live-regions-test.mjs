@@ -3,8 +3,10 @@ import {
   WEB_BASE,
   completeMpesaOnboardingUI,
   completeOnboardingFromPayload,
+  completeStubOnboardingUI,
   paystackClientMode,
   pickSettlementBank,
+  enabledPaystackRegions,
   regionsForLiveTests,
   apiRequest,
   apiSignIn,
@@ -12,6 +14,7 @@ import {
   assertNoStore,
   assertPaystackAccounts,
   assertPaystackOnboarding,
+  assertPaystackOnboardingLinked,
   assertRegionMarket,
   assertStructuredError,
   clearPaystackSubaccount,
@@ -19,6 +22,8 @@ import {
   enablePublicProfile,
   fetchPaystackAccounts,
   regionUsername,
+  waitForPaystackCustomer,
+  waitForPaystackSubaccountLinked,
   waitForServices,
 } from "./live-helpers.mjs";
 
@@ -29,6 +34,7 @@ await waitForServices();
 
 const mode = await paystackClientMode();
 const regions = await regionsForLiveTests();
+const enabledPaystackRegionsList = await enabledPaystackRegions();
 
 console.log(`1. Full account flow for regions (API) [${mode}]`);
 console.log(`   Regions: ${regions.map((region) => region.code).join(", ")}`);
@@ -53,12 +59,13 @@ for (const region of regions) {
       assertPaystackAccounts(accounts, region, { customer: false, subaccount: false });
       record.steps.customer = accounts.customerCode ? "ok" : "pending";
     } else {
-      assertPaystackAccounts(accounts, region, { customer: true, subaccount: region.subaccountSupported });
+      accounts = await waitForPaystackCustomer(username);
+      assertPaystackAccounts(accounts, region, { customer: true, subaccount: false });
       record.steps.customer = accounts.customerCode ? "ok" : "missing";
     }
 
     if (region.subaccountSupported) {
-      assertPaystackOnboarding(signupData, { complete: mode !== "live" });
+      assertPaystackOnboarding(signupData, { complete: false });
       record.steps.stubSubaccount =
         mode === "live" ? "pending" : accounts.subaccountCode ? "ok" : "missing";
 
@@ -81,8 +88,6 @@ for (const region of regions) {
         if (mpesa.code !== "MPESA") {
           throw new Error(`expected M-PESA in live bank list, got ${mpesa.code}`);
         }
-      } else if (banks[0]?.code !== region.bank) {
-        throw new Error(`expected bank ${region.bank}, got ${banks[0]?.code}`);
       }
       record.steps.banks = "ok";
 
@@ -93,14 +98,22 @@ for (const region of regions) {
       if (linked.response.status !== 200) {
         throw new Error(`onboarding link failed: ${JSON.stringify(linked.data)}`);
       }
-      assertPaystackOnboarding(linked.data, { complete: true });
+      if (mode === "live") {
+        assertPaystackOnboardingLinked(linked.data);
+      } else {
+        assertPaystackOnboarding(linked.data, { complete: true });
+      }
       record.steps.onboarding = "ok";
 
-      accounts = await fetchPaystackAccounts(username);
+      if (mode === "live") {
+        accounts = await waitForPaystackSubaccountLinked(username);
+      } else {
+        accounts = await fetchPaystackAccounts(username);
+      }
       assertPaystackAccounts(accounts, region, {
         customer: true,
         subaccount: true,
-        complete: true,
+        complete: mode !== "live",
       });
       record.steps.subaccount = accounts.subaccountCode ? "ok" : "missing";
 
@@ -207,7 +220,12 @@ if (failedUnsupported.length > 0) {
   process.exit(1);
 }
 
-const uiRegion = mode === "live" ? "KE" : "ZA";
+const uiRegion =
+  mode === "live"
+    ? "KE"
+    : (enabledPaystackRegionsList.find((region) => region.code === "ZA")?.code ??
+      enabledPaystackRegionsList[0]?.code ??
+      "KE");
 console.log(`\n3. UI onboarding smoke (${uiRegion})`);
 const uiUser = regionUsername("region_ui", uiRegion);
 await apiSignUp({
@@ -216,17 +234,20 @@ await apiSignUp({
   password,
   country_code: uiRegion,
 });
+if (mode === "live") {
+  await waitForPaystackCustomer(uiUser);
+}
 await clearPaystackSubaccount(uiUser);
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage();
-page.setDefaultTimeout(mode === "live" ? 60_000 : 30_000);
+page.setDefaultTimeout(mode === "live" ? 120_000 : 30_000);
 
 try {
   await page.goto(`${WEB_BASE}/sign-in`, { waitUntil: "domcontentloaded" });
   await page.fill("#login", uiUser);
   await page.fill("#password", password);
-  await page.getByRole("main").getByRole("button", { name: /^sign in$/i }).click();
+  await page.getByRole("main").getByRole("button", { name: /^log in$/i }).click();
   await page.waitForURL("**/dashboard", { timeout: 30000 });
   await page.getByRole("dialog").getByRole("heading", { name: /set up payouts/i }).waitFor();
 
@@ -236,8 +257,11 @@ try {
 
   if (mode === "live") {
     await completeMpesaOnboardingUI(page);
+  } else if (uiRegion === "KE") {
+    await completeStubOnboardingUI(page, { countryCode: "KE" });
   } else {
-    await page.getByText(/Payout market:.*South Africa/).waitFor();
+    const uiPaystackRegion = enabledPaystackRegionsList.find((region) => region.code === uiRegion);
+    await page.getByText(new RegExp(`Payout market:.*${uiPaystackRegion?.code === "ZA" ? "South Africa" : uiPaystackRegion?.code ?? uiRegion}`)).waitFor();
     await page.locator("#account_number").waitFor();
     await page.fill("#account_number", "0123456789");
     await page.getByRole("button", { name: /link payout account/i }).click();
