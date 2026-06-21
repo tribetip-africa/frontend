@@ -1,3 +1,6 @@
+import { WidgetMiniCard } from "@/widget/mini-card";
+import { widgetCountryLabel, widgetPaymentHint } from "@/widget/embed";
+
 type TipFlowPreviewProps = {
   variant?: "supporter" | "payout";
 };
@@ -35,35 +38,16 @@ export function TipFlowPreview({ variant = "supporter" }: TipFlowPreviewProps) {
   }
 
   return (
-    <div className="surface-card mx-auto max-w-sm rounded-3xl p-6 animate-float">
-      <div className="flex items-center gap-3">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-2xl">
-          ☕
-        </div>
-        <div>
-          <p className="font-bold text-ink">@ama_creates</p>
-          <p className="text-sm text-muted">Writer · Nairobi</p>
-        </div>
-      </div>
-      <p className="mt-4 text-sm leading-relaxed text-ink-soft">
-        If my work helped you today, send a tip — it keeps everything free for everyone.
-      </p>
-      <div className="mt-5 grid grid-cols-3 gap-2">
-        {["KSh 500", "KSh 1,000", "Custom"].map((amount, i) => (
-          <div
-            key={amount}
-            className={`rounded-xl py-2.5 text-center text-xs font-bold ${
-              i === 1 ? "bg-accent text-ink" : "bg-sand text-ink"
-            }`}
-          >
-            {amount}
-          </div>
-        ))}
-      </div>
-      <div className="mt-4 rounded-full bg-accent py-3 text-center text-sm font-bold text-ink">
-        Support @ama_creates
-      </div>
-      <p className="mt-3 text-center text-xs text-muted">No account needed · Pay with M-Pesa or card</p>
-    </div>
+    <WidgetMiniCard
+      username="ama_creates"
+      displayName="Ama Creates"
+      bio="If my work helped you today, send a tip — it keeps everything free for everyone."
+      countryLabel={widgetCountryLabel("KE")}
+      currency="KES"
+      defaultTipAmountCents={50_000}
+      ctaText="Support @ama_creates"
+      paymentHint={widgetPaymentHint("KE")}
+      className="surface-card mx-auto animate-float"
+    />
   );
 }
