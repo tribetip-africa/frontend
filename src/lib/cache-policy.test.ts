@@ -9,14 +9,11 @@ describe("cache policy", () => {
     expect(inferCachePolicy("/tribes/demo", true)).toBe("noStore");
   });
 
-  it("allows short public cache for creator pages", () => {
+  it("allows short public cache for creator and share pages", () => {
     expect(inferCachePolicy("/tribes/ama_creates")).toBe("publicShort");
+    expect(inferCachePolicy("/share/AAPb-WAjm626YAtTRbA05cc0TAgJMbvO")).toBe("publicShort");
     expect(cacheControlHeader("publicShort")).toContain("public");
     expect(cacheControlHeader("publicShort")).toContain("max-age=60");
-  });
-
-  it("never caches revocable share links", () => {
-    expect(inferCachePolicy("/share/AAPb-WAjm626YAtTRbA05cc0TAgJMbvO")).toBe("noStore");
   });
 
   it("uses static cache for landing page only", () => {
