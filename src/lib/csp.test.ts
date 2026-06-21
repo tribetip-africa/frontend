@@ -1,4 +1,4 @@
-import { buildContentSecurityPolicy, cspHeaderName } from "@/lib/csp";
+import { buildContentSecurityPolicy, buildEmbeddableContentSecurityPolicy, cspHeaderName } from "@/lib/csp";
 
 describe("CSP", () => {
   it("includes API origin in connect-src", () => {
@@ -12,17 +12,40 @@ describe("CSP", () => {
     expect(policy).toContain("object-src 'none'");
   });
 
-  it("uses report-only in development", () => {
+  it("allows widget embeds on public tip pages", () => {
+    const policy = buildEmbeddableContentSecurityPolicy();
+    expect(policy).toContain("frame-ancestors *");
+    expect(policy).toContain("object-src 'none'");
+  });
+
+  it("uses enforcing CSP in all environments", () => {
+    expect(cspHeaderName()).toBe("Content-Security-Policy");
+  });
+
+  it("only upgrades insecure requests in production", () => {
     const previous = process.env.NODE_ENV;
+
     process.env.NODE_ENV = "development";
-    expect(cspHeaderName()).toBe("Content-Security-Policy-Report-Only");
+    expect(buildContentSecurityPolicy()).not.toContain("upgrade-insecure-requests");
+
+    process.env.NODE_ENV = "production";
+    expect(buildContentSecurityPolicy()).toContain("upgrade-insecure-requests");
+
     process.env.NODE_ENV = previous;
   });
 
-  it("enforces CSP in production", () => {
+  it("allows unsafe-eval for React dev tooling in development only", () => {
     const previous = process.env.NODE_ENV;
+
+    process.env.NODE_ENV = "development";
+    expect(buildContentSecurityPolicy()).toContain("script-src 'self' 'unsafe-inline' 'unsafe-eval'");
+    expect(buildEmbeddableContentSecurityPolicy()).toContain("script-src 'self' 'unsafe-inline' 'unsafe-eval'");
+
     process.env.NODE_ENV = "production";
-    expect(cspHeaderName()).toBe("Content-Security-Policy");
+    expect(buildContentSecurityPolicy()).toContain("script-src 'self' 'unsafe-inline'");
+    expect(buildContentSecurityPolicy()).not.toContain("unsafe-eval");
+    expect(buildEmbeddableContentSecurityPolicy()).not.toContain("unsafe-eval");
+
     process.env.NODE_ENV = previous;
   });
 });
