@@ -23,17 +23,17 @@ function dockerRailsContainer() {
   return process.env.TRIBETIP_DOCKER_CONTAINER ?? "tribetip-api-1";
 }
 
-function useDockerRailsRunner() {
+function isDockerRailsRunner() {
   return process.env.LIVE_API_RUNNER === "docker";
 }
 
 function runRailsRunner(script, { encoding } = {}) {
-  const command = useDockerRailsRunner()
+  const command = isDockerRailsRunner()
     ? `docker exec ${dockerRailsContainer()} bin/rails runner ${JSON.stringify(script)}`
     : `bin/rails runner ${JSON.stringify(script)}`;
   const options = { stdio: "pipe", ...(encoding ? { encoding } : {}) };
 
-  if (!useDockerRailsRunner()) {
+  if (!isDockerRailsRunner()) {
     options.cwd = resolveTribetipDir();
   }
 

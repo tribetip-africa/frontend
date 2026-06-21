@@ -1,7 +1,4 @@
-import {
-  widgetSupportLabel,
-  type WidgetPosition,
-} from "@/widget/embed";
+import { widgetSupportLabel } from "@/widget/embed";
 
 describe("widget embed helpers", () => {
   it("builds a landing-style support label by default", () => {
