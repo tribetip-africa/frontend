@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { AuthProvider } from "@/context/auth-context";
 import { AuthGate } from "@/components/auth-gate";
+import { SessionMonitor } from "@/components/session-monitor";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -28,6 +29,7 @@ export default function RootLayout({
     <html lang="en" className={`${jakarta.variable} h-full`}>
       <body className="min-h-full flex flex-col antialiased">
         <AuthProvider>
+          <SessionMonitor />
           <AuthGate>{children}</AuthGate>
         </AuthProvider>
       </body>
