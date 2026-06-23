@@ -179,6 +179,26 @@ export async function signOut(token: string): Promise<void> {
   });
 }
 
+export async function refreshSession(
+  token: string,
+): Promise<{ data: AuthResponse; token: string }> {
+  const { response, data } = await requestJson<AuthResponse>(
+    `${API_BASE}/tribes/session/refresh`,
+    {
+      method: "POST",
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  const nextToken = extractToken(response, data as AuthResponse);
+  if (!nextToken) {
+    throw new TribetipAuthError("No authentication token returned from session refresh.");
+  }
+
+  return { data: data as AuthResponse, token: nextToken };
+}
+
 export async function fetchMyProfile(token: string): Promise<CreatorProfile> {
   const { data } = await requestJson<{ profile: CreatorProfile }>(`${API_BASE}/me/profile`, {
     cachePolicy: "noStore",
@@ -707,6 +727,18 @@ export async function fetchPaystackOnboarding(token: string): Promise<PaystackOn
   );
 
   return data;
+}
+
+export async function fetchPaystackAccountNumber(token: string): Promise<string> {
+  const { data } = await requestJson<{ account_number: string }>(
+    `${API_BASE}/me/paystack/account_number`,
+    {
+      cachePolicy: "noStore",
+      headers: authHeaders(token),
+    },
+  );
+
+  return data.account_number;
 }
 
 export async function completePaystackOnboarding(
