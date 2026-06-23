@@ -242,6 +242,14 @@ export type PaystackOnboardingPayload = {
   refreshed_at?: string;
 };
 
+export type AdminReconciliationOverview = {
+  never_run: boolean;
+  checked_at?: string;
+  findings_count?: number;
+  critical_count?: number;
+  warning_count?: number;
+};
+
 export type AdminOverview = {
   total_tribes: number;
   active_tribes: number;
@@ -261,6 +269,9 @@ export type AdminOverview = {
   payout_customers: number;
   tips_last_30_days: number;
   volume_last_30_days_cents: Record<string, number>;
+  unresolved_payment_alerts?: number;
+  failed_webhooks?: number;
+  reconciliation?: AdminReconciliationOverview;
 };
 
 export type AdminTribeSummary = {
