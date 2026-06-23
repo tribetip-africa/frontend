@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import { formatMoney } from "@/lib/money";
-import { maskAccountNumber } from "@/lib/mask-account";
+import { RevealableAccountNumber } from "@/components/revealable-account-number";
 import { payoutCardTheme } from "@/lib/payout-card-theme";
 import type { PayoutCardData } from "@/lib/payout-card-data";
 
@@ -11,6 +11,7 @@ const CARD_BALANCE_VIEW_MS = 5 * 1000;
 
 type PayoutCardProps = {
   data: PayoutCardData;
+  token?: string;
 };
 
 function CardChip({ className = "" }: { className?: string }) {
@@ -39,12 +40,11 @@ function ContactlessIcon() {
   );
 }
 
-export function PayoutCard({ data }: PayoutCardProps) {
+export function PayoutCard({ data, token }: PayoutCardProps) {
   const [flipped, setFlipped] = useState(false);
   const hintId = useId();
   const theme = payoutCardTheme(data.countryCode, data.currency);
   const cardholder = (data.accountName || data.displayName || `@${data.username}`).toUpperCase();
-  const maskedNumber = maskAccountNumber(data.accountNumber);
   const institution = data.settlementBank ?? theme.network;
   const statusLabel = !data.linked
     ? "Setup required"
@@ -83,12 +83,19 @@ export function PayoutCard({ data }: PayoutCardProps) {
   return (
     <div className="w-full">
       <div className="payout-card-scene mx-auto w-full max-w-full sm:max-w-[520px]">
-        <button
-          type="button"
+        <div
+          role={canFlip ? "button" : undefined}
+          tabIndex={canFlip ? 0 : undefined}
           className={`payout-card group relative block aspect-[1.586/1] w-full rounded-[1.35rem] text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${flipped ? "is-flipped" : ""} ${canFlip ? "cursor-pointer" : "cursor-default"}`}
           onClick={toggleFlip}
-          disabled={!canFlip}
-          aria-pressed={flipped}
+          onKeyDown={(event) => {
+            if (!canFlip) return;
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              toggleFlip();
+            }
+          }}
+          aria-pressed={canFlip ? flipped : undefined}
           aria-describedby={hintId}
           aria-label={
             canFlip
@@ -130,9 +137,22 @@ export function PayoutCard({ data }: PayoutCardProps) {
                 </div>
 
                 <div>
-                  <p className="font-mono text-lg tracking-[0.18em] text-white/95 sm:text-xl">
-                    {maskedNumber}
-                  </p>
+                  <div
+                    className="font-mono text-lg tracking-[0.18em] text-white/95 sm:text-xl"
+                    onClick={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => event.stopPropagation()}
+                  >
+                    {data.accountNumber ? (
+                      <RevealableAccountNumber
+                        value={data.accountNumber}
+                        token={token}
+                        className="text-white/95 [&_button]:text-white/80 [&_button:hover]:bg-white/10 [&_button:hover]:text-white"
+                        mono
+                      />
+                    ) : (
+                      <span>•••• •••• •••• ••••</span>
+                    )}
+                  </div>
                   <div className="mt-4 flex items-end justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-[10px] uppercase tracking-wider text-white/55">Account holder</p>
@@ -201,7 +221,7 @@ export function PayoutCard({ data }: PayoutCardProps) {
               </div>
             </div>
           </div>
-        </button>
+        </div>
       </div>
 
       <p id={hintId} className="mt-3 text-center text-xs text-brand-600">
