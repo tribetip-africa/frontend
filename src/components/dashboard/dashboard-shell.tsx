@@ -37,18 +37,18 @@ export function DashboardShell({
   };
 
   return (
-    <div className={`flex min-h-screen bg-cream ${blurred ? "pointer-events-none select-none blur-sm" : ""}`}>
-      <aside className="hidden w-60 shrink-0 flex-col bg-white lg:flex">
-        <div className="px-5 py-5">
+    <div className={`flex h-screen overflow-hidden bg-cream ${blurred ? "pointer-events-none select-none blur-sm" : ""}`}>
+      <aside className="hidden h-screen w-60 shrink-0 flex-col overflow-hidden bg-white lg:flex">
+        <div className="shrink-0 px-5 py-5">
           <Logo href="/dashboard" size="sm" />
         </div>
 
-        <div className="flex-1 overflow-y-auto px-3 py-4">
+        <div className="min-h-0 flex-1 px-3 py-4">
           <DashboardNav groups={navGroups} quickLinks={quickLinks} variant="light" />
         </div>
 
         {tribe && (
-          <div className="px-4 py-4">
+          <div className="shrink-0 border-t border-line px-4 py-4">
             <p className="truncate text-sm font-semibold text-ink">@{tribe.username}</p>
             <p className="truncate text-xs text-muted">{tribe.email}</p>
             <div className="mt-3 flex gap-2">
@@ -65,8 +65,8 @@ export function DashboardShell({
         )}
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col bg-cream">
-        <div className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-8">
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-cream">
+        <div className="mx-auto w-full max-w-dashboard px-4 py-5 sm:px-6 sm:py-8">
           <DashboardMobileNav groups={navGroups} quickLinks={quickLinks} />
           <div className="min-w-0 space-y-6">{children}</div>
         </div>
