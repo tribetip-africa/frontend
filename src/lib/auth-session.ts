@@ -29,6 +29,10 @@ export function isUnauthorizedError(error: unknown): boolean {
   return error instanceof TribetipApiError && error.status === 401;
 }
 
+export function isReauthenticationRequiredError(error: unknown): boolean {
+  return error instanceof TribetipApiError && error.code === "reauthentication_required";
+}
+
 export function isOnboardingRequiredError(error: unknown): boolean {
   return error instanceof TribetipApiError && error.code === "onboarding_required";
 }
