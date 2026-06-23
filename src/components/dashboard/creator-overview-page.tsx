@@ -131,6 +131,7 @@ export function CreatorOverviewPage() {
           variant="overview"
           metrics={profile?.metrics}
           availableToWithdrawCents={availableToWithdrawCents}
+          totalSettledCents={settlementsState.payload?.summary?.total_settled_cents}
           currencyFallback={currency}
         />
       </div>
@@ -149,6 +150,7 @@ export function CreatorOverviewPage() {
 
       <div className="order-7">
         <CreatorLastSettlement
+          token={token}
           payload={settlementsState.payload}
           loading={settlementsState.loading}
           error={settlementsState.error}
