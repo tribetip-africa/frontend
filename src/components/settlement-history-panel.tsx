@@ -1,5 +1,6 @@
 "use client";
 
+import { RevealablePayoutDestination } from "@/components/revealable-payout-destination";
 import { formatMoney } from "@/lib/money";
 import {
   formatSettlementDate,
@@ -14,6 +15,7 @@ import type { PaystackSettlement } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
 type SettlementHistoryPanelProps = {
+  token?: string;
   settlements: PaystackSettlement[];
   currency: string;
   error: string | null;
@@ -26,6 +28,7 @@ type SettlementHistoryPanelProps = {
 };
 
 export function SettlementHistoryPanel({
+  token,
   settlements,
   currency,
   error,
@@ -96,7 +99,14 @@ export function SettlementHistoryPanel({
                     {formatMoney(settlement.amount_cents, settlement.currency || currency)}
                   </td>
                   <td className="px-4 py-3 text-brand-700">
-                    {settlement.destination ?? "Linked payout account"}
+                    {settlement.destination ? (
+                      <RevealablePayoutDestination
+                        destination={settlement.destination}
+                        token={token}
+                      />
+                    ) : (
+                      "Linked payout account"
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <span
