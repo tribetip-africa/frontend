@@ -56,19 +56,21 @@ function EyeSlashIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
-export function RevealableAccountNumber({
-  value,
+type RevealableAccountNumberInnerProps = RevealableAccountNumberProps & {
+  maskedValue: string;
+};
+
+function RevealableAccountNumberInner({
+  maskedValue,
   token,
   fullValue,
   className = "",
   mono = false,
   revealDurationMs = REVEAL_DURATION_MS,
   onRevealRequest,
-}: RevealableAccountNumberProps) {
+}: RevealableAccountNumberInnerProps) {
   const pathname = usePathname();
-  const maskedValue = displayMaskedAccount(value);
-  const [displayValue, setDisplayValue] = useState(maskedValue);
-  const [revealed, setRevealed] = useState(false);
+  const [revealedFull, setRevealedFull] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [reauthRequired, setReauthRequired] = useState(false);
   const timerRef = useRef<number | null>(null);
@@ -82,18 +84,13 @@ export function RevealableAccountNumber({
 
   const hideAccountNumber = useCallback(() => {
     clearRevealTimer();
-    setDisplayValue(maskedValue);
-    setRevealed(false);
-  }, [clearRevealTimer, maskedValue]);
-
-  useEffect(() => {
-    setDisplayValue(maskedValue);
-    setRevealed(false);
-    setReauthRequired(false);
-    clearRevealTimer();
-  }, [maskedValue, clearRevealTimer]);
+    setRevealedFull(null);
+  }, [clearRevealTimer]);
 
   useEffect(() => () => clearRevealTimer(), [clearRevealTimer]);
+
+  const revealed = revealedFull !== null;
+  const displayValue = revealedFull ?? maskedValue;
 
   async function handleReveal(event?: MouseEvent<HTMLButtonElement>) {
     event?.stopPropagation();
@@ -126,8 +123,7 @@ export function RevealableAccountNumber({
 
     if (!full) return;
 
-    setDisplayValue(full);
-    setRevealed(true);
+    setRevealedFull(full);
     clearRevealTimer();
     timerRef.current = window.setTimeout(() => {
       hideAccountNumber();
@@ -171,4 +167,10 @@ export function RevealableAccountNumber({
       )}
     </span>
   );
+}
+
+export function RevealableAccountNumber(props: RevealableAccountNumberProps) {
+  const maskedValue = displayMaskedAccount(props.value);
+
+  return <RevealableAccountNumberInner key={maskedValue} {...props} maskedValue={maskedValue} />;
 }
