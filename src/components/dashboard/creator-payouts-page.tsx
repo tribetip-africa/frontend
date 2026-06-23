@@ -79,7 +79,7 @@ export function CreatorPayoutsPage() {
       />
 
       <div className="surface-panel rounded-3xl px-3 py-5 sm:px-5 sm:py-6">
-        <PayoutCard data={cardData} />
+        <PayoutCard data={cardData} token={token} />
       </div>
 
       <div className="surface-panel rounded-3xl p-5 sm:p-6">
@@ -100,6 +100,7 @@ export function CreatorPayoutsPage() {
       {showWithdrawalPanel && (
         <div className="surface-panel rounded-3xl p-5 sm:p-6">
           <WithdrawalPanel
+            token={token}
             payload={withdrawalsState.payload}
             error={withdrawalsState.error}
             loading={withdrawalsState.loading}
@@ -116,6 +117,7 @@ export function CreatorPayoutsPage() {
       {(withdrawalsState.payload?.withdrawals.length ?? 0) > 0 && (
         <div className="surface-panel rounded-3xl p-5 sm:p-6">
           <WithdrawalHistoryPanel
+            token={token}
             withdrawals={withdrawalsState.payload?.withdrawals ?? []}
             currency={currency}
             loading={withdrawalsState.loading}
@@ -125,6 +127,7 @@ export function CreatorPayoutsPage() {
 
       <div className="surface-panel rounded-3xl p-5 sm:p-6">
         <PaystackPayoutStatusPanel
+          token={token}
           {...payoutState}
           onRefresh={() => void payoutState.refresh()}
         />
@@ -136,6 +139,7 @@ export function CreatorPayoutsPage() {
 
       <div className="surface-panel rounded-3xl p-5 sm:p-6">
         <SettlementHistoryPanel
+          token={token}
           settlements={settlementsState.payload?.settlements ?? []}
           currency={currency}
           error={settlementsState.error}
