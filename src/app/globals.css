@@ -24,6 +24,7 @@
   --accent-hover: #f0ad2e;
   --coral: #e8683c;
   --coral-soft: #fef0eb;
+  --dashboard-content-max: 76.8rem;
 }
 
 @theme inline {
@@ -50,6 +51,7 @@
   --color-accent-hover: var(--accent-hover);
   --color-coral: var(--coral);
   --color-coral-soft: var(--coral-soft);
+  --max-width-dashboard: var(--dashboard-content-max);
   --font-sans: var(--font-jakarta);
   --font-display: var(--font-jakarta);
 }
