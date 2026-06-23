@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { RevealablePayoutDestination } from "@/components/revealable-payout-destination";
 import { Modal } from "@/components/ui/modal";
 import { fetchPaystackSettlementDetail } from "@/lib/api";
 import { getDisplayMessage } from "@/lib/errors";
@@ -83,7 +84,14 @@ export function SettlementDetailModal({
               </p>
               <p className="mt-1 text-sm text-brand-700">
                 {formatSettlementDate(settlement.settled_at)} ·{" "}
-                {settlement.destination ?? "Linked payout account"}
+                {settlement.destination ? (
+                  <RevealablePayoutDestination
+                    destination={settlement.destination}
+                    token={token}
+                  />
+                ) : (
+                  "Linked payout account"
+                )}
               </p>
             </div>
             <span
