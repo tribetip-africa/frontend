@@ -1,11 +1,13 @@
 "use client";
 
+import { RevealableAccountNumber } from "@/components/revealable-account-number";
 import { formatMoney } from "@/lib/money";
 import type { PaystackOnboardingPayload, PaystackPayoutStatus } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { PaystackVerificationChecks } from "@/components/paystack-verification-checks";
 
 type PaystackPayoutStatusPanelProps = {
+  token?: string;
   payload: PaystackOnboardingPayload | null;
   error: string | null;
   loading: boolean;
@@ -17,6 +19,7 @@ function resolvePayout(payload: PaystackOnboardingPayload): PaystackPayoutStatus
 }
 
 export function PaystackPayoutStatusPanel({
+  token,
   payload,
   error,
   loading,
@@ -87,7 +90,9 @@ export function PaystackPayoutStatusPanel({
           {payout.account_number && (
             <div className="rounded-xl border border-brand-100 px-3 py-2">
               <dt className="text-brand-600">Account number</dt>
-              <dd className="font-medium text-brand-900">{payout.account_number}</dd>
+              <dd className="font-medium text-brand-900">
+                <RevealableAccountNumber value={payout.account_number} token={token} />
+              </dd>
             </div>
           )}
           {typeof payout.available_to_settle_cents === "number" && (
