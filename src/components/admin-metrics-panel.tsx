@@ -103,7 +103,7 @@ export function buildAdminMetrics(overview: AdminOverview): MetricItem[] {
       value: String(normalized.failed_webhooks),
       hint: "Events needing replay or investigation",
     },
-    reconciliationMetric(normalized.reconciliation),
+    reconciliationMetric(normalized.reconciliation ?? DEFAULT_RECONCILIATION),
     {
       label: "Total tips",
       value: String(normalized.total_tips),
