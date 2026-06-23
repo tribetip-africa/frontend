@@ -1,5 +1,6 @@
 "use client";
 
+import { RevealablePayoutDestination } from "@/components/revealable-payout-destination";
 import { formatMoney } from "@/lib/money";
 import {
   formatSettlementDate,
@@ -9,12 +10,14 @@ import {
 import type { PaystackSettlement } from "@/types/api";
 
 type WithdrawalHistoryPanelProps = {
+  token?: string;
   withdrawals: PaystackSettlement[];
   currency: string;
   loading: boolean;
 };
 
 export function WithdrawalHistoryPanel({
+  token,
   withdrawals,
   currency,
   loading,
@@ -55,7 +58,14 @@ export function WithdrawalHistoryPanel({
                     {formatMoney(withdrawal.amount_cents, withdrawal.currency || currency)}
                   </td>
                   <td className="px-4 py-3 text-brand-700">
-                    {withdrawal.destination ?? "Linked payout account"}
+                    {withdrawal.destination ? (
+                      <RevealablePayoutDestination
+                        destination={withdrawal.destination}
+                        token={token}
+                      />
+                    ) : (
+                      "Linked payout account"
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <span
