@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { buildEarningsSnapshot } from "@/lib/creator-onboarding-progress";
+import { buildCreatorOverviewMetrics } from "@/lib/creator-overview-metrics";
 import { formatMoney } from "@/lib/money";
-import { MetricsGrid, formatOptionalMoney } from "@/components/metrics-grid";
+import { MetricsGrid } from "@/components/metrics-grid";
 import { Button } from "@/components/ui/button";
 import type {
   CreatorMetrics,
@@ -14,6 +14,7 @@ type CreatorEarningsPanelProps = {
   variant: "overview" | "payouts";
   metrics?: CreatorMetrics | null;
   availableToWithdrawCents?: number;
+  totalSettledCents?: number;
   currencyFallback?: string;
   payload?: PaystackOnboardingPayload | null;
   withdrawalStatus?: WithdrawalStatus;
@@ -28,14 +29,12 @@ export function CreatorEarningsPanel({
   variant,
   metrics,
   availableToWithdrawCents,
+  totalSettledCents,
   currencyFallback = "KES",
   payload = null,
   withdrawalStatus,
 }: CreatorEarningsPanelProps) {
   if (variant === "overview") {
-    const snapshot = buildEarningsSnapshot(metrics, availableToWithdrawCents, currencyFallback);
-    const currency = snapshot.currency;
-
     return (
       <section className="space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -54,36 +53,12 @@ export function CreatorEarningsPanel({
 
         <MetricsGrid
           columns={4}
-          metrics={[
-            {
-              label: "Total earned",
-              value: formatOptionalMoney(snapshot.totalEarnedCents, currency),
-              hint: metrics ? `${metrics.paid_tips_count} paid tips` : "Complete payout setup to unlock",
-            },
-            {
-              label: "Last 30 days",
-              value: formatOptionalMoney(snapshot.tipsLast30DaysCents, currency),
-              hint: metrics
-                ? `${metrics.tips_last_30_days_count} paid tips`
-                : "Recent supporter activity",
-            },
-            {
-              label: "Available to withdraw",
-              value: formatOptionalMoney(snapshot.availableToWithdrawCents, currency),
-              hint:
-                snapshot.availableToWithdrawCents > 0
-                  ? "Ready for payout or withdrawal"
-                  : "Awaiting settlement",
-            },
-            {
-              label: "Pending tips",
-              value: String(snapshot.pendingTipsCount),
-              hint:
-                snapshot.pendingTipsCount > 0
-                  ? formatOptionalMoney(snapshot.pendingTipsCents, currency)
-                  : "Awaiting payment confirmation",
-            },
-          ]}
+          metrics={buildCreatorOverviewMetrics({
+            metrics,
+            availableToWithdrawCents,
+            totalSettledCents,
+            currencyFallback,
+          })}
         />
 
         {metrics && metrics.failed_tips_count > 0 && (
