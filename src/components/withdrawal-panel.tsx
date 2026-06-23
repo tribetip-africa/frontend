@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { RevealablePayoutDestination } from "@/components/revealable-payout-destination";
 import { Modal } from "@/components/ui/modal";
 import { formatMoney } from "@/lib/money";
 import type { PaystackWithdrawalsPayload, WithdrawalStatus } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
 type WithdrawalPanelProps = {
+  token?: string;
   payload: PaystackWithdrawalsPayload | null;
   error: string | null;
   loading: boolean;
@@ -23,6 +25,7 @@ export function isWithdrawalPanelVisible(status: WithdrawalStatus | undefined) {
 }
 
 export function WithdrawalPanel({
+  token,
   payload,
   error,
   loading,
@@ -65,7 +68,9 @@ export function WithdrawalPanel({
               )}
         </p>
         {status?.destination && (
-          <p className="mt-2 text-sm text-brand-700">To {status.destination}</p>
+          <p className="mt-2 text-sm text-brand-700">
+            To <RevealablePayoutDestination destination={status.destination} token={token} />
+          </p>
         )}
         {status?.withdraw_blocker && !status.can_withdraw && (
           <p className="mt-2 text-sm text-amber-900">{status.withdraw_blocker}</p>
@@ -99,7 +104,13 @@ export function WithdrawalPanel({
                 status?.currency ?? "KES",
               )}
             </span>{" "}
-            to {status?.destination ?? "your linked payout account"}?
+            to{" "}
+            {status?.destination ? (
+              <RevealablePayoutDestination destination={status.destination} token={token} />
+            ) : (
+              "your linked payout account"
+            )}
+            ?
           </p>
           <p className="text-brand-600">
             This sends your full available balance. Processing usually completes within a few
