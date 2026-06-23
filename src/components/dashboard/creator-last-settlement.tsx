@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatMoney } from "@/lib/money";
+import { RevealablePayoutDestination } from "@/components/revealable-payout-destination";
 import {
   formatSettlementDate,
   settlementStatusLabel,
@@ -13,12 +14,13 @@ import type { PaystackSettlementsPayload } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
 type CreatorLastSettlementProps = {
+  token?: string;
   payload: PaystackSettlementsPayload | null;
   loading: boolean;
   error: string | null;
 };
 
-export function CreatorLastSettlement({ payload, loading, error }: CreatorLastSettlementProps) {
+export function CreatorLastSettlement({ token, payload, loading, error }: CreatorLastSettlementProps) {
   const latestSettlement = pickLatestSettlement(payload?.settlements ?? []);
   const health = buildSettlementHealth(payload?.summary, latestSettlement);
   const settlementHref = health.lastSettlementId
@@ -68,7 +70,13 @@ export function CreatorLastSettlement({ payload, loading, error }: CreatorLastSe
                 {formatSettlementDate(health.lastSettledAt ?? latestSettlement.settled_at)}
               </p>
               {latestSettlement.destination && (
-                <p className="mt-1 text-sm text-brand-600">To {latestSettlement.destination}</p>
+                <p className="mt-1 text-sm text-brand-600">
+                  To{" "}
+                  <RevealablePayoutDestination
+                    destination={latestSettlement.destination}
+                    token={token}
+                  />
+                </p>
               )}
             </div>
             <span
