@@ -41,14 +41,34 @@ export function SiteFooter({ fixed = false }: SiteFooterProps) {
             <p className="font-semibold text-ink">Company</p>
             <ul className="mt-3 space-y-2 text-muted">
               <li>
-                <a href="#markets" className="hover:text-ink">
+                <Link href="/#markets" className="hover:text-ink">
                   Markets
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#creators" className="hover:text-ink">
+                <Link href="/#creators" className="hover:text-ink">
                   For creators
-                </a>
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-semibold text-ink">Support</p>
+            <ul className="mt-3 space-y-2 text-muted">
+              <li>
+                <Link href="/faq" className="hover:text-ink">
+                  FAQ
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="hover:text-ink">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="hover:text-ink">
+                  Privacy Policy
+                </Link>
               </li>
             </ul>
           </div>
