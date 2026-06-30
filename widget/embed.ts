@@ -9,8 +9,8 @@ export const WIDGET_POSITIONS = [
 
 export type WidgetPosition = (typeof WIDGET_POSITIONS)[number];
 
-/** Landing-style yellow for tip chips and the support pill. */
-export const WIDGET_HIGHLIGHT_COLOR = "#f5b942";
+/** WhatsApp green for tip chips and the support pill. */
+export const WIDGET_HIGHLIGHT_COLOR = "#25d366";
 export const DEFAULT_WIDGET_CTA_TEXT = "Tip me";
 export const DEFAULT_WIDGET_POSITION: WidgetPosition = "bottom-right";
 
