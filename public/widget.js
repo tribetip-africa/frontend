@@ -5,46 +5,92 @@
   var CACHE_TTL_MS = 60000;
   var REFRESH_MS = 60000;
   var TOKEN_PATTERN = /^[A-Za-z0-9_-]{20,48}$/;
-  var HIGHLIGHT_COLOR = "#f5b942";
+  var HIGHLIGHT_COLOR = "#25d366";
   var DEFAULT_POSITION = "bottom-right";
 
-  var script = document.currentScript;
-  if (!script) {
-    return;
+  // Optional global-config form: window.TribeTipWidget = { token, api }.
+  var globalConfig = window.TribeTipWidget || window.tribetipWidget || {};
+
+  // Resolve our own <script> element. document.currentScript is null when the
+  // tag is injected dynamically — Google Tag Manager custom HTML, several site
+  // builders' code blocks, and type="module" — so fall back to finding it by src.
+  function resolveScriptElement() {
+    if (document.currentScript) {
+      return document.currentScript;
+    }
+
+    var scripts = document.querySelectorAll('script[src*="widget.js"]');
+    for (var i = scripts.length - 1; i >= 0; i -= 1) {
+      if (/widget\.js(\?|$)/.test(scripts[i].getAttribute("src") || "")) {
+        return scripts[i];
+      }
+    }
+
+    return null;
   }
 
-  var token = "";
-  try {
-    token = new URL(script.src).searchParams.get("token") || "";
-  } catch (error) {
-    console.warn("[Tribetip] Widget: invalid script URL.");
-    return;
+  var script = resolveScriptElement();
+
+  // Token can come from (in order): global config, a data-token attribute, or the
+  // ?token= query on the script src. The attribute survives platforms that strip
+  // query strings or rewrite the src.
+  function readToken() {
+    if (globalConfig.token) {
+      return String(globalConfig.token);
+    }
+
+    if (script) {
+      var attrToken = script.getAttribute("data-token");
+      if (attrToken) {
+        return attrToken;
+      }
+
+      try {
+        var fromSrc = new URL(script.src, window.location.href).searchParams.get("token");
+        if (fromSrc) {
+          return fromSrc;
+        }
+      } catch (error) {
+        // fall through to the invalid-token warning below
+      }
+    }
+
+    return "";
   }
 
+  var token = readToken();
   if (!TOKEN_PATTERN.test(token)) {
     console.warn("[Tribetip] Widget: missing or invalid token.");
     return;
   }
 
   function resolveApiBase() {
-    var explicit = script.getAttribute("data-api");
-    if (explicit) {
-      return explicit.replace(/\/$/, "");
+    if (globalConfig.api) {
+      return String(globalConfig.api).replace(/\/$/, "");
     }
 
-    try {
-      var scriptUrl = new URL(script.src);
-      var host = scriptUrl.hostname;
-      if (host === "localhost" || host === "127.0.0.1") {
-        return scriptUrl.protocol + "//" + host + ":3001";
+    if (script) {
+      var explicit = script.getAttribute("data-api");
+      if (explicit) {
+        return explicit.replace(/\/$/, "");
       }
-      if (host === "tribetip.africa") {
-        return "https://api.tribetip.africa";
+
+      try {
+        var scriptUrl = new URL(script.src, window.location.href);
+        var host = scriptUrl.hostname;
+        if (host === "localhost" || host === "127.0.0.1") {
+          return scriptUrl.protocol + "//" + host + ":3001";
+        }
+        if (host === "tribetip.africa") {
+          return "https://api.tribetip.africa";
+        }
+        return scriptUrl.protocol + "//api." + host;
+      } catch (error) {
+        // fall through to the production default
       }
-      return scriptUrl.protocol + "//api." + host;
-    } catch (error) {
-      return "";
     }
+
+    return "https://api.tribetip.africa";
   }
 
   var apiBase = resolveApiBase();
@@ -62,6 +108,19 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  // This script runs on third-party pages. Never act on a URL unless it is
+  // explicitly http(s): a javascript:/data: value reaching location.assign or an
+  // <img src> would execute/leak in the host page's origin. The API already
+  // validates these server-side; this is defense-in-depth at the sink.
+  function isSafeHttpUrl(value) {
+    try {
+      var parsed = new URL(String(value), window.location.href);
+      return parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch (error) {
+      return false;
+    }
   }
 
   function readCachedEntry() {
@@ -193,7 +252,7 @@
 
   function openDestination(config) {
     var destination = config.destination_url;
-    if (!destination) {
+    if (!destination || !isSafeHttpUrl(destination)) {
       return;
     }
 
@@ -206,7 +265,7 @@
   }
 
   function buildAvatarMarkup(config) {
-    if (config.icon_url) {
+    if (config.icon_url && isSafeHttpUrl(config.icon_url)) {
       return (
         '<img class="avatar-img" src="' +
         escapeHtml(config.icon_url) +
@@ -274,7 +333,7 @@
       ".card:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(26,26,26,.08),0 16px 44px rgba(26,26,26,.1);}" +
       ".card:focus-visible{outline:2px solid #247a45;outline-offset:3px;}" +
       ".header{display:flex;align-items:center;gap:12px;}" +
-      ".avatar{flex-shrink:0;width:56px;height:56px;border-radius:16px;background:#fff8e6;display:flex;align-items:center;justify-content:center;overflow:hidden;}" +
+      ".avatar{flex-shrink:0;width:56px;height:56px;border-radius:16px;background:#e7f9ef;display:flex;align-items:center;justify-content:center;overflow:hidden;}" +
       ".avatar-img{width:100%;height:100%;object-fit:cover;}" +
       ".avatar-initials{font-size:18px;font-weight:700;color:#247a45;}" +
       ".identity{min-width:0;}" +
