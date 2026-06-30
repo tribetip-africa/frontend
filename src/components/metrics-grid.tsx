@@ -13,13 +13,6 @@ type MetricsGridProps = {
   columns?: 2 | 3 | 4;
 };
 
-const ACCENT_BARS = [
-  "from-accent to-accent-deep",
-  "from-brand-500 to-brand-700",
-  "from-coral to-coral/70",
-  "from-brand-400 to-brand-600",
-];
-
 export function MetricsGrid({ metrics, columns = 3 }: MetricsGridProps) {
   const gridClass =
     columns === 4
@@ -30,15 +23,11 @@ export function MetricsGrid({ metrics, columns = 3 }: MetricsGridProps) {
 
   return (
     <dl className={`grid gap-3 ${gridClass}`}>
-      {metrics.map((metric, index) => (
+      {metrics.map((metric) => (
         <div
           key={metric.label}
-          className="group relative overflow-hidden rounded-2xl border border-brand-900/8 bg-white px-4 py-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="group rounded-2xl border border-brand-900/8 bg-white px-4 py-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
         >
-          <div
-            className={`absolute left-0 top-0 h-1 w-full bg-gradient-to-r ${ACCENT_BARS[index % ACCENT_BARS.length]}`}
-            aria-hidden
-          />
           <dt className="text-[10px] font-bold uppercase tracking-widest text-brand-600">
             {metric.label}
           </dt>
