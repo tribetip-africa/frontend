@@ -31,7 +31,16 @@ function runRailsRunner(script, { encoding } = {}) {
   const command = isDockerRailsRunner()
     ? `docker exec ${dockerRailsContainer()} bin/rails runner ${JSON.stringify(script)}`
     : `bin/rails runner ${JSON.stringify(script)}`;
-  const options = { stdio: "pipe", ...(encoding ? { encoding } : {}) };
+  const options = {
+    stdio: "pipe",
+    env: {
+      ...process.env,
+      DB_HOST: process.env.DB_HOST ?? "127.0.0.1",
+      DB_USERNAME: process.env.DB_USERNAME ?? "tribetip",
+      DB_PASSWORD: process.env.DB_PASSWORD ?? "tribetip",
+    },
+    ...(encoding ? { encoding } : {}),
+  };
 
   if (!isDockerRailsRunner()) {
     options.cwd = resolveTribetipDir();
