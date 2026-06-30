@@ -15,6 +15,7 @@ import type { CreatorProfile } from "@/types/api";
 const LANDING_NAV = [
   { href: "/#creators", label: "For creators" },
   { href: "/#markets", label: "Markets" },
+  { href: "/faq", label: "FAQ" },
 ] as const;
 
 function navLinkClass(isActive: boolean) {
@@ -94,7 +95,11 @@ export function SiteHeader() {
             </>
           ) : (
             LANDING_NAV.map(({ href, label }) => (
-              <Link key={href} href={href} className={navLinkClass(false)}>
+              <Link
+                key={href}
+                href={href}
+                className={navLinkClass(href.startsWith("/") && !href.includes("#") && pathname === href)}
+              >
                 {label}
               </Link>
             ))
