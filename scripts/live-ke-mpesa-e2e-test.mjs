@@ -69,6 +69,10 @@ try {
   await browser.close();
 }
 
+// Brief pause so Paystack customer provisioning from the UI signup can finish
+// before we create a second Kenyan account in the same test run.
+await new Promise((resolve) => setTimeout(resolve, 5_000));
+
 const username = regionUsername("ke_mpesa", "KE");
 const email = `${username}@tribetip.africa`;
 
@@ -82,7 +86,7 @@ const { data: signupData } = await apiSignUp({
 assertRegionMarket(signupData, KE);
 assertPaystackOnboarding(signupData, { complete: false });
 
-const accounts = await waitForPaystackCustomer(username, { timeoutMs: 120_000 });
+const accounts = await waitForPaystackCustomer(username, { timeoutMs: 180_000 });
 assertRealPaystackCode(accounts.customerCode, { label: "customer" });
 console.log(`   ✓ customer ${accounts.customerCode}`);
 
