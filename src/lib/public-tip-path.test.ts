@@ -29,6 +29,12 @@ describe("public-tip-path", () => {
       expect(isEmbeddablePublicTipPath("/.env")).toBe(false);
       expect(isEmbeddablePublicTipPath("/package.json")).toBe(false);
     });
+
+    it("treats static legal/help pages as reserved (not embeddable/clickjackable)", () => {
+      expect(isEmbeddablePublicTipPath("/faq")).toBe(false);
+      expect(isEmbeddablePublicTipPath("/terms")).toBe(false);
+      expect(isEmbeddablePublicTipPath("/privacy")).toBe(false);
+    });
   });
 
   describe("isBlockedPublicUsernamePath", () => {
