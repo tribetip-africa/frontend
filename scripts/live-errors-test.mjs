@@ -29,6 +29,47 @@ if (!Array.isArray(validation.data.errors) || validation.data.errors.length === 
   throw new Error("Expected legacy errors array for validation responses");
 }
 
+console.log("1b. API rejects reserved usernames");
+const reservedTs = Date.now();
+const reserved = await apiRequest("POST", "/tribes.json", {
+  body: {
+    tribe: {
+      email: `reserved_${reservedTs}@tribetip.africa`,
+      password: "securepass123",
+      password_confirmation: "securepass123",
+      username: "faq",
+      country_code: "KE",
+      currency: "KES",
+    },
+  },
+});
+if (reserved.response.status !== 422) {
+  throw new Error(`Expected reserved username 422, got ${reserved.response.status}`);
+}
+assertStructuredError(reserved.data, { code: "validation_failed" });
+const reservedMessages = (reserved.data.errors ?? []).join(" ").toLowerCase();
+if (!reservedMessages.includes("reserved")) {
+  throw new Error(`Expected reserved username error, got: ${JSON.stringify(reserved.data.errors)}`);
+}
+
+console.log("1c. API rejects passwords shorter than 8 characters");
+const shortPassword = await apiRequest("POST", "/tribes.json", {
+  body: {
+    tribe: {
+      email: `shortpw_${reservedTs}@tribetip.africa`,
+      password: "1234567",
+      password_confirmation: "1234567",
+      username: `shortpw_${reservedTs}`,
+      country_code: "KE",
+      currency: "KES",
+    },
+  },
+});
+if (shortPassword.response.status !== 422) {
+  throw new Error(`Expected short password 422, got ${shortPassword.response.status}`);
+}
+assertStructuredError(shortPassword.data, { code: "validation_failed" });
+
 console.log("2. API not found errors use structured payload");
 const missing = await apiRequest("GET", "/tribes/missing_live_errors_user", {
   headers: { Accept: "application/json" },
