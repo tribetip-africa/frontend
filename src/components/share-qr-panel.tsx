@@ -13,10 +13,83 @@ import { Modal } from "@/components/ui/modal";
 type ShareQrPanelProps = {
   token: string;
   shareable: boolean;
+  displayName?: string | null;
   compact?: boolean;
 };
 
-export function ShareQrPanel({ token, shareable, compact = false }: ShareQrPanelProps) {
+const QR_RENDER_SIZE = 512;
+
+function drawRoundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + width, y, x + width, y + height, r);
+  ctx.arcTo(x + width, y + height, x, y + height, r);
+  ctx.arcTo(x, y + height, x, y, r);
+  ctx.arcTo(x, y, x + width, y, r);
+  ctx.closePath();
+}
+
+// Bake the creator's name into the centre of the QR. Uses high error correction
+// (level H, ~30% recovery) so the covered modules still decode, and renders onto
+// a canvas so the centre label is included in the downloaded PNG too.
+async function generateQrWithLabel(url: string, label: string): Promise<string> {
+  const size = QR_RENDER_SIZE;
+  const canvas = document.createElement("canvas");
+
+  await QRCode.toCanvas(canvas, url, {
+    width: size,
+    margin: 1,
+    errorCorrectionLevel: "H",
+    color: { dark: "#1a1a1a", light: "#ffffff" },
+  });
+
+  const ctx = canvas.getContext("2d");
+  const text = label.trim();
+  if (!ctx || !text) {
+    return canvas.toDataURL("image/png");
+  }
+
+  ctx.font = `700 ${Math.round(size * 0.064)}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+
+  const maxTextWidth = size * 0.6;
+  let display = text;
+  if (ctx.measureText(display).width > maxTextWidth) {
+    while (display.length > 1 && ctx.measureText(`${display}…`).width > maxTextWidth) {
+      display = display.slice(0, -1);
+    }
+    display = `${display}…`;
+  }
+
+  const textWidth = ctx.measureText(display).width;
+  const badgeHeight = size * 0.18;
+  const badgeWidth = Math.min(size * 0.72, textWidth + size * 0.1);
+  const badgeX = (size - badgeWidth) / 2;
+  const badgeY = (size - badgeHeight) / 2;
+
+  ctx.fillStyle = "#ffffff";
+  ctx.strokeStyle = "#1a1a1a";
+  ctx.lineWidth = size * 0.008;
+  drawRoundedRect(ctx, badgeX, badgeY, badgeWidth, badgeHeight, badgeHeight / 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#1a1a1a";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(display, size / 2, size / 2);
+
+  return canvas.toDataURL("image/png");
+}
+
+export function ShareQrPanel({ token, shareable, displayName, compact = false }: ShareQrPanelProps) {
   const [shareLink, setShareLink] = useState<ShareLinkPayload | null>(null);
   const [generatedQrDataUrl, setGeneratedQrDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -50,11 +123,7 @@ export function ShareQrPanel({ token, shareable, compact = false }: ShareQrPanel
 
     let cancelled = false;
 
-    void QRCode.toDataURL(shareLink.url, {
-      margin: 1,
-      width: 240,
-      errorCorrectionLevel: "M",
-    }).then((dataUrl) => {
+    void generateQrWithLabel(shareLink.url, displayName ?? "").then((dataUrl) => {
       if (!cancelled) {
         setGeneratedQrDataUrl(dataUrl);
       }
@@ -63,7 +132,7 @@ export function ShareQrPanel({ token, shareable, compact = false }: ShareQrPanel
     return () => {
       cancelled = true;
     };
-  }, [shareLink]);
+  }, [shareLink, displayName]);
 
   const handleRotate = useCallback(async () => {
     setRotating(true);
