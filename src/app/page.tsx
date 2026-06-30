@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { AfricaFlowMap } from "@/components/landing/africa-flow-map";
 import { CreatorShowcase } from "@/components/landing/creator-showcase";
 import { FeatureSection } from "@/components/landing/feature-section";
 import { HeroUsernameCta } from "@/components/landing/hero-username-cta";
 import { TipFlowPreview } from "@/components/landing/tip-flow-preview";
 import { Button } from "@/components/ui/button";
-import { enabledMarkets } from "@/lib/region-flags";
 
 const benefits = [
   {
@@ -32,8 +32,6 @@ const benefits = [
 ];
 
 export default function HomePage() {
-  const markets = enabledMarkets();
-
   return (
     <>
       <SiteHeader />
@@ -87,31 +85,10 @@ export default function HomePage() {
 
         <CreatorShowcase />
 
-        {/* Markets */}
-        <section id="markets" className="section-alt py-16 sm:py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="text-center">
-              <p className="text-sm font-bold text-brand-600">Markets</p>
-              <h2 className="mt-2 font-display text-3xl font-extrabold text-ink sm:text-4xl">
-                {markets.length === 1
-                  ? `Live in ${markets[0]?.name}`
-                  : "Built for creators across Africa"}
-              </h2>
-            </div>
-            <ul className="mx-auto mt-10 flex max-w-3xl flex-wrap justify-center gap-3">
-              {markets.map((market) => (
-                <li
-                  key={market.code}
-                  className="flex items-center gap-2 rounded-full border border-line bg-white px-5 py-2.5 text-sm font-semibold shadow-sm"
-                >
-                  <span>{market.flag}</span>
-                  {market.name}
-                  <span className="text-muted">({market.currency})</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+        {/* Markets — animated Africa money-flow map */}
+        <div id="markets">
+          <AfricaFlowMap />
+        </div>
 
         {/* Benefits grid — BMC "designed for creators" */}
         <section id="creators" className="bg-white py-16 sm:py-24">
