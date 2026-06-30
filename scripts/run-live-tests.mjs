@@ -9,10 +9,12 @@ const mode = await paystackClientMode();
 // Errors test last: it exhausts the public profile rate limit for the runner IP.
 const tests = [
   "live-cache-test.mjs",
+  "live-static-pages-test.mjs",
   "live-signup-test.mjs",
   "live-signin-test.mjs",
   "live-regions-test.mjs",
   "live-tips-test.mjs",
+  "live-share-widget-test.mjs",
 ];
 
 if (mode === "live") {
