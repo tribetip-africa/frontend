@@ -29,7 +29,11 @@ export function CreatorPublicPageSettings() {
 
       <div className="space-y-5 rounded-2xl border border-brand-100 bg-white p-5 shadow-sm sm:p-6">
         <PublicPageUrlField username={tribe.username} profile={profile} shareable={shareable} />
-        <ShareQrPanel token={token} shareable={shareable} />
+        <ShareQrPanel
+          token={token}
+          shareable={shareable}
+          displayName={profile?.display_name ?? tribe.username}
+        />
 
         <p className="text-sm text-brand-700">
           Want a mini tip card on your own website?{" "}
