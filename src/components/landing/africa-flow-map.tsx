@@ -215,9 +215,9 @@ export function AfricaFlowMap() {
   const isActive = (code: string) => flags[code as keyof typeof flags] === true;
 
   return (
-    <section className="section-alt py-16 sm:py-24">
+    <section className="section-alt py-16 sm:py-24" data-landing="stagger-section">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="text-center">
+        <div className="text-center" data-landing="reveal">
           <p className="text-sm font-bold text-brand-600">Across Africa</p>
           <h2 className="mt-2 font-display text-3xl font-extrabold text-ink sm:text-4xl">
             Money moving where your audience lives
@@ -228,7 +228,7 @@ export function AfricaFlowMap() {
           </p>
         </div>
 
-        <div className="mx-auto mt-10 max-w-md">
+        <div className="mx-auto mt-10 max-w-md" data-landing="map">
           <svg
             viewBox={`${round(MIN_X)} ${round(MIN_Y)} ${round(VIEW_W)} ${round(VIEW_H)}`}
             className="h-auto w-full"
