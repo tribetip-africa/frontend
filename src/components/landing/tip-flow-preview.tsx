@@ -3,12 +3,15 @@ import { widgetCountryLabel, widgetPaymentHint } from "@/widget/embed";
 
 type TipFlowPreviewProps = {
   variant?: "supporter" | "payout";
+  animated?: boolean;
 };
 
-export function TipFlowPreview({ variant = "supporter" }: TipFlowPreviewProps) {
+export function TipFlowPreview({ variant = "supporter", animated = true }: TipFlowPreviewProps) {
+  const floatClass = animated ? "animate-float" : "";
+
   if (variant === "payout") {
     return (
-      <div className="surface-card mx-auto max-w-sm rounded-3xl p-6 animate-float">
+      <div className={`surface-card mx-auto max-w-sm rounded-3xl p-6 ${floatClass}`}>
         <p className="text-xs font-semibold uppercase tracking-wide text-muted">Your balance</p>
         <p className="mt-2 font-display text-4xl font-extrabold text-ink">KSh 24,500</p>
         <p className="mt-1 text-sm text-muted">Ready to withdraw</p>
@@ -47,7 +50,7 @@ export function TipFlowPreview({ variant = "supporter" }: TipFlowPreviewProps) {
       defaultTipAmountCents={50_000}
       ctaText="Support @ama_creates"
       paymentHint={widgetPaymentHint("KE")}
-      className="surface-card mx-auto animate-float"
+      className={`surface-card mx-auto ${floatClass}`}
     />
   );
 }
