@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import type { CreatorProfile } from "@/types/api";
 
 const LANDING_NAV = [
+  { href: "/#how-it-works", label: "How it works" },
   { href: "/#creators", label: "For creators" },
   { href: "/#markets", label: "Markets" },
   { href: "/faq", label: "FAQ" },
