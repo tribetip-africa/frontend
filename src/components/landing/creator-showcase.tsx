@@ -35,9 +35,9 @@ const CREATORS = [
 
 export function CreatorShowcase() {
   return (
-    <section className="bg-white py-16 sm:py-24">
+    <section className="bg-white py-16 sm:py-24" data-landing="stagger-section">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="text-center">
+        <div className="text-center" data-landing="reveal">
           <p className="text-sm font-bold text-brand-600">Creators on TribeTip</p>
           <h2 className="mt-2 font-display text-3xl font-extrabold text-ink sm:text-4xl">
             Join thousands earning from their audience
@@ -47,10 +47,11 @@ export function CreatorShowcase() {
           </p>
         </div>
 
-        <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" data-landing="stagger-parent">
           {CREATORS.map((creator) => (
             <li
               key={creator.handle}
+              data-landing="stagger-item"
               className="surface-card rounded-2xl p-5 transition hover:-translate-y-1 hover:shadow-lg"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft text-2xl">
