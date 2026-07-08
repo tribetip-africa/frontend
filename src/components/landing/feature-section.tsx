@@ -8,6 +8,7 @@ type FeatureSectionProps = {
   visual: ReactNode;
   reversed?: boolean;
   alt?: boolean;
+  motion?: boolean;
 };
 
 export function FeatureSection({
@@ -18,11 +19,23 @@ export function FeatureSection({
   visual,
   reversed = false,
   alt = false,
+  motion = false,
 }: FeatureSectionProps) {
   return (
-    <section className={alt ? "section-alt py-16 sm:py-24" : "bg-white py-16 sm:py-24"}>
+    <section
+      className={alt ? "section-alt py-16 sm:py-24" : "bg-white py-16 sm:py-24"}
+      {...(motion
+        ? {
+            "data-landing": "feature",
+            "data-landing-direction": reversed ? "reversed" : "forward",
+          }
+        : {})}
+    >
       <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16">
-        <div className={reversed ? "lg:order-2" : ""}>
+        <div
+          className={reversed ? "lg:order-2" : ""}
+          {...(motion ? { "data-landing": "feature-text" } : {})}
+        >
           <p className="text-sm font-bold text-brand-600">{eyebrow}</p>
           <h2 className="mt-2 font-display text-3xl font-extrabold leading-tight text-ink sm:text-4xl">
             {title}
@@ -42,7 +55,12 @@ export function FeatureSection({
             </ul>
           )}
         </div>
-        <div className={reversed ? "lg:order-1" : ""}>{visual}</div>
+        <div
+          className={reversed ? "lg:order-1" : ""}
+          {...(motion ? { "data-landing": "feature-visual" } : {})}
+        >
+          {visual}
+        </div>
       </div>
     </section>
   );
