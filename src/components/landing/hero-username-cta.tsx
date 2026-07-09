@@ -23,9 +23,6 @@ export function HeroUsernameCta() {
             {launchCta.label}
           </Button>
         </Link>
-        <p className="mt-3 text-sm text-muted">
-          Be first to claim your username when we open creator sign-ups.
-        </p>
       </div>
     );
   }
