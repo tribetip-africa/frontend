@@ -2,6 +2,8 @@ import { chromium } from "playwright";
 import {
   WEB_BASE,
   assertNoStore,
+  isLiveSignupOpen,
+  liveLaunchMode,
   waitForServices,
 } from "./live-helpers.mjs";
 
@@ -73,9 +75,21 @@ try {
   await page.waitForURL("**/terms", { timeout: 10_000 });
 
   console.log("6. Auth pages remain no-store (regression)");
-  for (const path of ["/sign-in", "/sign-up"]) {
-    const response = await page.goto(`${WEB_BASE}${path}`, { waitUntil: "domcontentloaded" });
-    assertNoStore(response.headers(), path);
+  if (isLiveSignupOpen()) {
+    for (const path of ["/sign-in", "/sign-up"]) {
+      const response = await page.goto(`${WEB_BASE}${path}`, { waitUntil: "domcontentloaded" });
+      assertNoStore(response.headers(), path);
+    }
+  } else {
+    console.log(`   … launch mode is ${liveLaunchMode()}, checking waitlist gating instead`);
+    for (const path of ["/sign-in", "/sign-up"]) {
+      await page.goto(`${WEB_BASE}${path}`, { waitUntil: "domcontentloaded" });
+      await page.waitForURL("**/waitlist", { timeout: 10_000 });
+    }
+    const waitlistResponse = await page.goto(`${WEB_BASE}/waitlist`, {
+      waitUntil: "domcontentloaded",
+    });
+    assertNoStore(waitlistResponse.headers(), "/waitlist");
   }
 
   console.log("PASS: static pages and navigation");

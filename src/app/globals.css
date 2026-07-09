@@ -1,35 +1,70 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #1a1a1a;
-  --cream: #fffbf5;
-  --ink: #1a1a1a;
-  --ink-soft: #4a4a4a;
-  --muted: #6b6b6b;
-  --sand: #f7f4ef;
-  --line: #ebe6df;
-  --brand-50: #f3faf5;
-  --brand-100: #e3f2e8;
-  --brand-200: #c5e0ce;
-  --brand-400: #4fa06a;
-  --brand-500: #2f8a52;
-  --brand-600: #247a45;
-  --brand-700: #1d6238;
-  --brand-800: #164d2c;
-  --brand-900: #1a1a1a;
-  --accent: #25d366;
-  --accent-deep: #1da851;
-  --accent-soft: #e7f9ef;
-  --accent-hover: #20bd5c;
-  --coral: #e8683c;
-  --coral-soft: #fef0eb;
+  color-scheme: light;
+  --background: #f4f0e8;
+  --foreground: #1a221c;
+  --surface: #fffcf8;
+  --cream: #faf6ee;
+  --ink: #1a221c;
+  --ink-soft: #4a5249;
+  --muted: #6d7268;
+  --sand: #e9e2d6;
+  --line: #d8cfc0;
+  --brand-50: #eef5f0;
+  --brand-100: #d9e8de;
+  --brand-200: #b5d0be;
+  --brand-400: #4d8c67;
+  --brand-500: #356f4f;
+  --brand-600: #2b5a40;
+  --brand-700: #234833;
+  --brand-800: #1c3a29;
+  --brand-900: #152d20;
+  --accent: #3d8f5f;
+  --accent-deep: #32784f;
+  --accent-soft: #e3f0e8;
+  --accent-hover: #358555;
+  --coral: #c96f4a;
+  --coral-soft: #f8ebe4;
   --dashboard-content-max: 76.8rem;
+  --shadow-color: 26 36 28;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #101412;
+  --foreground: #e7ece8;
+  --surface: #171d19;
+  --cream: #131815;
+  --ink: #e7ece8;
+  --ink-soft: #b4bdb6;
+  --muted: #8b968d;
+  --sand: #222a25;
+  --line: #2f3832;
+  --brand-50: #162019;
+  --brand-100: #1d2b22;
+  --brand-200: #274433;
+  --brand-400: #5ea67a;
+  --brand-500: #4d8f67;
+  --brand-600: #66a883;
+  --brand-700: #7fbaa0;
+  --brand-800: #9cccb6;
+  --brand-900: #b8ddcb;
+  --accent: #5ea67a;
+  --accent-deep: #4d8f67;
+  --accent-soft: #1b2d23;
+  --accent-hover: #6eb58a;
+  --coral: #dd8a67;
+  --coral-soft: #2d211b;
+  --shadow-color: 0 0 0;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
   --color-cream: var(--cream);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
@@ -66,33 +101,83 @@ body {
   font-family: var(--font-jakarta), system-ui, sans-serif;
 }
 
-/* ── Surfaces (BMC-inspired: clean white cards) ─────── */
+/* ── Surfaces ─────────────────────────────────────────── */
 
 .surface-card {
   border: 1px solid var(--line);
-  background: white;
-  box-shadow: 0 2px 16px rgb(26 26 26 / 0.06);
+  background: var(--surface);
+  box-shadow: 0 2px 20px rgb(var(--shadow-color) / 0.07);
 }
 
 .surface-panel {
   border: 1px solid var(--line);
-  background: white;
-  box-shadow: 0 1px 8px rgb(26 26 26 / 0.04);
+  background: var(--surface);
+  box-shadow: 0 1px 10px rgb(var(--shadow-color) / 0.05);
 }
 
 .surface-soft {
-  background: var(--cream);
+  background: color-mix(in srgb, var(--cream) 82%, var(--brand-50));
   border: 1px solid var(--line);
 }
 
 .section-alt {
-  background: var(--cream);
+  background: color-mix(in srgb, var(--sand) 55%, var(--cream));
+}
+
+.landing-hero {
+  background:
+    radial-gradient(ellipse 90% 70% at 100% -10%, rgb(61 143 95 / 0.1), transparent 55%),
+    radial-gradient(ellipse 70% 55% at -5% 100%, rgb(201 111 74 / 0.08), transparent 50%),
+    linear-gradient(180deg, var(--cream) 0%, var(--background) 100%);
+}
+
+.dark .landing-hero {
+  background:
+    radial-gradient(ellipse 90% 70% at 100% -10%, rgb(94 166 122 / 0.14), transparent 55%),
+    radial-gradient(ellipse 70% 55% at -5% 100%, rgb(221 138 103 / 0.08), transparent 50%),
+    linear-gradient(180deg, var(--cream) 0%, var(--background) 100%);
+}
+
+.landing-section {
+  background: var(--background);
+}
+
+.landing-section-warm {
+  background: color-mix(in srgb, var(--cream) 70%, var(--sand));
 }
 
 .pattern-dots {
-  background-color: var(--cream);
-  background-image: radial-gradient(circle at 1px 1px, rgb(36 122 69 / 0.07) 1px, transparent 0);
+  background-color: color-mix(in srgb, var(--cream) 70%, var(--sand));
+  background-image: radial-gradient(circle at 1px 1px, rgb(43 90 64 / 0.08) 1px, transparent 0);
   background-size: 24px 24px;
+}
+
+.dark .bg-white {
+  background-color: var(--surface);
+}
+
+.dark .border-brand-100 {
+  border-color: color-mix(in srgb, var(--line) 70%, var(--brand-200));
+}
+
+.dark .text-brand-900 {
+  color: var(--ink);
+}
+
+.dark .shadow-brand-900\/10 {
+  --tw-shadow-color: rgb(0 0 0 / 0.25);
+}
+
+/* ── Africa map ──────────────────────────────────────── */
+
+.africa-map-svg .africa-continent-dots circle {
+  fill: var(--brand-800);
+  opacity: 0.92;
+}
+
+.dark .africa-map-svg .africa-continent-dots circle {
+  fill: var(--accent);
+  opacity: 0.88;
 }
 
 /* ── GSAP landing motion ─────────────────────────────── */

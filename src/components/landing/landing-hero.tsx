@@ -97,7 +97,7 @@ export function LandingHero() {
   );
 
   return (
-    <section ref={heroRef} className="bg-white pt-12 pb-16 sm:pt-16 sm:pb-20">
+    <section ref={heroRef} className="landing-hero pt-12 pb-16 sm:pt-16 sm:pb-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           <div className="text-center lg:text-left">

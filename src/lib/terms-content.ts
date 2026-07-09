@@ -235,6 +235,24 @@ export const TERMS_SECTIONS: TermsSection[] = [
     ],
   },
   {
+    id: "referrals",
+    title: "Referral program",
+    blocks: [
+      {
+        type: "paragraph",
+        text: "TribeTip may offer a creator referral program from time to time. If you participate, you may receive a referral link to invite other creators to join the Service.",
+      },
+      {
+        type: "paragraph",
+        text: "Referrals qualify only when the invited creator completes onboarding, receives a qualifying first paid tip, and meets the program rules shown in your dashboard. Bonuses and welcome credits are subject to the amounts and currency displayed in the product at the time of qualification.",
+      },
+      {
+        type: "paragraph",
+        text: "We do not allow self-referrals, duplicate accounts, misleading promotion, or other abuse of the referral program. We may reject or reverse referrals, withhold bonuses, or suspend accounts that break these rules or applicable law. Referral rewards may be taxable; you are responsible for any taxes due.",
+      },
+    ],
+  },
+  {
     id: "changes",
     title: "Changes to these terms",
     blocks: [

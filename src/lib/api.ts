@@ -31,6 +31,9 @@ import type {
   TipInvestigation,
   PaymentAlertsResponse,
   PlatformReconciliationResponse,
+  ReferralsPayload,
+  ReferralInvitePayload,
+  AdminReferralsResponse,
 } from "@/types/api";
 import { authHeaders, requestJson } from "@/lib/api-request";
 import { TribetipAuthError, getDisplayMessage } from "@/lib/errors";
@@ -124,6 +127,89 @@ export async function rotateMyShareLink(authToken: string): Promise<ShareLinkPay
   );
 
   return data.share_link;
+}
+
+export async function fetchMyReferrals(authToken: string): Promise<ReferralsPayload["referrals"]> {
+  const { data } = await requestJson<ReferralsPayload>(`${API_BASE}/me/referrals`, {
+    cachePolicy: "noStore",
+    headers: authHeaders(authToken),
+  });
+
+  return data.referrals;
+}
+
+export async function updateMyReferrals(
+  authToken: string,
+  referralsEnabled: boolean,
+): Promise<ReferralsPayload["referrals"]> {
+  const { data } = await requestJson<ReferralsPayload>(`${API_BASE}/me/referrals`, {
+    method: "PATCH",
+    cachePolicy: "noStore",
+    headers: {
+      ...authHeaders(authToken),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      referrals: {
+        referrals_enabled: referralsEnabled,
+      },
+    }),
+  });
+
+  return data.referrals;
+}
+
+export async function rotateReferralInvite(
+  authToken: string,
+): Promise<{ message: string; invite: ReferralInvitePayload }> {
+  const { data } = await requestJson<{ message: string; invite: ReferralInvitePayload }>(
+    `${API_BASE}/me/referrals/invite/rotate`,
+    {
+      method: "POST",
+      cachePolicy: "noStore",
+      headers: authHeaders(authToken),
+    },
+  );
+
+  return data;
+}
+
+export async function fetchAdminReferrals(
+  authToken: string,
+  params: { limit?: number; offset?: number } = {},
+): Promise<AdminReferralsResponse> {
+  const search = new URLSearchParams();
+  if (params.limit != null) search.set("limit", String(params.limit));
+  if (params.offset != null) search.set("offset", String(params.offset));
+
+  const query = search.toString();
+  const { data } = await requestJson<AdminReferralsResponse>(
+    `${API_BASE}/admin/referrals${query ? `?${query}` : ""}`,
+    {
+      cachePolicy: "noStore",
+      headers: authHeaders(authToken),
+    },
+  );
+
+  return data;
+}
+
+export async function rejectAdminReferral(
+  authToken: string,
+  referralId: string,
+  reason: string,
+): Promise<{ message: string }> {
+  const { data } = await requestJson<{ message: string }>(
+    `${API_BASE}/admin/referrals/${encodeURIComponent(referralId)}/reject`,
+    {
+      method: "PATCH",
+      cachePolicy: "noStore",
+      headers: authHeaders(authToken),
+      body: JSON.stringify({ reason }),
+    },
+  );
+
+  return data;
 }
 
 export async function signUp(

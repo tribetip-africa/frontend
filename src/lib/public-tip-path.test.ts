@@ -47,6 +47,7 @@ describe("public-tip-path", () => {
       expect(isBlockedPublicUsernamePath("/dashboard")).toBe(false);
       expect(isBlockedPublicUsernamePath("/demo_creator")).toBe(false);
       expect(isBlockedPublicUsernamePath("/t/token")).toBe(false);
+      expect(isBlockedPublicUsernamePath("/widget.js")).toBe(false);
     });
   });
 });

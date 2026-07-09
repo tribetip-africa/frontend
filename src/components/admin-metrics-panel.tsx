@@ -103,6 +103,16 @@ export function buildAdminMetrics(overview: AdminOverview): MetricItem[] {
       value: String(normalized.failed_webhooks),
       hint: "Events needing replay or investigation",
     },
+    {
+      label: "Referrals pending",
+      value: String(normalized.referrals_pending ?? 0),
+      hint: `${normalized.referrals_qualified ?? 0} qualified · ${normalized.referrals_rewarded ?? 0} rewarded`,
+    },
+    {
+      label: "Referral bonuses",
+      value: formatVolumeByCurrency(normalized.referral_bonus_paid_cents ?? {}),
+      hint: `${normalized.referrals_rejected ?? 0} rejected`,
+    },
     reconciliationMetric(normalized.reconciliation ?? DEFAULT_RECONCILIATION),
     {
       label: "Total tips",

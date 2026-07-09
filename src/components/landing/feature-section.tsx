@@ -23,7 +23,7 @@ export function FeatureSection({
 }: FeatureSectionProps) {
   return (
     <section
-      className={alt ? "section-alt py-16 sm:py-24" : "bg-white py-16 sm:py-24"}
+      className={alt ? "section-alt py-16 sm:py-24" : "landing-section py-16 sm:py-24"}
       {...(motion
         ? {
             "data-landing": "feature",

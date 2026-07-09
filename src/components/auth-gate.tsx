@@ -62,12 +62,13 @@ export function AuthGate({ children }: AuthGateProps) {
   }, [isLoading, token, pathname, router, validatedToken]);
 
   const sessionPendingValidation = Boolean(token) && validatedToken !== token;
+  const needsAuthBootstrap =
+    isProtectedPath(pathname) || (isMarketingPath(pathname) && Boolean(token));
 
   const shouldBlock =
-    isLoading ||
+    (isLoading && needsAuthBootstrap) ||
     checking ||
-    (sessionPendingValidation &&
-      (isProtectedPath(pathname) || isMarketingPath(pathname)));
+    (sessionPendingValidation && needsAuthBootstrap);
 
   if (shouldBlock) {
     return (

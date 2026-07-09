@@ -166,6 +166,33 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
     ],
   },
   {
+    id: "referrals",
+    title: "Invite creators",
+    description: "How the referral program works and what you can earn.",
+    items: [
+      {
+        question: "How do I invite other creators?",
+        answer:
+          "Open your dashboard and go to Invite creators. Copy your personal sign-up link or referral code and share it with creators you know. They can click the link or paste the code on the sign-up form. Each invite code expires after a set period; you can generate a new one anytime.",
+      },
+      {
+        question: "When does a referral qualify?",
+        answer:
+          "A referred creator qualifies after they finish payout setup and receive their first paid tip above the minimum amount shown in your dashboard. Until then, the referral stays pending.",
+      },
+      {
+        question: "What do I earn for a qualified referral?",
+        answer:
+          "When a referral qualifies, you receive a cash bonus in your local currency. The current bonus amount is shown on your Invite creators page. Referred creators also receive welcome fee credits on their tips.",
+      },
+      {
+        question: "Can I refer myself or create duplicate accounts?",
+        answer:
+          "No. Self-referrals, duplicate accounts, and other abuse are not allowed. We may reject referrals that share the same sign-up IP as the referrer, exceed program limits, or otherwise break the rules.",
+      },
+    ],
+  },
+  {
     id: "support",
     title: "Support",
     description: "Getting help when you need it.",

@@ -60,6 +60,7 @@ export type SettlementBreakdown = {
   gross_cents?: number;
   platform_fee_cents?: number;
   platform_fee_percent: number;
+  referral_fee_credit_applied_cents?: number;
   net_cents: number;
   currency: string;
 };
@@ -272,6 +273,11 @@ export type AdminOverview = {
   unresolved_payment_alerts?: number;
   failed_webhooks?: number;
   reconciliation?: AdminReconciliationOverview;
+  referrals_pending?: number;
+  referrals_qualified?: number;
+  referrals_rewarded?: number;
+  referrals_rejected?: number;
+  referral_bonus_paid_cents?: Record<string, number>;
 };
 
 export type AdminTribeSummary = {
@@ -345,6 +351,7 @@ export type SignUpPayload = {
   username: string;
   country_code?: string;
   currency?: string;
+  referral_code?: string;
 };
 
 export type SignInPayload = {
@@ -373,6 +380,7 @@ export type CreatorProfile = Tribe & {
   currency: string;
   default_tip_amount_cents: number;
   is_profile_public: boolean;
+  referral_fee_credit_cents_remaining?: number;
   metrics?: CreatorMetrics;
 };
 
@@ -382,6 +390,91 @@ export type UpdateProfilePayload = {
   country_code?: string;
   currency?: string;
   default_tip_amount_cents?: number;
+};
+
+export type ReferralLink = {
+  code: string | null;
+  path: string | null;
+  url: string | null;
+  expires_at: string | null;
+  kind: "invite";
+  username_code: string;
+};
+
+export type ReferralInvitePayload = ReferralLink;
+
+export type ReferralStats = {
+  pending: number;
+  qualified: number;
+  rewarded: number;
+  rejected: number;
+  total: number;
+};
+
+export type ReferralQualification = {
+  requires_onboarding: boolean;
+  requires_first_paid_tip: boolean;
+  min_tip_cents: number;
+  referrer_bonus_cents: number;
+  referred_fee_credit_cents: number;
+  currency: string;
+};
+
+export type ReferralEntry = {
+  username: string;
+  status: "pending" | "qualified" | "rewarded" | "rejected";
+  signed_up_at: string;
+  qualified_at?: string | null;
+  rewarded_at?: string | null;
+};
+
+export type ReferralsSummary = {
+  referrals_enabled: boolean;
+  program_enabled: boolean;
+  link: ReferralLink;
+  can_refer: boolean;
+  stats: ReferralStats;
+  qualification: ReferralQualification;
+  fee_credit_cents_remaining: number;
+  entries: ReferralEntry[];
+};
+
+export type ReferralsPayload = {
+  referrals: ReferralsSummary;
+};
+
+export type AdminReferralSummary = {
+  id: string;
+  status: ReferralEntry["status"];
+  referral_code_used: string;
+  referrer_username: string;
+  referred_username: string;
+  signed_up_at: string;
+  qualified_at?: string | null;
+  rewarded_at?: string | null;
+  referrer_bonus_cents?: number | null;
+  referrer_bonus_currency?: string | null;
+  qualifying_tip_reference?: string | null;
+  metadata: Record<string, unknown>;
+};
+
+export type AdminReferralsOverview = {
+  pending: number;
+  qualified: number;
+  rewarded: number;
+  rejected: number;
+  total: number;
+  bonus_paid_cents: Record<string, number>;
+};
+
+export type AdminReferralsResponse = {
+  overview: AdminReferralsOverview;
+  referrals: AdminReferralSummary[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
 };
 
 export type TipStatus = "pending" | "paid" | "failed";

@@ -19,7 +19,10 @@ export const CREATOR_DASHBOARD_NAV: DashboardNavGroup[] = [
   },
   {
     label: "Your page",
-    items: [{ id: "public-page", href: "/dashboard/public-page", label: "Public page" }],
+    items: [
+      { id: "public-page", href: "/dashboard/public-page", label: "Public page" },
+      { id: "referrals", href: "/dashboard/referrals", label: "Invite creators" },
+    ],
   },
   {
     label: "Integrations",
@@ -48,6 +51,7 @@ export const ADMIN_DASHBOARD_NAV: DashboardNavGroup[] = [
 export const CREATOR_DASHBOARD_PATHS = [
   "/dashboard/tips",
   "/dashboard/public-page",
+  "/dashboard/referrals",
   "/dashboard/widget",
   "/dashboard/payouts",
   "/dashboard/notifications",

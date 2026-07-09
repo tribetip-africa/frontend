@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Logo } from "@/components/brand/logo";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import type { DashboardNavGroup } from "@/lib/dashboard-nav";
 import { flattenDashboardNav } from "@/lib/dashboard-nav";
 import { useAuth } from "@/context/auth-context";
@@ -116,7 +117,10 @@ export function DashboardMobileNav({ groups, quickLinks }: DashboardMobileNavPro
             {pageTitle}
           </p>
         </div>
-        <Logo href="/dashboard" size="sm" className="shrink-0" />
+        <div className="flex shrink-0 items-center gap-2">
+          <ThemeSwitcher className="h-9 w-9" />
+          <Logo href="/dashboard" size="sm" className="shrink-0" />
+        </div>
       </div>
 
       {open && (
@@ -133,7 +137,7 @@ export function DashboardMobileNav({ groups, quickLinks }: DashboardMobileNavPro
             role="dialog"
             aria-modal="true"
             aria-label="Dashboard menu"
-            className="absolute inset-y-0 left-0 flex w-[min(100%,300px)] flex-col bg-white shadow-2xl"
+            className="absolute inset-y-0 left-0 flex w-[min(100%,300px)] flex-col bg-surface shadow-2xl"
           >
             <div className="flex items-center justify-between px-4 py-4">
               <Logo href="/dashboard" size="sm" />

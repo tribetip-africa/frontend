@@ -8,12 +8,14 @@ export const RESERVED_ROOT_SEGMENTS = new Set([
   "faq",
   "terms",
   "privacy",
+  "waitlist",
   "t",
   "api",
   "_next",
   "favicon.ico",
   "robots.txt",
   "sitemap.xml",
+  "widget.js",
 ]);
 
 export function isValidPublicUsername(segment: string): boolean {

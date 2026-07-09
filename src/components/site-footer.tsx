@@ -1,15 +1,19 @@
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
+import { isSignupOpen, primaryLaunchCta } from "@/lib/launch-mode";
 
 type SiteFooterProps = {
   fixed?: boolean;
 };
 
 export function SiteFooter({ fixed = false }: SiteFooterProps) {
+  const launchCta = primaryLaunchCta();
+  const signupOpen = isSignupOpen();
+
   return (
     <footer
       className={[
-        "bg-white",
+        "border-t border-line bg-background",
         fixed ? "fixed inset-x-0 bottom-0 z-40" : "",
       ].join(" ")}
     >
@@ -25,16 +29,28 @@ export function SiteFooter({ fixed = false }: SiteFooterProps) {
           <div>
             <p className="font-semibold text-ink">Product</p>
             <ul className="mt-3 space-y-2 text-muted">
-              <li>
-                <Link href="/sign-up" className="hover:text-ink">
-                  Start my page
-                </Link>
-              </li>
-              <li>
-                <Link href="/sign-in" className="hover:text-ink">
-                  Log in
-                </Link>
-              </li>
+              {signupOpen ? (
+                <>
+                  <li>
+                    <Link href="/sign-up" className="hover:text-ink">
+                      Start my page
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/sign-in" className="hover:text-ink">
+                      Log in
+                    </Link>
+                  </li>
+                </>
+              ) : launchCta ? (
+                <li>
+                  <Link href={launchCta.href} className="hover:text-ink">
+                    {launchCta.label}
+                  </Link>
+                </li>
+              ) : (
+                <li className="text-muted">Launching soon</li>
+              )}
             </ul>
           </div>
           <div>

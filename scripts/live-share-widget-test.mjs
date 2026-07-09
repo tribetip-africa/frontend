@@ -9,6 +9,7 @@ import {
   completeOnboardingAfterSignup,
   paystackClientMode,
   setupTippableCreator,
+  signInPageSession,
   supportedRegionsForLiveTests,
   waitForDashboardOnboardingClear,
   waitForServices,
@@ -260,13 +261,7 @@ try {
   creatorPage.setDefaultTimeout(mode === "live" ? 60_000 : 30_000);
 
   await record("dashboard widget page shows the embed snippet", async () => {
-    const signIn = await creatorPage.goto(`${WEB_BASE}/sign-in`, { waitUntil: "domcontentloaded" });
-    assertNoStore(signIn.headers(), "/sign-in");
-
-    await creatorPage.fill("#login", username);
-    await creatorPage.fill("#password", password);
-    await creatorPage.getByRole("main").getByRole("button", { name: /^log in$/i }).click();
-    await creatorPage.waitForURL("**/dashboard", { timeout: 30_000 });
+    await signInPageSession(creatorPage, { login: username, password });
     await completeOnboardingAfterSignup(creatorPage, { mode, countryCode: region.code });
     await waitForDashboardOnboardingClear(creatorPage, {
       mode,

@@ -74,7 +74,7 @@ export function HowItWorks() {
               <li
                 key={label}
                 data-landing="stagger-item"
-                className="rounded-full border border-line bg-white px-4 py-1.5 text-sm font-semibold text-ink-soft"
+                className="rounded-full border border-line bg-surface px-4 py-1.5 text-sm font-semibold text-ink-soft"
               >
                 {label}
               </li>

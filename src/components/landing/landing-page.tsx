@@ -7,11 +7,13 @@ import { SiteHeader } from "@/components/site-header";
 import { AfricaFlowMap } from "@/components/landing/africa-flow-map";
 import { CreatorShowcase } from "@/components/landing/creator-showcase";
 import { FeatureSection } from "@/components/landing/feature-section";
+import { GrowthToolsSection } from "@/components/landing/growth-tools-section";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { TipFlowPreview } from "@/components/landing/tip-flow-preview";
 import { useLandingScrollMotion } from "@/components/landing/use-landing-scroll-motion";
 import { Button } from "@/components/ui/button";
+import { primaryLaunchCta } from "@/lib/launch-mode";
 
 const benefits = [
   {
@@ -38,6 +40,7 @@ const benefits = [
 
 export function LandingPage() {
   const mainRef = useRef<HTMLElement>(null);
+  const launchCta = primaryLaunchCta();
   useLandingScrollMotion(mainRef);
 
   return (
@@ -78,11 +81,13 @@ export function LandingPage() {
 
         <CreatorShowcase />
 
+        <GrowthToolsSection />
+
         <div id="markets">
           <AfricaFlowMap />
         </div>
 
-        <section id="creators" className="bg-white py-16 sm:py-24" data-landing="stagger-section">
+        <section id="creators" className="landing-section py-16 sm:py-24" data-landing="stagger-section">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="text-center" data-landing="reveal">
               <h2 className="font-display text-3xl font-extrabold text-ink sm:text-4xl">
@@ -124,13 +129,17 @@ export function LandingPage() {
               Ready to get your first tip?
             </h2>
             <p className="mt-3 text-lg text-ink-soft">
-              Join creators building income from their communities — starting in Africa.
+              {launchCta
+                ? "Join creators building income from their communities — starting in Africa."
+                : "Creator sign-ups are opening soon across Africa."}
             </p>
-            <Link href="/sign-up" className="mt-8 inline-block">
-              <Button variant="primary" type="button" className="px-10 py-4 text-base">
-                Start my page — it&apos;s free
-              </Button>
-            </Link>
+            {launchCta ? (
+              <Link href={launchCta.href} className="mt-8 inline-block">
+                <Button variant="primary" type="button" className="px-10 py-4 text-base">
+                  {launchCta.label}
+                </Button>
+              </Link>
+            ) : null}
           </div>
         </section>
       </main>
