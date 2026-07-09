@@ -30,7 +30,6 @@ export function LandingHero() {
       const rotator = hero.querySelector<HTMLElement>('[data-landing-hero="headline-rotator"]');
       const subhead = hero.querySelector<HTMLElement>('[data-landing-hero="subhead"]');
       const cta = hero.querySelector<HTMLElement>('[data-landing-hero="cta"]');
-      const previewLabel = hero.querySelector<HTMLElement>('[data-landing-hero="preview-label"]');
       const preview = hero.querySelector<HTMLElement>('[data-landing-hero="preview"]');
       const previewFloat = hero.querySelector<HTMLElement>('[data-landing-hero="preview-float"]');
 
@@ -58,7 +57,6 @@ export function LandingHero() {
         .from(subhead, { y: 22, autoAlpha: 0, duration: 0.65 }, "-=0.35")
         .from(rotator, { y: 22, autoAlpha: 0, duration: 0.65 }, "-=0.5")
         .from(cta, { y: 18, autoAlpha: 0, scale: 0.97, duration: 0.55 }, "-=0.3")
-        .from(previewLabel, { autoAlpha: 0, duration: 0.45 }, "-=0.35")
         .from(
           preview,
           {
@@ -133,12 +131,6 @@ export function LandingHero() {
           </div>
 
           <div className="mx-auto w-full max-w-md lg:max-w-none">
-            <p
-              data-landing-hero="preview-label"
-              className="mb-4 text-center text-sm font-semibold text-muted lg:text-left"
-            >
-              What your fans see when they visit your page
-            </p>
             <div data-landing-hero="preview">
               <div data-landing-hero="preview-float">
                 <TipFlowPreview variant="supporter" animated={false} />
