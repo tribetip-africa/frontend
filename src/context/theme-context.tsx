@@ -4,7 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useSyncExternalStore,
   type ReactNode,
@@ -78,7 +78,7 @@ function notifyThemeSubscribers() {
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const snapshot = useSyncExternalStore(subscribeTheme, getThemeSnapshot, () => SERVER_SNAPSHOT);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     applyThemePreference(snapshot.preference);
   }, [snapshot.preference, snapshot.resolvedTheme]);
 
