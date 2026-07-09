@@ -3,6 +3,7 @@ import {
   WEB_BASE,
   apiRequest,
   assertStructuredError,
+  isLiveSignupOpen,
   waitForServices,
 } from "./live-helpers.mjs";
 
@@ -90,30 +91,34 @@ if (signOut.data.error.message !== "No active session.") {
 }
 
 console.log("4. Sign-up UI surfaces structured validation errors");
-const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage();
-const uiTs = Date.now();
+if (!isLiveSignupOpen()) {
+  console.log("   … skipped (launch mode gates sign-up)");
+} else {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  const uiTs = Date.now();
 
-try {
-  await page.goto(`${WEB_BASE}/sign-up`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#username", { state: "visible" });
-  const countrySelect = page.locator("#country_code");
-  if (await countrySelect.isVisible()) {
-    await countrySelect.selectOption("KE");
+  try {
+    await page.goto(`${WEB_BASE}/sign-up`, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("#username", { state: "visible" });
+    const countrySelect = page.locator("#country_code");
+    if (await countrySelect.isVisible()) {
+      await countrySelect.selectOption("KE");
+    }
+    await page.fill("#username", "ab");
+    await page.fill("#email", `errors_ui_${uiTs}@tribetip.africa`);
+    await page.fill("#password", "securepass123");
+    await page.fill("#password_confirmation", "securepass123");
+    await page.getByRole("main").getByRole("button", { name: /start my page/i }).click();
+
+    const alert = page.locator('[role="alert"]');
+    await alert.filter({ hasText: /validation failed/i }).waitFor({
+      state: "visible",
+      timeout: 15000,
+    });
+  } finally {
+    await browser.close();
   }
-  await page.fill("#username", "ab");
-  await page.fill("#email", `errors_ui_${uiTs}@tribetip.africa`);
-  await page.fill("#password", "securepass123");
-  await page.fill("#password_confirmation", "securepass123");
-  await page.getByRole("main").getByRole("button", { name: /start my page/i }).click();
-
-  const alert = page.locator('[role="alert"]');
-  await alert.filter({ hasText: /validation failed/i }).waitFor({
-    state: "visible",
-    timeout: 15000,
-  });
-} finally {
-  await browser.close();
 }
 
 console.log("5. API rate limit errors use structured payload");

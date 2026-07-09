@@ -22,6 +22,7 @@ import {
   pickSettlementBank,
   postTipCheckout,
   regionUsername,
+  isLiveSignupOpen,
   waitForPaystackCustomer,
   waitForServices,
 } from "./live-helpers.mjs";
@@ -40,38 +41,43 @@ console.log("=== Kenya M-Pesa / Safaricom payout E2E ===\n");
 
 console.log("1. UI — Kenyan signup, M-PESA onboarding, dashboard");
 const uiUser = regionUsername("ke_mpesa_ui", "KE");
-const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage();
-page.setDefaultTimeout(120_000);
 
-try {
-  await page.goto(`${WEB_BASE}/sign-up`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#username", { state: "visible" });
-  await fillSignupForm(page, {
-    username: uiUser,
-    email: `${uiUser}@tribetip.africa`,
-    password,
-    countryCode: "KE",
-  });
-  await page.getByRole("main").getByRole("button", { name: /start my page/i }).click();
-  await page.waitForURL("**/dashboard", { timeout: 30000 });
-  await page.getByRole("dialog").getByRole("heading", { name: /set up payouts/i }).waitFor();
-  await page.getByRole("heading", { name: /set up payouts/i }).waitFor();
-  await completeMpesaOnboardingUI(page);
-  console.log(`   ✓ UI flow completed for @${uiUser}`);
-} catch (error) {
-  const alert = await page.locator('[role="alert"]').textContent().catch(() => null);
-  console.error("   ✗ UI flow failed:", error.message);
-  if (alert) console.error("   UI error:", alert);
-  await browser.close();
-  process.exit(1);
-} finally {
-  await browser.close();
+if (!isLiveSignupOpen()) {
+  console.log("   … skipped (launch mode gates sign-up)");
+} else {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  page.setDefaultTimeout(120_000);
+
+  try {
+    await page.goto(`${WEB_BASE}/sign-up`, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("#username", { state: "visible" });
+    await fillSignupForm(page, {
+      username: uiUser,
+      email: `${uiUser}@tribetip.africa`,
+      password,
+      countryCode: "KE",
+    });
+    await page.getByRole("main").getByRole("button", { name: /start my page/i }).click();
+    await page.waitForURL("**/dashboard", { timeout: 30000 });
+    await page.getByRole("dialog").getByRole("heading", { name: /set up payouts/i }).waitFor();
+    await page.getByRole("heading", { name: /set up payouts/i }).waitFor();
+    await completeMpesaOnboardingUI(page);
+    console.log(`   ✓ UI flow completed for @${uiUser}`);
+  } catch (error) {
+    const alert = await page.locator('[role="alert"]').textContent().catch(() => null);
+    console.error("   ✗ UI flow failed:", error.message);
+    if (alert) console.error("   UI error:", alert);
+    await browser.close();
+    process.exit(1);
+  } finally {
+    await browser.close();
+  }
+
+  // Brief pause so Paystack customer provisioning from the UI signup can finish
+  // before we create a second Kenyan account in the same test run.
+  await new Promise((resolve) => setTimeout(resolve, 5_000));
 }
-
-// Brief pause so Paystack customer provisioning from the UI signup can finish
-// before we create a second Kenyan account in the same test run.
-await new Promise((resolve) => setTimeout(resolve, 5_000));
 
 const username = regionUsername("ke_mpesa", "KE");
 const email = `${username}@tribetip.africa`;

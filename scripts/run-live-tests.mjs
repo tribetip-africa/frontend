@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { paystackClientMode } from "./live-helpers.mjs";
+import { isLiveSignupOpen, liveLaunchMode, paystackClientMode } from "./live-helpers.mjs";
 
 const scriptsDir = path.dirname(fileURLToPath(import.meta.url));
 const mode = await paystackClientMode();
@@ -10,12 +10,19 @@ const mode = await paystackClientMode();
 const tests = [
   "live-cache-test.mjs",
   "live-static-pages-test.mjs",
-  "live-signup-test.mjs",
-  "live-signin-test.mjs",
+];
+
+if (isLiveSignupOpen()) {
+  tests.push("live-signup-test.mjs", "live-signin-test.mjs");
+} else {
+  console.log(`Skipping signup/sign-in live tests (launch mode: ${liveLaunchMode()})\n`);
+}
+
+tests.push(
   "live-regions-test.mjs",
   "live-tips-test.mjs",
   "live-share-widget-test.mjs",
-];
+);
 
 if (mode === "live") {
   tests.push("live-ke-mpesa-e2e-test.mjs");

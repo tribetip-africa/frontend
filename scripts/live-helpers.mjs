@@ -1,8 +1,37 @@
 import { execSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const frontendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+function readEnvLocalLaunchMode() {
+  const envPath = path.join(frontendRoot, ".env.local");
+  if (!existsSync(envPath)) return null;
+
+  const match = readFileSync(envPath, "utf8").match(
+    /^\s*NEXT_PUBLIC_LAUNCH_MODE\s*=\s*([^\s#]+)/m,
+  );
+  return match?.[1]?.trim().toLowerCase() ?? null;
+}
 
 export const API_BASE = process.env.LIVE_API_URL ?? "http://127.0.0.1:3001";
 export const WEB_BASE = process.env.LIVE_WEB_URL ?? "http://localhost:3000";
+
+export function liveLaunchMode() {
+  const raw =
+    process.env.LIVE_LAUNCH_MODE ??
+    process.env.NEXT_PUBLIC_LAUNCH_MODE ??
+    readEnvLocalLaunchMode() ??
+    "open";
+  const mode = raw.trim().toLowerCase();
+  if (mode === "waitlist" || mode === "coming_soon") return mode;
+  return "open";
+}
+
+export function isLiveSignupOpen() {
+  return liveLaunchMode() === "open";
+}
 
 export function resolveTribetipDir() {
   if (process.env.TRIBETIP_DIR) return process.env.TRIBETIP_DIR;
@@ -191,6 +220,22 @@ export async function apiSignIn({ login, password = "securepass123" }) {
   }
 
   return { response, data, token };
+}
+
+export async function signInPageSession(page, { login, password = "securepass123" }) {
+  const { token, data } = await apiSignIn({ login, password });
+
+  await page.goto(`${WEB_BASE}/`, { waitUntil: "domcontentloaded" });
+  await page.evaluate(
+    ({ sessionToken, tribe }) => {
+      localStorage.setItem("tribetip_token", sessionToken);
+      localStorage.setItem("tribetip_tribe", JSON.stringify(tribe));
+    },
+    { sessionToken: token, tribe: data.tribe },
+  );
+  await page.goto(`${WEB_BASE}/dashboard`, { waitUntil: "domcontentloaded" });
+
+  return { token, tribe: data.tribe };
 }
 
 export async function railsRunner(script) {
@@ -936,7 +981,7 @@ export async function selectSignupMarket(page, countryCode) {
 export async function waitForServices() {
   const checks = [
     { name: "API", url: `${API_BASE}/up` },
-    { name: "Web", url: `${WEB_BASE}/sign-up` },
+    { name: "Web", url: `${WEB_BASE}/` },
   ];
 
   for (const { name, url } of checks) {

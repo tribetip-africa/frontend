@@ -7,6 +7,7 @@ import {
   paystackClientMode,
   pickSettlementBank,
   enabledPaystackRegions,
+  isLiveSignupOpen,
   regionsForLiveTests,
   apiRequest,
   apiSignIn,
@@ -22,6 +23,7 @@ import {
   enablePublicProfile,
   fetchPaystackAccounts,
   regionUsername,
+  signInPageSession,
   waitForPaystackCustomer,
   waitForPaystackSubaccountLinked,
   waitForServices,
@@ -226,7 +228,13 @@ const uiRegion =
     : (enabledPaystackRegionsList.find((region) => region.code === "ZA")?.code ??
       enabledPaystackRegionsList[0]?.code ??
       "KE");
-console.log(`\n3. UI onboarding smoke (${uiRegion})`);
+
+if (!isLiveSignupOpen()) {
+  console.log(`\n3. UI onboarding smoke (${uiRegion}) — sign-in UI gated, using API session`);
+} else {
+  console.log(`\n3. UI onboarding smoke (${uiRegion})`);
+}
+
 const uiUser = regionUsername("region_ui", uiRegion);
 await apiSignUp({
   username: uiUser,
@@ -234,8 +242,8 @@ await apiSignUp({
   password,
   country_code: uiRegion,
 });
-if (mode === "live") {
-  await waitForPaystackCustomer(uiUser);
+if (mode === "live" && isLiveSignupOpen()) {
+  await waitForPaystackCustomer(uiUser, { timeoutMs: 120_000 });
 }
 await clearPaystackSubaccount(uiUser);
 
@@ -244,11 +252,16 @@ const page = await browser.newPage();
 page.setDefaultTimeout(mode === "live" ? 120_000 : 30_000);
 
 try {
-  await page.goto(`${WEB_BASE}/sign-in`, { waitUntil: "domcontentloaded" });
-  await page.fill("#login", uiUser);
-  await page.fill("#password", password);
-  await page.getByRole("main").getByRole("button", { name: /^log in$/i }).click();
-  await page.waitForURL("**/dashboard", { timeout: 30000 });
+  if (isLiveSignupOpen()) {
+    await page.goto(`${WEB_BASE}/sign-in`, { waitUntil: "domcontentloaded" });
+    await page.fill("#login", uiUser);
+    await page.fill("#password", password);
+    await page.getByRole("main").getByRole("button", { name: /^log in$/i }).click();
+    await page.waitForURL("**/dashboard", { timeout: 30000 });
+  } else {
+    await signInPageSession(page, { login: uiUser, password });
+  }
+
   await page.getByRole("dialog").getByRole("heading", { name: /set up payouts/i }).waitFor();
 
   const dashboardPage = await page.reload({ waitUntil: "domcontentloaded" });
