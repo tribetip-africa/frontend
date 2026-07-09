@@ -192,6 +192,37 @@ body {
   perspective: 900px;
 }
 
+.hero-payout-headline {
+  display: inline;
+}
+
+.hero-payout-rotator {
+  position: relative;
+  display: inline;
+  vertical-align: baseline;
+}
+
+.hero-payout-rotator-item {
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.hero-payout-rotator-item.is-active {
+  position: relative;
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-payout-rotator-item:not(.is-active) {
+    display: none;
+  }
+}
+
 
 @keyframes float-y {
   0%,

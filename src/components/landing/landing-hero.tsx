@@ -3,21 +3,22 @@
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { HeroUsernameCta } from "@/components/landing/hero-username-cta";
+import { HeroPayoutRotator } from "@/components/landing/hero-payout-rotator";
 import { TipFlowPreview } from "@/components/landing/tip-flow-preview";
 import { gsap, registerGsapPlugins, SplitText } from "@/lib/gsap/register";
 import { prefersReducedMotion } from "@/lib/gsap/prefers-reduced-motion";
 
 export function LandingHero() {
   const heroRef = useRef<HTMLElement>(null);
-  const headlineRef = useRef<HTMLHeadingElement>(null);
+  const headlineRef = useRef<HTMLSpanElement>(null);
 
   useGSAP(
     () => {
       registerGsapPlugins();
 
       const hero = heroRef.current;
-      const headline = headlineRef.current;
-      if (!hero || !headline) {
+      const headlineEl = headlineRef.current;
+      if (!hero || !headlineEl) {
         return;
       }
 
@@ -26,13 +27,13 @@ export function LandingHero() {
       }
 
       const badge = hero.querySelector<HTMLElement>('[data-landing-hero="badge"]');
+      const rotator = hero.querySelector<HTMLElement>('[data-landing-hero="headline-rotator"]');
       const subhead = hero.querySelector<HTMLElement>('[data-landing-hero="subhead"]');
       const cta = hero.querySelector<HTMLElement>('[data-landing-hero="cta"]');
-      const previewLabel = hero.querySelector<HTMLElement>('[data-landing-hero="preview-label"]');
       const preview = hero.querySelector<HTMLElement>('[data-landing-hero="preview"]');
       const previewFloat = hero.querySelector<HTMLElement>('[data-landing-hero="preview-float"]');
 
-      const split = SplitText.create(headline, {
+      const split = SplitText.create(headlineEl, {
         type: "words",
         wordsClass: "landing-split-word",
       });
@@ -54,8 +55,8 @@ export function LandingHero() {
           "-=0.25",
         )
         .from(subhead, { y: 22, autoAlpha: 0, duration: 0.65 }, "-=0.35")
+        .from(rotator, { y: 22, autoAlpha: 0, duration: 0.65 }, "-=0.5")
         .from(cta, { y: 18, autoAlpha: 0, scale: 0.97, duration: 0.55 }, "-=0.3")
-        .from(previewLabel, { autoAlpha: 0, duration: 0.45 }, "-=0.35")
         .from(
           preview,
           {
@@ -107,12 +108,13 @@ export function LandingHero() {
             >
               Creator tipping platform · Built for Africa
             </p>
-            <h1
-              ref={headlineRef}
-              data-landing-hero="headline"
-              className="mt-5 font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-ink sm:text-5xl lg:text-[3.25rem]"
-            >
-              A tip jar for creators — paid to M-Pesa or your bank
+            <h1 className="mt-5 font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-ink sm:text-5xl lg:text-[3.25rem]">
+              <span className="hero-payout-headline">
+                <span ref={headlineRef} data-landing-hero="headline">
+                  A tip jar for creators — paid to{" "}
+                </span>
+                <HeroPayoutRotator scrollRootRef={heroRef} />
+              </span>
             </h1>
             <p
               data-landing-hero="subhead"
@@ -129,12 +131,6 @@ export function LandingHero() {
           </div>
 
           <div className="mx-auto w-full max-w-md lg:max-w-none">
-            <p
-              data-landing-hero="preview-label"
-              className="mb-4 text-center text-sm font-semibold text-muted lg:text-left"
-            >
-              What your fans see when they visit your page
-            </p>
             <div data-landing-hero="preview">
               <div data-landing-hero="preview-float">
                 <TipFlowPreview variant="supporter" animated={false} />
