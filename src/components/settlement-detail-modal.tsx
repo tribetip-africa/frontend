@@ -118,6 +118,15 @@ export function SettlementDetailModal({
                     {formatMoney(breakdown.platform_fee_cents ?? 0, breakdown.currency)}
                   </dd>
                 </div>
+                {breakdown.referral_fee_credit_applied_cents != null &&
+                  breakdown.referral_fee_credit_applied_cents > 0 && (
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-brand-600">Referral fee credit</dt>
+                      <dd className="font-medium text-green-700">
+                        -{formatMoney(breakdown.referral_fee_credit_applied_cents, breakdown.currency)}
+                      </dd>
+                    </div>
+                  )}
               </>
             )}
             <div className="flex items-center justify-between gap-4 border-t border-brand-100 pt-3">

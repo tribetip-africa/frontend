@@ -1,7 +1,8 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-
+import { useRef, useSyncExternalStore } from "react";
+import { useGSAP } from "@gsap/react";
+import { gsap } from "@/lib/gsap/register";
 import { regionFlags } from "@/lib/region-flags";
 
 /**
@@ -9,11 +10,8 @@ import { regionFlags } from "@/lib/region-flags";
  *
  * Africa rendered as a dense dot-matrix (via an orthographic globe projection,
  * so it keeps a subtle curved/zoomed feel) with pulses of value flowing between
- * the five Paystack-accessible regions. Inspired by payd.money's dotted globe,
- * re-themed for TribeTip and focused only on the continent.
- *
- * Pure SVG + SMIL + CSS — no animation dependencies. Animation is skipped when
- * the visitor prefers reduced motion.
+ * the five Paystack-accessible regions. A GSAP-animated atmospheric halo and
+ * orbital rings sit behind the continent to suggest Earth without leaving Africa.
  */
 
 type LngLat = readonly [number, number];
@@ -155,7 +153,8 @@ const REGION_POS = Object.fromEntries(
 ) as Record<string, { x: number; y: number; front: boolean }>;
 
 // Tight viewBox around the continent so it reads as a zoom onto Africa.
-const PAD = 32;
+// The halo may clip slightly at the edges — overflow stays visible on the wrapper.
+const PAD = 28;
 const ALL_X = DOTS.map((d) => d.x);
 const ALL_Y = DOTS.map((d) => d.y);
 const MIN_X = Math.min(...ALL_X) - PAD;
@@ -212,7 +211,95 @@ function usePrefersReducedMotion(): boolean {
 export function AfricaFlowMap() {
   const reduced = usePrefersReducedMotion();
   const flags = regionFlags();
+  const mapRef = useRef<HTMLDivElement>(null);
   const isActive = (code: string) => flags[code as keyof typeof flags] === true;
+
+  useGSAP(
+    () => {
+      if (reduced || !mapRef.current) {
+        return;
+      }
+
+      const atmosphere = mapRef.current.querySelector<SVGGElement>('[data-africa-halo="atmosphere"]');
+      const limb = mapRef.current.querySelector<SVGCircleElement>('[data-africa-halo="limb"]');
+      const orbitOuter = mapRef.current.querySelector<SVGGElement>('[data-africa-halo="orbit-outer"]');
+      const orbitInner = mapRef.current.querySelector<SVGGElement>('[data-africa-halo="orbit-inner"]');
+      const satelliteA = mapRef.current.querySelector<SVGCircleElement>(
+        '[data-africa-halo="satellite-a"]',
+      );
+      const satelliteB = mapRef.current.querySelector<SVGCircleElement>(
+        '[data-africa-halo="satellite-b"]',
+      );
+
+      const timeline = gsap.timeline({ defaults: { ease: "sine.inOut" } });
+
+      if (atmosphere) {
+        gsap.set(atmosphere, { transformOrigin: "0px 0px", svgOrigin: "0 0" });
+        timeline.to(
+          atmosphere,
+          { opacity: 0.46, scale: 1.03, duration: 4.2, repeat: -1, yoyo: true },
+          0,
+        );
+      }
+
+      if (limb) {
+        timeline.to(
+          limb,
+          { opacity: 0.62, strokeWidth: 2.4, duration: 3.6, repeat: -1, yoyo: true },
+          0,
+        );
+      }
+
+      if (orbitOuter) {
+        gsap.to(orbitOuter, {
+          rotation: 360,
+          duration: 52,
+          repeat: -1,
+          ease: "none",
+          svgOrigin: "0 0",
+        });
+      }
+
+      if (orbitInner) {
+        gsap.to(orbitInner, {
+          rotation: -360,
+          duration: 34,
+          repeat: -1,
+          ease: "none",
+          svgOrigin: "0 0",
+        });
+      }
+
+      if (satelliteA) {
+        gsap.to(satelliteA, {
+          opacity: 0.35,
+          duration: 2.2,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+        });
+      }
+
+      if (satelliteB) {
+        gsap.to(satelliteB, {
+          opacity: 0.3,
+          duration: 2.8,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+          delay: 0.9,
+        });
+      }
+
+      return () => {
+        timeline.kill();
+        gsap.killTweensOf(
+          [atmosphere, limb, orbitOuter, orbitInner, satelliteA, satelliteB].filter(Boolean),
+        );
+      };
+    },
+    { scope: mapRef, dependencies: [reduced] },
+  );
 
   return (
     <section className="section-alt py-16 sm:py-24" data-landing="stagger-section">
@@ -228,14 +315,31 @@ export function AfricaFlowMap() {
           </p>
         </div>
 
-        <div className="mx-auto mt-10 max-w-md" data-landing="map">
+        <div ref={mapRef} className="mx-auto mt-10 max-w-lg sm:max-w-xl" data-landing="map">
           <svg
             viewBox={`${round(MIN_X)} ${round(MIN_Y)} ${round(VIEW_W)} ${round(VIEW_H)}`}
-            className="h-auto w-full"
+            className="africa-map-svg h-auto w-full overflow-visible"
             role="img"
             aria-label="Map of Africa showing tips flowing between Nigeria, Ghana, Côte d'Ivoire, Kenya and South Africa."
           >
             <defs>
+              <radialGradient id="tt-atmo-glow" cx="50%" cy="50%" r="50%">
+                <stop offset="62%" stopColor="var(--accent)" stopOpacity="0" />
+                <stop offset="86%" stopColor="var(--accent)" stopOpacity="0.06" />
+                <stop offset="96%" stopColor="var(--brand-400)" stopOpacity="0.12" />
+                <stop offset="100%" stopColor="var(--brand-200)" stopOpacity="0.18" />
+              </radialGradient>
+              <linearGradient id="tt-limb-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="var(--brand-200)" stopOpacity="0.15" />
+                <stop offset="35%" stopColor="var(--accent)" stopOpacity="0.75" />
+                <stop offset="65%" stopColor="var(--brand-400)" stopOpacity="0.55" />
+                <stop offset="100%" stopColor="var(--brand-200)" stopOpacity="0.12" />
+              </linearGradient>
+              <linearGradient id="tt-orbit-stroke" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="var(--accent)" stopOpacity="0" />
+                <stop offset="45%" stopColor="var(--accent)" stopOpacity="0.55" />
+                <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+              </linearGradient>
               <linearGradient id="tt-flow-line" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="rgba(37,211,102,0)" />
                 <stop offset="50%" stopColor="rgba(29,168,81,0.7)" />
@@ -249,12 +353,75 @@ export function AfricaFlowMap() {
               <filter id="tt-blur" x="-50%" y="-50%" width="200%" height="200%">
                 <feGaussianBlur stdDeviation="1.4" />
               </filter>
+              <filter id="tt-halo-blur" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="3.5" />
+              </filter>
             </defs>
 
+            {/* globe halo — centred on the orthographic projection */}
+            <g transform={`translate(${CX} ${CY})`} className="africa-map-halo">
+              <g data-africa-halo="atmosphere" opacity={reduced ? 0.28 : 0.34}>
+                <circle r={R * 1.14} fill="url(#tt-atmo-glow)" filter="url(#tt-halo-blur)" />
+              </g>
+
+              <g data-africa-halo="orbit-outer" opacity={0.3}>
+                <ellipse
+                  rx={R * 1.06}
+                  ry={R * 0.36}
+                  fill="none"
+                  stroke="url(#tt-orbit-stroke)"
+                  strokeWidth={1.2}
+                  strokeDasharray="5 11"
+                  transform="rotate(-18)"
+                />
+                {!reduced && (
+                  <circle
+                    data-africa-halo="satellite-a"
+                    cx={R * 1.06}
+                    cy={0}
+                    r={2.6}
+                    fill="var(--accent)"
+                    transform="rotate(-18)"
+                  />
+                )}
+              </g>
+
+              <g data-africa-halo="orbit-inner" opacity={0.24}>
+                <ellipse
+                  rx={R * 0.9}
+                  ry={R * 0.26}
+                  fill="none"
+                  stroke="url(#tt-orbit-stroke)"
+                  strokeWidth={1}
+                  strokeDasharray="3 9"
+                  transform="rotate(54)"
+                />
+                {!reduced && (
+                  <circle
+                    data-africa-halo="satellite-b"
+                    cx={0}
+                    cy={-R * 0.26}
+                    r={2}
+                    fill="var(--brand-400)"
+                    transform="rotate(54)"
+                  />
+                )}
+              </g>
+
+              <circle
+                data-africa-halo="limb"
+                r={R}
+                fill="none"
+                stroke="url(#tt-limb-glow)"
+                strokeWidth={1.8}
+                opacity={reduced ? 0.32 : 0.48}
+              />
+            </g>
+
             {/* dot-matrix Africa */}
-            <g fill="var(--accent)">
+            <g className="africa-continent-dots">
               {DOTS.map((dot, i) => (
-                <circle key={i} cx={dot.x} cy={dot.y} r={1} opacity={0.7} />
+                <circle key={i} cx={dot.x} cy={dot.y} r={1.35} />
               ))}
             </g>
 
@@ -362,8 +529,8 @@ export function AfricaFlowMap() {
                 key={region.code}
                 className={`flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold shadow-sm ${
                   active
-                    ? "border-brand-200 bg-white text-ink"
-                    : "border-line bg-white text-muted opacity-60"
+                    ? "border-brand-200 bg-surface text-ink"
+                    : "border-line bg-surface text-muted opacity-60"
                 }`}
               >
                 <span aria-hidden className={active ? "" : "grayscale"}>

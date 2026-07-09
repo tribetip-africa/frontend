@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { AuthForm } from "@/components/auth-form";
 import { AuthPageShell } from "@/components/auth-page-shell";
 import { SiteHeader } from "@/components/site-header";
 import { useAuth } from "@/context/auth-context";
+import { clearReferralCode, getReferralCode, normalizeReferralCode, setReferralCode } from "@/lib/referral-attribution";
 import type { SignUpPayload } from "@/types/api";
 
 function SignUpContent() {
@@ -13,10 +14,28 @@ function SignUpContent() {
   const searchParams = useSearchParams();
   const { signUp } = useAuth();
   const defaultUsername = searchParams.get("username") ?? "";
+  const referralFromUrl = searchParams.get("ref");
+  const defaultReferralCode = referralFromUrl ?? getReferralCode() ?? "";
+
+  useEffect(() => {
+    if (referralFromUrl) {
+      setReferralCode(referralFromUrl);
+    }
+  }, [referralFromUrl]);
 
   async function handleSubmit(values: Record<string, string>) {
     const payload = values as unknown as SignUpPayload;
+    const manualReferralCode = normalizeReferralCode(values.referral_code);
+    const referralCode = manualReferralCode ?? getReferralCode();
+    if (referralCode) {
+      payload.referral_code = referralCode;
+    } else {
+      delete payload.referral_code;
+    }
+
     const { confirmationRequired } = await signUp(payload);
+    clearReferralCode();
+
     if (confirmationRequired) {
       router.push("/sign-in?confirm_email=1");
       return;
@@ -35,7 +54,12 @@ function SignUpContent() {
         </p>
       }
     >
-      <AuthForm mode="sign-up" onSubmit={handleSubmit} defaultUsername={defaultUsername} />
+      <AuthForm
+        mode="sign-up"
+        onSubmit={handleSubmit}
+        defaultUsername={defaultUsername}
+        defaultReferralCode={defaultReferralCode}
+      />
     </AuthPageShell>
   );
 }

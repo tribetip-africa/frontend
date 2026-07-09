@@ -24,6 +24,7 @@ import { accountStatusBannerForCreator } from "@/lib/paystack-onboarding";
 import { canAccessCreatorPublicPage, isPublicPageShareable } from "@/lib/creator-public-page";
 import { fetchAdminTribes, fetchMyProfile } from "@/lib/api";
 import { AdminMetricsPanel } from "@/components/admin-metrics-panel";
+import { AdminReferralsPanel } from "@/components/dashboard/admin-referrals-panel";
 import { useDashboard } from "@/context/dashboard-context";
 import type { AdminOverview } from "@/types/api";
 
@@ -224,6 +225,8 @@ export function AdminOverviewPage() {
           <p className="text-sm text-brand-700">Loading platform metrics…</p>
         )}
       </div>
+
+      <AdminReferralsPanel token={token} />
     </>
   );
 }

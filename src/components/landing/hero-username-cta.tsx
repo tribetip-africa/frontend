@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { primaryLaunchCta, showWaitlist } from "@/lib/launch-mode";
 import { getPlatformHostLabel } from "@/lib/platform";
 
 const USERNAME_PATTERN = /^[a-z0-9_]{3,30}$/;
@@ -11,6 +13,34 @@ export function HeroUsernameCta() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const launchCta = primaryLaunchCta();
+
+  if (showWaitlist() && launchCta) {
+    return (
+      <div className="w-full max-w-xl">
+        <Link href={launchCta.href}>
+          <Button variant="primary" className="w-full px-8 py-4 text-base sm:w-auto">
+            {launchCta.label}
+          </Button>
+        </Link>
+        <p className="mt-3 text-sm text-muted">
+          Be first to claim your username when we open creator sign-ups.
+        </p>
+      </div>
+    );
+  }
+
+  if (!launchCta) {
+    return (
+      <div className="w-full max-w-xl rounded-2xl border border-line bg-surface px-5 py-5">
+        <p className="font-display text-xl font-extrabold text-ink">Launching soon</p>
+        <p className="mt-2 text-sm text-ink-soft">
+          TribeTip is opening creator sign-ups in waves across Africa. Check back shortly or follow
+          us for updates.
+        </p>
+      </div>
+    );
+  }
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -28,7 +58,7 @@ export function HeroUsernameCta() {
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-xl">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-        <div className="flex min-w-0 flex-1 items-center overflow-hidden rounded-full border-2 border-line bg-white shadow-sm focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30">
+        <div className="flex min-w-0 flex-1 items-center overflow-hidden rounded-full border-2 border-line bg-surface shadow-sm focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-200/70">
           <span className="hidden shrink-0 pl-5 text-sm text-muted sm:inline">
             {getPlatformHostLabel()}/
           </span>

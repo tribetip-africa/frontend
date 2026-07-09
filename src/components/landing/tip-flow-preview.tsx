@@ -33,7 +33,7 @@ export function TipFlowPreview({ variant = "supporter", animated = true }: TipFl
             </div>
           ))}
         </div>
-        <div className="mt-4 rounded-full bg-accent py-3 text-center text-sm font-bold text-ink">
+        <div className="mt-4 rounded-full bg-brand-600 py-3 text-center text-sm font-bold text-white">
           Withdraw to M-Pesa
         </div>
       </div>

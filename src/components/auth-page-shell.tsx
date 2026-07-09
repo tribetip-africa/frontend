@@ -62,7 +62,7 @@ export function AuthPageShell({
       </aside>
 
       {/* Right — form */}
-      <section className="flex w-full flex-1 flex-col bg-white px-4 pb-10 pt-6 sm:px-8 sm:pt-8 lg:w-[56%] lg:px-12 lg:pt-10 xl:w-1/2 xl:px-16">
+      <section className="flex w-full flex-1 flex-col bg-surface px-4 pb-10 pt-6 sm:px-8 sm:pt-8 lg:w-[56%] lg:px-12 lg:pt-10 xl:w-1/2 xl:px-16">
         <div className="mx-auto w-full max-w-md lg:mx-0 lg:max-w-lg">
           <Link
             href="/"

@@ -4,9 +4,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/brand/logo";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { useAuth } from "@/context/auth-context";
 import { fetchMyProfile } from "@/lib/api";
 import { canAccessCreatorPublicPage, LOCKED_PAGE_HINT } from "@/lib/creator-public-page";
+import { isSignupOpen, primaryLaunchCta } from "@/lib/launch-mode";
 import { getCreatorPageUrl } from "@/lib/platform";
 import { isAdminRole } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
@@ -14,6 +16,7 @@ import type { CreatorProfile } from "@/types/api";
 
 const LANDING_NAV = [
   { href: "/#how-it-works", label: "How it works" },
+  { href: "/#growth-tools", label: "Grow" },
   { href: "/#creators", label: "For creators" },
   { href: "/#markets", label: "Markets" },
   { href: "/faq", label: "FAQ" },
@@ -42,6 +45,8 @@ export function SiteHeader() {
   const publicPageShareable =
     isAuthenticated && !isAdmin && canAccessCreatorPublicPage(tribe, effectiveProfile);
   const onDashboard = isDashboardPath(pathname);
+  const launchCta = primaryLaunchCta();
+  const signupOpen = isSignupOpen();
 
   useEffect(() => {
     if (!shouldLoadProfile || !token) return;
@@ -70,7 +75,7 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-line/70 bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Logo href={isAuthenticated ? "/dashboard" : "/"} size="md" />
 
@@ -108,6 +113,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <ThemeSwitcher />
           {isAuthenticated ? (
             <>
               <span className="hidden text-sm text-muted sm:inline">@{tribe.username}</span>
@@ -115,7 +121,7 @@ export function SiteHeader() {
                 Sign out
               </Button>
             </>
-          ) : (
+          ) : signupOpen ? (
             <>
               <Link href="/sign-in" className="hidden sm:block">
                 <Button variant="ghost" type="button">
@@ -128,6 +134,16 @@ export function SiteHeader() {
                 </Button>
               </Link>
             </>
+          ) : launchCta ? (
+            <Link href={launchCta.href}>
+              <Button variant="primary" type="button">
+                {launchCta.label}
+              </Button>
+            </Link>
+          ) : (
+            <span className="hidden rounded-full border border-line bg-surface px-4 py-2 text-sm font-semibold text-muted sm:inline">
+              Launching soon
+            </span>
           )}
         </div>
       </div>

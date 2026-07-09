@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Logo } from "@/components/brand/logo";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { DashboardMobileNav } from "@/components/dashboard/dashboard-mobile-nav";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import type { DashboardNavGroup } from "@/lib/dashboard-nav";
@@ -38,7 +39,7 @@ export function DashboardShell({
 
   return (
     <div className={`flex h-screen overflow-hidden bg-cream ${blurred ? "pointer-events-none select-none blur-sm" : ""}`}>
-      <aside className="hidden h-screen w-60 shrink-0 flex-col overflow-hidden bg-white lg:flex">
+      <aside className="hidden h-screen w-60 shrink-0 flex-col overflow-hidden bg-surface lg:flex">
         <div className="shrink-0 px-5 py-5">
           <Logo href="/dashboard" size="sm" />
         </div>
@@ -52,6 +53,7 @@ export function DashboardShell({
             <p className="truncate text-sm font-semibold text-ink">@{tribe.username}</p>
             <p className="truncate text-xs text-muted">{tribe.email}</p>
             <div className="mt-3 flex gap-2">
+              <ThemeSwitcher className="h-9 w-9" />
               <Link href="/" className="flex-1">
                 <Button variant="ghost" type="button" className="w-full text-xs">
                   Site

@@ -4,10 +4,10 @@ type Variant = "primary" | "secondary" | "ghost" | "gold" | "dark";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-accent text-ink hover:bg-accent-hover shadow-sm hover:shadow-md font-bold",
-  gold: "bg-accent text-ink hover:bg-accent-hover shadow-sm hover:shadow-md font-bold",
+    "bg-brand-600 text-white hover:bg-brand-700 shadow-sm hover:shadow-md font-bold",
+  gold: "bg-brand-600 text-white hover:bg-brand-700 shadow-sm hover:shadow-md font-bold",
   secondary:
-    "bg-white text-ink border-2 border-line hover:border-ink/20 hover:bg-sand font-semibold",
+    "bg-surface text-ink border-2 border-line hover:border-brand-200 hover:bg-sand font-semibold",
   ghost: "text-ink-soft hover:bg-sand font-medium",
   dark: "bg-ink text-white hover:bg-ink-soft font-bold",
 };

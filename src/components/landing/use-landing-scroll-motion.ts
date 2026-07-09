@@ -7,6 +7,7 @@ import { prefersReducedMotion } from "@/lib/gsap/prefers-reduced-motion";
 
 /** Play on enter, reverse on leave — works scrolling down and back up. */
 const REVERSIBLE_TOGGLE = "play reverse play reverse";
+const REVEAL_ONCE_TOGGLE = "play none none none";
 
 type ScrollRevealOptions = {
   trigger: Element;
@@ -18,6 +19,7 @@ function scrollReveal(
   targets: gsap.TweenTarget,
   vars: gsap.TweenVars,
   { trigger, start = "top 85%", end = "bottom 18%" }: ScrollRevealOptions,
+  toggleActions: string = REVERSIBLE_TOGGLE,
 ) {
   return gsap.from(targets, {
     ...vars,
@@ -26,7 +28,7 @@ function scrollReveal(
       trigger,
       start,
       end,
-      toggleActions: REVERSIBLE_TOGGLE,
+      toggleActions,
     },
   });
 }
@@ -52,9 +54,13 @@ export function useLandingScrollMotion(scopeRef: RefObject<HTMLElement | null>) 
         return;
       }
 
-      const reveals = gsap.utils.toArray<HTMLElement>('[data-landing="reveal"]', scope);
+      const reveals = gsap.utils.toArray<HTMLElement>(
+        '[data-landing="reveal"], [data-landing="reveal-once"]',
+        scope,
+      );
       reveals.forEach((element) => {
         const section = element.closest('[data-landing="stagger-section"]');
+        const once = element.getAttribute("data-landing") === "reveal-once";
         scrollReveal(
           element,
           { y: 44, autoAlpha: 0, duration: 0.85, ease: "power3.out" },
@@ -62,6 +68,7 @@ export function useLandingScrollMotion(scopeRef: RefObject<HTMLElement | null>) 
             trigger: section ?? element,
             start: section ? "top 82%" : "top 85%",
           },
+          once ? REVEAL_ONCE_TOGGLE : REVERSIBLE_TOGGLE,
         );
       });
 

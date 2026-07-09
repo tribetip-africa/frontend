@@ -8,7 +8,15 @@ type NotificationToastProps = {
   onDismiss: () => void;
 };
 
-function settlementHref(notification: CreatorNotification): string {
+function notificationHref(notification: CreatorNotification): string {
+  if (notification.kind === "referral_bonus_paid" || notification.kind === "referral_qualified") {
+    return "/dashboard/referrals";
+  }
+
+  if (notification.kind === "referral_welcome_bonus") {
+    return "/dashboard/referrals";
+  }
+
   const transferCode = notification.metadata.paystack_transfer_code;
   if (typeof transferCode === "string" && transferCode.length > 0) {
     return `/dashboard/payouts?settlement=${encodeURIComponent(transferCode)}`;
@@ -17,10 +25,22 @@ function settlementHref(notification: CreatorNotification): string {
   return "/dashboard/payouts";
 }
 
+function notificationLinkLabel(notification: CreatorNotification): string {
+  if (notification.kind.startsWith("referral_")) {
+    return "View referrals";
+  }
+
+  return "View settlement";
+}
+
 export function NotificationToast({ notification, onDismiss }: NotificationToastProps) {
   if (!notification) return null;
 
-  const isSuccess = notification.kind === "settlement_paid";
+  const isSuccess =
+    notification.kind === "settlement_paid" ||
+    notification.kind === "referral_bonus_paid" ||
+    notification.kind === "referral_qualified" ||
+    notification.kind === "referral_welcome_bonus";
 
   return (
     <div
@@ -44,11 +64,11 @@ export function NotificationToast({ notification, onDismiss }: NotificationToast
           <p className="font-semibold text-brand-900">{notification.title}</p>
           <p className="mt-1 text-sm text-brand-700">{notification.body}</p>
           <Link
-            href={settlementHref(notification)}
+            href={notificationHref(notification)}
             className="mt-2 inline-block text-sm font-medium text-brand-600 hover:text-brand-800"
             onClick={onDismiss}
           >
-            View settlement
+            {notificationLinkLabel(notification)}
           </Link>
         </div>
         <button

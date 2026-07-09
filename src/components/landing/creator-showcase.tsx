@@ -35,7 +35,7 @@ const CREATORS = [
 
 export function CreatorShowcase() {
   return (
-    <section className="bg-white py-16 sm:py-24" data-landing="stagger-section">
+    <section className="landing-section-warm py-16 sm:py-24" data-landing="stagger-section">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="text-center" data-landing="reveal">
           <p className="text-sm font-bold text-brand-600">Creators on TribeTip</p>
