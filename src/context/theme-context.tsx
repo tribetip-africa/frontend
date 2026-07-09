@@ -6,8 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import {
@@ -20,9 +19,12 @@ import {
   type ThemePreference,
 } from "@/lib/theme";
 
-type ThemeContextValue = {
+type ThemeSnapshot = {
   preference: ThemePreference;
   resolvedTheme: ResolvedTheme;
+};
+
+type ThemeContextValue = ThemeSnapshot & {
   label: string;
   setPreference: (preference: ThemePreference) => void;
   cyclePreference: () => void;
@@ -32,53 +34,80 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 const PREFERENCE_ORDER: ThemePreference[] = ["light", "dark", "system"];
 
+const SERVER_SNAPSHOT: ThemeSnapshot = {
+  preference: "system",
+  resolvedTheme: "light",
+};
+
+let cachedThemeSnapshot: ThemeSnapshot = SERVER_SNAPSHOT;
+
+function getThemeSnapshot(): ThemeSnapshot {
+  const preference = readStoredThemePreference();
+  const resolvedTheme = resolveTheme(preference);
+
+  if (
+    cachedThemeSnapshot.preference === preference &&
+    cachedThemeSnapshot.resolvedTheme === resolvedTheme
+  ) {
+    return cachedThemeSnapshot;
+  }
+
+  cachedThemeSnapshot = { preference, resolvedTheme };
+  return cachedThemeSnapshot;
+}
+
+function subscribeTheme(onStoreChange: () => void) {
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  const handleChange = () => onStoreChange();
+
+  window.addEventListener("tribetip-theme", handleChange);
+  window.addEventListener("storage", handleChange);
+  media.addEventListener("change", handleChange);
+
+  return () => {
+    window.removeEventListener("tribetip-theme", handleChange);
+    window.removeEventListener("storage", handleChange);
+    media.removeEventListener("change", handleChange);
+  };
+}
+
+function notifyThemeSubscribers() {
+  window.dispatchEvent(new Event("tribetip-theme"));
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [preference, setPreferenceState] = useState<ThemePreference>("system");
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
-  const preferenceRef = useRef<ThemePreference>("system");
+  const snapshot = useSyncExternalStore(subscribeTheme, getThemeSnapshot, () => SERVER_SNAPSHOT);
 
   useEffect(() => {
-    const stored = readStoredThemePreference();
-    preferenceRef.current = stored;
-    setPreferenceState(stored);
-    setResolvedTheme(applyThemePreference(stored));
-
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleSystemChange = () => {
-      setResolvedTheme(applyThemePreference(preferenceRef.current));
-    };
-
-    media.addEventListener("change", handleSystemChange);
-    return () => media.removeEventListener("change", handleSystemChange);
-  }, []);
+    applyThemePreference(snapshot.preference);
+  }, [snapshot.preference, snapshot.resolvedTheme]);
 
   const setPreference = useCallback((next: ThemePreference) => {
-    preferenceRef.current = next;
-    setPreferenceState(next);
-    setResolvedTheme(applyThemePreference(next));
+    applyThemePreference(next);
 
     try {
       window.localStorage.setItem(THEME_STORAGE_KEY, next);
     } catch {
       // Ignore storage failures (private mode, etc.).
     }
+
+    notifyThemeSubscribers();
   }, []);
 
   const cyclePreference = useCallback(() => {
-    const currentIndex = PREFERENCE_ORDER.indexOf(preference);
+    const currentIndex = PREFERENCE_ORDER.indexOf(snapshot.preference);
     const next = PREFERENCE_ORDER[(currentIndex + 1) % PREFERENCE_ORDER.length];
     setPreference(next);
-  }, [preference, setPreference]);
+  }, [setPreference, snapshot.preference]);
 
   const value = useMemo(
     () => ({
-      preference,
-      resolvedTheme,
-      label: themePreferenceLabel(preference, resolvedTheme),
+      ...snapshot,
+      label: themePreferenceLabel(snapshot.preference, snapshot.resolvedTheme),
       setPreference,
       cyclePreference,
     }),
-    [preference, resolvedTheme, setPreference, cyclePreference],
+    [snapshot, setPreference, cyclePreference],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
