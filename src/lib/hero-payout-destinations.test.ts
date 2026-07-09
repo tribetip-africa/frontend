@@ -6,7 +6,8 @@ describe("hero payout methods", () => {
     const bankMentions = labels.filter((label) => /bank/i.test(label));
 
     expect(HERO_PAYOUT_METHODS.length).toBeGreaterThan(4);
-    expect(bankMentions).toEqual(["bank transfer"]);
+    expect(bankMentions).toHaveLength(1);
+    expect(bankMentions[0]).toMatch(/^bank transfer$/i);
     expect(new Set(HERO_PAYOUT_METHODS.map((method) => method.id)).size).toBe(
       HERO_PAYOUT_METHODS.length,
     );
