@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
-import { gsap, registerGsapPlugins, ScrollTrigger } from "@/lib/gsap/register";
+import { gsap } from "@/lib/gsap/register";
 import { prefersReducedMotion } from "@/lib/gsap/prefers-reduced-motion";
 import { WidgetMiniCard } from "@/widget/mini-card";
 import { widgetCountryLabel, widgetPaymentHint } from "@/widget/embed";
@@ -270,67 +270,6 @@ function showSlide(slide: HTMLElement | null, zIndex = 2) {
   });
 }
 
-function playToolAccent(slide: HTMLElement | null, visual: Tool["visual"]) {
-  if (!slide || prefersReducedMotion()) {
-    return;
-  }
-
-  switch (visual) {
-    case "widget": {
-      const widget = slide.querySelector<HTMLElement>('[data-growth-accent="widget"]');
-      if (!widget) {
-        return;
-      }
-
-      gsap.fromTo(
-        widget,
-        { y: 16, rotate: 2.5, scale: 0.94 },
-        { y: 0, rotate: 0, scale: 1, duration: 0.7, ease: "back.out(1.35)" },
-      );
-      break;
-    }
-    case "qr": {
-      const scanLine = slide.querySelector<HTMLElement>('[data-growth-accent="qr-scan"]');
-      if (!scanLine) {
-        return;
-      }
-
-      gsap.fromTo(
-        scanLine,
-        { y: 0, opacity: 0 },
-        {
-          y: 152,
-          opacity: 1,
-          duration: 1.05,
-          ease: "power1.inOut",
-          repeat: 1,
-          yoyo: true,
-          onComplete: () => {
-            gsap.set(scanLine, { opacity: 0, y: 0 });
-          },
-        },
-      );
-      break;
-    }
-    case "referral": {
-      const fields = gsap.utils.toArray<HTMLElement>(
-        '[data-growth-accent="referral-field"]',
-        slide,
-      );
-      if (fields.length === 0) {
-        return;
-      }
-
-      gsap.fromTo(
-        fields,
-        { y: 10, scale: 0.97, autoAlpha: 0.45 },
-        { y: 0, scale: 1, autoAlpha: 1, duration: 0.55, stagger: 0.1, ease: "power2.out" },
-      );
-      break;
-    }
-  }
-}
-
 export function GrowthToolsSection() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -395,49 +334,17 @@ export function GrowthToolsSection() {
       const previousSlide = slides[previousIndex.current];
       const direction = directionRef.current;
 
-      const revealText = (layers: NonNullable<ReturnType<typeof getSlideLayers>>) => {
-        return gsap.fromTo(
-          getSlideTextTargets(layers),
-          { y: 24, autoAlpha: 0 },
-          {
-            y: 0,
-            autoAlpha: 1,
-            duration: 0.58,
-            stagger: 0.07,
-            ease: "power3.out",
-          },
-        );
+      const prepareSlideContent = (layers: NonNullable<ReturnType<typeof getSlideLayers>>) => {
+        gsap.set(getSlideTextTargets(layers), { autoAlpha: 1, y: 0, x: 0 });
       };
 
       if (isFirstRender.current) {
         isFirstRender.current = false;
-        slides.forEach((slide, index) => {
-          if (index === activeIndex) {
-            showSlide(slide);
-          } else {
-            hideSlide(slide);
-          }
-        });
-
+        syncVisibleSlide(activeIndex);
         const layers = getSlideLayers(currentSlide);
-        if (!layers?.visual) {
-          previousIndex.current = activeIndex;
-          return;
+        if (layers) {
+          prepareSlideContent(layers);
         }
-
-        gsap.set(getSlideTextTargets(layers), { y: 24, autoAlpha: 0 });
-        gsap.set(layers.visual, { rotateY: -18, x: 36, autoAlpha: 0, scale: 0.95 });
-
-        const intro = gsap.timeline({
-          defaults: { ease: "power3.out" },
-          onComplete: () => playToolAccent(currentSlide, TOOLS[activeIndex].visual),
-        });
-
-        intro
-          .to(layers.visual, { rotateY: 0, x: 0, autoAlpha: 1, scale: 1, duration: 0.72 }, 0)
-          .add(revealText(layers), 0.1);
-
-        transitionRef.current = intro;
         previousIndex.current = activeIndex;
         return;
       }
@@ -467,68 +374,26 @@ export function GrowthToolsSection() {
         onComplete: () => {
           hideSlide(previousSlide);
           showSlide(currentSlide);
-          playToolAccent(currentSlide, TOOLS[activeIndex].visual);
         },
       });
 
       timeline
         .to(
-          previousSlide,
-          { autoAlpha: 0, duration: 0.28, ease: "power2.in" },
-          0,
-        )
-        .to(
           oldLayers.visual,
-          { rotateY: direction * 42, scale: 0.94, duration: 0.28, ease: "power2.in" },
-          0,
-        )
-        .to(
-          getSlideTextTargets(oldLayers),
-          { x: direction * -20, autoAlpha: 0, duration: 0.24, stagger: 0.03, ease: "power2.in" },
+          { rotateY: direction * 90, autoAlpha: 0, duration: 0.62, ease: "power2.in" },
           0,
         )
         .add(() => {
           hideSlide(previousSlide);
           showSlide(currentSlide, 2);
           resetSlideLayers(currentSlide);
-          gsap.set(newLayers.visual, { rotateY: direction * -48, scale: 0.94, autoAlpha: 0 });
-          gsap.set(getSlideTextTargets(newLayers), { y: 24, autoAlpha: 0, x: 0 });
+          prepareSlideContent(newLayers);
+          gsap.set(newLayers.visual, { rotateY: direction * -90, autoAlpha: 0 });
         })
-        .to(
-          newLayers.visual,
-          { rotateY: 0, scale: 1, autoAlpha: 1, duration: 0.58, ease: "power3.out" },
-        )
-        .add(revealText(newLayers), "-=0.34");
+        .to(newLayers.visual, { rotateY: 0, autoAlpha: 1, duration: 0.72, ease: "power2.out" });
 
       transitionRef.current = timeline;
       previousIndex.current = activeIndex;
-    },
-    { dependencies: [activeIndex, syncVisibleSlide], scope: sectionRef },
-  );
-
-  useGSAP(
-    () => {
-      registerGsapPlugins();
-
-      if (prefersReducedMotion()) {
-        return;
-      }
-
-      const section = sectionRef.current;
-      if (!section) {
-        return;
-      }
-
-      const trigger = ScrollTrigger.create({
-        trigger: section,
-        start: "top 88%",
-        onEnter: () => syncVisibleSlide(activeIndex),
-        onEnterBack: () => syncVisibleSlide(activeIndex),
-      });
-
-      return () => {
-        trigger.kill();
-      };
     },
     { dependencies: [activeIndex, syncVisibleSlide], scope: sectionRef },
   );
@@ -565,7 +430,6 @@ export function GrowthToolsSection() {
       id="growth-tools"
       ref={sectionRef}
       className="landing-section-warm border-y border-line py-16 sm:py-24"
-      data-landing="stagger-section"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -576,7 +440,7 @@ export function GrowthToolsSection() {
       }}
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="text-center" data-landing="reveal-once">
+        <div className="text-center">
           <p className="text-sm font-bold text-brand-600">Grow beyond your link</p>
           <h2 className="mt-2 font-display text-3xl font-extrabold text-ink sm:text-4xl">
             Widget, QR, and referrals — built into your dashboard
