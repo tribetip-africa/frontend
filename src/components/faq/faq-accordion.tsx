@@ -1,6 +1,8 @@
 import type { FaqItem } from "@/lib/faq-content";
+import { faqItemAnchorId } from "@/lib/faq-slug";
 
 type FaqAccordionProps = {
+  categoryId: string;
   items: FaqItem[];
   /**
    * Shared name that turns the items into an exclusive accordion — opening one
@@ -9,11 +11,16 @@ type FaqAccordionProps = {
   name: string;
 };
 
-export function FaqAccordion({ items, name }: FaqAccordionProps) {
+export function FaqAccordion({ categoryId, items, name }: FaqAccordionProps) {
   return (
     <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
       {items.map((item) => (
-        <details key={item.question} name={name} className="group">
+        <details
+          key={item.question}
+          id={faqItemAnchorId(categoryId, item.question)}
+          name={name}
+          className="group scroll-mt-24"
+        >
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5 text-left font-semibold text-ink transition-colors hover:bg-sand sm:px-6">
             <span>{item.question}</span>
             <span
