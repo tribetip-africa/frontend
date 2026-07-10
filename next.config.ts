@@ -44,6 +44,12 @@ const nextConfig: NextConfig = {
       { source: "/admin/:path*", destination: "/dashboard", permanent: false },
     ];
   },
+  async rewrites() {
+    return [
+      { source: "/llms.txt", destination: "/api/llms" },
+      { source: "/:key.txt", destination: "/api/indexnow/key?key=:key" },
+    ];
+  },
   async headers() {
     return [
       {
