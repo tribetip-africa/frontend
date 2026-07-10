@@ -1,19 +1,39 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { JsonLd } from "@/components/json-ld";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { PRIVACY_LAST_UPDATED, PRIVACY_SECTIONS } from "@/lib/privacy-content";
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from "@/lib/seo-schema";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy",
-  description:
-    "How TribeTip collects, uses, and protects your data — and the choices you have. We never email or sell your supporters.",
-  alternates: { canonical: "/privacy" },
-};
+const PRIVACY_TITLE = "Privacy Policy";
+const PRIVACY_DESCRIPTION =
+  "How TribeTip collects, uses, and protects your data — and the choices you have. We never email or sell your supporters.";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: PRIVACY_TITLE,
+  description: PRIVACY_DESCRIPTION,
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageJsonLd({
+            name: PRIVACY_TITLE,
+            description: PRIVACY_DESCRIPTION,
+            path: "/privacy",
+            dateModified: PRIVACY_LAST_UPDATED,
+          }),
+          buildBreadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Privacy Policy", path: "/privacy" },
+          ]),
+        ]}
+      />
       <SiteHeader />
       <main>
         {/* Hero */}
