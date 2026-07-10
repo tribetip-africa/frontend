@@ -18,7 +18,10 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:live": "node scripts/run-live-tests.mjs",
-    "ci": "npm run lint && npm run typecheck && npm run test:ci && npm run test:errors && npm run build"
+    "test:seo": "jest --ci --testPathPatterns=src/lib/seo-audit",
+    "audit:seo": "tsx scripts/seo-audit.ts",
+    "submit:indexnow": "tsx scripts/submit-indexnow.ts",
+    "ci": "npm run lint && npm run typecheck && npm run test:ci && npm run test:seo && npm run test:errors && npm run build"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
