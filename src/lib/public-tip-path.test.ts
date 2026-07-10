@@ -32,6 +32,7 @@ describe("public-tip-path", () => {
 
     it("treats static legal/help pages as reserved (not embeddable/clickjackable)", () => {
       expect(isEmbeddablePublicTipPath("/faq")).toBe(false);
+      expect(isEmbeddablePublicTipPath("/for-creators")).toBe(false);
       expect(isEmbeddablePublicTipPath("/terms")).toBe(false);
       expect(isEmbeddablePublicTipPath("/privacy")).toBe(false);
     });
@@ -41,6 +42,10 @@ describe("public-tip-path", () => {
     it("flags invalid single-segment paths that would hit [username]", () => {
       expect(isBlockedPublicUsernamePath("/.env")).toBe(true);
       expect(isBlockedPublicUsernamePath("/package.json")).toBe(true);
+    });
+
+    it("allows root text verification files", () => {
+      expect(isBlockedPublicUsernamePath("/abc123def456.txt")).toBe(false);
     });
 
     it("ignores reserved app routes and valid usernames", () => {
