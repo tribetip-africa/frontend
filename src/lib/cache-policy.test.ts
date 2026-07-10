@@ -16,8 +16,12 @@ describe("cache policy", () => {
     expect(cacheControlHeader("publicShort")).toContain("max-age=60");
   });
 
-  it("uses static cache for landing page only", () => {
+  it("uses static cache for marketing pages", () => {
     expect(inferCachePolicy("/")).toBe("staticPage");
+    expect(inferCachePolicy("/faq")).toBe("staticPage");
+    expect(inferCachePolicy("/for-creators")).toBe("staticPage");
+    expect(inferCachePolicy("/privacy")).toBe("staticPage");
+    expect(inferCachePolicy("/terms")).toBe("staticPage");
     expect(cacheControlHeader("staticPage")).toContain("max-age=300");
     expect(cacheControlHeader("noStore")).toContain("no-store");
   });
