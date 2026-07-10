@@ -10,6 +10,7 @@ const mode = await paystackClientMode();
 const tests = [
   "live-cache-test.mjs",
   "live-static-pages-test.mjs",
+  "live-seo-test.mjs",
 ];
 
 if (isLiveSignupOpen()) {
