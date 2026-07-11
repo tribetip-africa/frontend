@@ -10,6 +10,9 @@ type HeroPayoutRotatorProps = {
   scrollRootRef?: React.RefObject<HTMLElement | null>;
 };
 
+const PAYOUT_ROTATOR_FADE_DURATION = 0.12;
+const PAYOUT_ROTATOR_HOLD_DURATION = 2.6;
+
 export function HeroPayoutRotator({ scrollRootRef }: HeroPayoutRotatorProps) {
   const rootRef = useRef<HTMLSpanElement>(null);
 
@@ -50,12 +53,18 @@ export function HeroPayoutRotator({ scrollRootRef }: HeroPayoutRotatorProps) {
 
         const timeline = gsap.timeline({ defaults: { ease: "power2.inOut", overwrite: true } });
 
+        timeline.call(() => markActive(activeIndex));
+
         if (items[previousIndex]) {
-          timeline.to(items[previousIndex], { autoAlpha: 0, duration: 0.22 });
+          timeline.to(items[previousIndex], { autoAlpha: 0, duration: PAYOUT_ROTATOR_FADE_DURATION });
         }
 
-        timeline.call(() => markActive(activeIndex));
-        timeline.fromTo(items[activeIndex], { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.22 });
+        timeline.fromTo(
+          items[activeIndex],
+          { autoAlpha: 0 },
+          { autoAlpha: 1, duration: PAYOUT_ROTATOR_FADE_DURATION },
+          "<",
+        );
       };
 
       if (prefersReducedMotion()) {
@@ -67,7 +76,7 @@ export function HeroPayoutRotator({ scrollRootRef }: HeroPayoutRotatorProps) {
       setActive(0, { animate: false });
 
       const autoTimeline = gsap.timeline({ repeat: -1 });
-      autoTimeline.to({}, { duration: 3.2 });
+      autoTimeline.to({}, { duration: PAYOUT_ROTATOR_HOLD_DURATION });
       autoTimeline.call(() => setActive(activeIndex + 1));
 
       const scrollTrigger =
