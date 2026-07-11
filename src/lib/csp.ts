@@ -1,3 +1,8 @@
+export type ContentSecurityPolicyOptions = {
+  embeddable?: boolean;
+  nonce?: string;
+};
+
 function apiConnectOrigin(): string {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
   try {
@@ -11,7 +16,20 @@ function isProduction(): boolean {
   return process.env.NODE_ENV === "production";
 }
 
-function buildPolicyDirectives(frameAncestors: string): string[] {
+function buildScriptSrc(nonce?: string): string {
+  if (!isProduction()) {
+    return "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+  }
+
+  if (nonce) {
+    return `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`;
+  }
+
+  return "script-src 'self' 'unsafe-inline'";
+}
+
+function buildPolicyDirectives(options: ContentSecurityPolicyOptions = {}): string[] {
+  const frameAncestors = options.embeddable ? "frame-ancestors *" : "frame-ancestors 'none'";
   const directives = [
     "default-src 'self'",
     "base-uri 'self'",
@@ -21,9 +39,7 @@ function buildPolicyDirectives(frameAncestors: string): string[] {
     "img-src 'self' data: blob:",
     "font-src 'self'",
     "style-src 'self' 'unsafe-inline'",
-    isProduction()
-      ? "script-src 'self' 'unsafe-inline'"
-      : "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    buildScriptSrc(options.nonce),
     "object-src 'none'",
   ];
 
@@ -34,14 +50,18 @@ function buildPolicyDirectives(frameAncestors: string): string[] {
   return directives;
 }
 
-export function buildContentSecurityPolicy(): string {
-  return buildPolicyDirectives("frame-ancestors 'none'").join("; ");
+export function buildContentSecurityPolicy(options: ContentSecurityPolicyOptions = {}): string {
+  return buildPolicyDirectives(options).join("; ");
 }
 
-export function buildEmbeddableContentSecurityPolicy(): string {
-  return buildPolicyDirectives("frame-ancestors *").join("; ");
+export function buildEmbeddableContentSecurityPolicy(options: Omit<ContentSecurityPolicyOptions, "embeddable"> = {}): string {
+  return buildPolicyDirectives({ ...options, embeddable: true }).join("; ");
 }
 
 export function cspHeaderName(): string {
   return "Content-Security-Policy";
+}
+
+export function generateCspNonce(): string {
+  return Buffer.from(crypto.randomUUID()).toString("base64");
 }
