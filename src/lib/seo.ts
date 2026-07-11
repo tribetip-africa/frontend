@@ -256,6 +256,35 @@ export function buildCreatorMetadataFallback(username: string): Metadata {
   });
 }
 
+const JSON_LD_CONTEXT = "https://schema.org";
+
+function stripJsonLdContext(node: Record<string, unknown>): Record<string, unknown> {
+  const { ["@context"]: _context, ...rest } = node;
+  return rest;
+}
+
+export function normalizeJsonLd(
+  data: Record<string, unknown> | Record<string, unknown>[],
+): Record<string, unknown> {
+  if (Array.isArray(data)) {
+    if (data.length === 0) {
+      return { "@context": JSON_LD_CONTEXT, "@graph": [] };
+    }
+
+    if (data.length === 1) {
+      return data[0] as Record<string, unknown>;
+    }
+
+    return {
+      "@context": JSON_LD_CONTEXT,
+      "@graph": data.map((item) => stripJsonLdContext(item)),
+    };
+  }
+
+  return data;
+}
+
 export function serializeJsonLd(data: Record<string, unknown> | Record<string, unknown>[]): string {
-  return JSON.stringify(data);
+  // Escape `<` so creator-controlled strings cannot break out of the ld+json block.
+  return JSON.stringify(normalizeJsonLd(data)).replace(/</g, "\\u003c");
 }
