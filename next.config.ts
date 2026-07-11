@@ -3,7 +3,7 @@ import { RESERVED_ROOT_SEGMENTS } from "./src/lib/public-tip-path";
 
 // Single source of truth: the embeddable creator-page header rule must never
 // match a reserved app route (e.g. /faq, /terms, /dashboard). Deriving the
-// exclusion list from RESERVED_ROOT_SEGMENTS keeps this in sync with middleware.
+// exclusion list from RESERVED_ROOT_SEGMENTS keeps this in sync with proxy.
 function reservedSegmentsAlternation(): string {
   return Array.from(RESERVED_ROOT_SEGMENTS)
     .map((segment) => segment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
