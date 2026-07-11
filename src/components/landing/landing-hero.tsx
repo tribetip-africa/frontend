@@ -111,7 +111,7 @@ export function LandingHero() {
             <h1 className="mt-5 font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-ink sm:text-5xl lg:text-[3.25rem]">
               <span className="hero-payout-headline">
                 <span ref={headlineRef} data-landing-hero="headline">
-                  A tip jar for creators — paid to{" "}
+                  A tip jar for creators — paid to
                 </span>
                 <HeroPayoutRotator scrollRootRef={heroRef} />
               </span>
