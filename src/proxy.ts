@@ -34,7 +34,7 @@ function applyContentSecurityPolicy(response: NextResponse, pathname: string, no
   response.headers.set(cspHeaderName(), policy);
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const nonce = generateCspNonce();
 
