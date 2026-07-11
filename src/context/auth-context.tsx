@@ -11,6 +11,7 @@ import { signIn as apiSignIn, signOut as apiSignOut, signUp as apiSignUp } from 
 import {
   clearStoredAuth,
   getAuthStorageSnapshot,
+  isAuthenticatedSnapshot,
   setStoredAuth,
   subscribeAuthStorage,
 } from "@/lib/auth-storage";
@@ -19,6 +20,7 @@ import type { SignInPayload, SignUpPayload, Tribe } from "@/types/api";
 type AuthContextValue = {
   tribe: Tribe | null;
   token: string | null;
+  isAuthenticated: boolean;
   isLoading: boolean;
   signUp: (payload: SignUpPayload) => Promise<{ confirmationRequired: boolean; tribe: Tribe | null }>;
   signIn: (payload: SignInPayload) => Promise<void>;
@@ -36,12 +38,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => false,
   );
 
-  const { token, tribe } = useSyncExternalStore(
+  const snapshot = useSyncExternalStore(
     subscribeAuthStorage,
     getAuthStorageSnapshot,
     () => emptyAuthSnapshot,
   );
 
+  const { token, tribe } = snapshot;
+  const isAuthenticated = isAuthenticatedSnapshot(snapshot);
   const isLoading = !hasMounted;
 
   const signUp = useCallback(async (payload: SignUpPayload) => {
@@ -56,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setStoredAuth(jwt, data.tribe);
       return { confirmationRequired: false, tribe: data.tribe };
     }
-    // Registration does not issue JWT; sign in to obtain a session token.
+
     const { data: session, token: sessionToken } = await apiSignIn({
       login: payload.email,
       password: payload.password,
@@ -71,19 +75,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    if (token) {
-      try {
-        await apiSignOut(token);
-      } catch {
-        // Clear local session even if API sign-out fails
-      }
+    try {
+      await apiSignOut(token);
+    } catch {
+      // Clear local session even if API sign-out fails
     }
     clearStoredAuth();
   }, [token]);
 
   const value = useMemo(
-    () => ({ tribe, token, isLoading, signUp, signIn, signOut }),
-    [tribe, token, isLoading, signUp, signIn, signOut],
+    () => ({ tribe, token, isAuthenticated, isLoading, signUp, signIn, signOut }),
+    [tribe, token, isAuthenticated, isLoading, signUp, signIn, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
