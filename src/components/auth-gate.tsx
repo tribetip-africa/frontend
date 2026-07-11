@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { clearStoredAuth, getStoredTribe } from "@/lib/auth-storage";
@@ -16,16 +16,19 @@ export function AuthGate({ children }: AuthGateProps) {
   const pathname = usePathname();
   const { token, isAuthenticated, isLoading } = useAuth();
   const [checking, setChecking] = useState(false);
-  const [validated, setValidated] = useState(false);
+  const [validatedSessionKey, setValidatedSessionKey] = useState<string | null>(null);
+  const sessionKey = isAuthenticated ? (token ?? "cookie") : null;
+  const validated = sessionKey !== null && validatedSessionKey === sessionKey;
+  const redirectAttempted = useRef(false);
 
   useEffect(() => {
-    if (isLoading || !isAuthenticated) {
-      setValidated(false);
+    if (isLoading || !isAuthenticated || !sessionKey) {
       return;
     }
 
     if (validated) {
-      if (isMarketingPath(pathname) && getStoredTribe()) {
+      if (isMarketingPath(pathname) && getStoredTribe() && !redirectAttempted.current) {
+        redirectAttempted.current = true;
         router.replace("/dashboard");
       }
       return;
@@ -40,16 +43,17 @@ export function AuthGate({ children }: AuthGateProps) {
         await validateStoredSession(token);
         if (cancelled) return;
 
-        setValidated(true);
+        setValidatedSessionKey(sessionKey);
 
         if (isMarketingPath(pathname)) {
+          redirectAttempted.current = true;
           router.replace("/dashboard");
         }
       } catch (error) {
         if (cancelled) return;
 
         if (isUnauthorizedError(error)) {
-          setValidated(false);
+          setValidatedSessionKey(null);
           clearStoredAuth();
           router.replace("/");
           return;
@@ -62,7 +66,11 @@ export function AuthGate({ children }: AuthGateProps) {
     return () => {
       cancelled = true;
     };
-  }, [isLoading, isAuthenticated, token, pathname, router, validated]);
+  }, [isLoading, isAuthenticated, sessionKey, token, pathname, router, validated]);
+
+  useEffect(() => {
+    redirectAttempted.current = false;
+  }, [pathname]);
 
   const sessionPendingValidation = isAuthenticated && !validated;
   const needsAuthBootstrap =
