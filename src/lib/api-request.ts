@@ -3,6 +3,7 @@ import {
   parseApiErrorBody,
   TribetipNetworkError,
 } from "@/lib/errors";
+import { isCookieAuthEnabled } from "@/lib/auth-mode";
 import { secureFetch } from "@/lib/secure-fetch";
 
 async function parseJson<T>(response: Response): Promise<T> {
@@ -11,11 +12,23 @@ async function parseJson<T>(response: Response): Promise<T> {
   return JSON.parse(text) as T;
 }
 
-export function authHeaders(token: string): HeadersInit {
-  return {
+export function authHeaders(token?: string | null): HeadersInit {
+  const headers: Record<string, string> = {
     Accept: "application/json",
-    Authorization: `Bearer ${token}`,
   };
+
+  if (isCookieAuthEnabled()) {
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  } else {
+    if (!token) {
+      throw new Error("Authentication token is required.");
+    }
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  return headers;
 }
 
 export async function requestJson<T>(
