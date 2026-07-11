@@ -1,4 +1,9 @@
-import { buildContentSecurityPolicy, buildEmbeddableContentSecurityPolicy, cspHeaderName } from "@/lib/csp";
+import {
+  buildContentSecurityPolicy,
+  buildEmbeddableContentSecurityPolicy,
+  cspHeaderName,
+  generateCspNonce,
+} from "@/lib/csp";
 
 describe("CSP", () => {
   it("includes API origin in connect-src", () => {
@@ -47,5 +52,20 @@ describe("CSP", () => {
     expect(buildEmbeddableContentSecurityPolicy()).not.toContain("unsafe-eval");
 
     process.env.NODE_ENV = previous;
+  });
+
+  it("uses nonce and strict-dynamic in production when a nonce is provided", () => {
+    const previous = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+
+    const policy = buildContentSecurityPolicy({ nonce: "abc123" });
+    expect(policy).toContain("script-src 'self' 'nonce-abc123' 'strict-dynamic'");
+    expect(policy).not.toMatch(/script-src[^;]*unsafe-inline/);
+
+    process.env.NODE_ENV = previous;
+  });
+
+  it("generates a base64 nonce", () => {
+    expect(generateCspNonce()).toMatch(/^[A-Za-z0-9+/]+=*$/);
   });
 });
