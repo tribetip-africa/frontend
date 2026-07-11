@@ -15,6 +15,16 @@ const themeInitScript = `
 })();
 `;
 
-export function ThemeInitScript() {
-  return <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />;
+type ThemeInitScriptProps = {
+  nonce?: string;
+};
+
+export function ThemeInitScript({ nonce }: ThemeInitScriptProps) {
+  return (
+    <script
+      nonce={nonce}
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: themeInitScript }}
+    />
+  );
 }
