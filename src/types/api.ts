@@ -340,6 +340,7 @@ export type PaystackAuditReport = {
 export type AuthResponse = {
   message: string;
   token?: string;
+  csrf_token?: string;
   confirmation_required?: boolean;
   tribe: Tribe;
 };
