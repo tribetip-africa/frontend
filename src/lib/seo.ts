@@ -259,8 +259,7 @@ export function buildCreatorMetadataFallback(username: string): Metadata {
 const JSON_LD_CONTEXT = "https://schema.org";
 
 function stripJsonLdContext(node: Record<string, unknown>): Record<string, unknown> {
-  const { ["@context"]: _context, ...rest } = node;
-  return rest;
+  return Object.fromEntries(Object.entries(node).filter(([key]) => key !== "@context"));
 }
 
 export function normalizeJsonLd(
