@@ -14,14 +14,17 @@ type AuthGateProps = {
 export function AuthGate({ children }: AuthGateProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { token, isLoading } = useAuth();
+  const { token, isAuthenticated, isLoading } = useAuth();
   const [checking, setChecking] = useState(false);
-  const [validatedToken, setValidatedToken] = useState<string | null>(null);
+  const [validated, setValidated] = useState(false);
 
   useEffect(() => {
-    if (isLoading || !token) return;
+    if (isLoading || !isAuthenticated) {
+      setValidated(false);
+      return;
+    }
 
-    if (validatedToken === token) {
+    if (validated) {
       if (isMarketingPath(pathname) && getStoredTribe()) {
         router.replace("/dashboard");
       }
@@ -37,7 +40,7 @@ export function AuthGate({ children }: AuthGateProps) {
         await validateStoredSession(token);
         if (cancelled) return;
 
-        setValidatedToken(token);
+        setValidated(true);
 
         if (isMarketingPath(pathname)) {
           router.replace("/dashboard");
@@ -46,7 +49,7 @@ export function AuthGate({ children }: AuthGateProps) {
         if (cancelled) return;
 
         if (isUnauthorizedError(error)) {
-          setValidatedToken(null);
+          setValidated(false);
           clearStoredAuth();
           router.replace("/");
           return;
@@ -59,11 +62,11 @@ export function AuthGate({ children }: AuthGateProps) {
     return () => {
       cancelled = true;
     };
-  }, [isLoading, token, pathname, router, validatedToken]);
+  }, [isLoading, isAuthenticated, token, pathname, router, validated]);
 
-  const sessionPendingValidation = Boolean(token) && validatedToken !== token;
+  const sessionPendingValidation = isAuthenticated && !validated;
   const needsAuthBootstrap =
-    isProtectedPath(pathname) || (isMarketingPath(pathname) && Boolean(token));
+    isProtectedPath(pathname) || (isMarketingPath(pathname) && isAuthenticated);
 
   const shouldBlock =
     (isLoading && needsAuthBootstrap) ||
