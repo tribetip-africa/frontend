@@ -1,4 +1,5 @@
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { headers } from "next/headers";
 import { AuthProvider } from "@/context/auth-context";
 import { ThemeProvider } from "@/context/theme-context";
 import { AuthGate } from "@/components/auth-gate";
@@ -15,15 +16,17 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata = buildRootMetadata();
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
-    <html lang="en" className={`${jakarta.variable} h-full`} suppressHydrationWarning>
+    <html lang="en" className={`${jakarta.variable} h-full`} suppressHydrationWarning nonce={nonce}>
       <head>
-        <ThemeInitScript />
+        <ThemeInitScript nonce={nonce} />
       </head>
       <body className="min-h-full flex flex-col antialiased">
         <ThemeProvider>
