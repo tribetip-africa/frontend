@@ -22,7 +22,9 @@ export function CreatorIdentity({ profile }: CreatorIdentityProps) {
         <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-brand-900">
           {profile.display_name}
         </h1>
-        <p className="mt-1 text-sm text-brand-700">Creator · {locationLabel}</p>
+        <p className="mt-1 text-sm text-brand-700">
+          Creator · {locationLabel} · {profile.currency}
+        </p>
       </div>
     </div>
   );

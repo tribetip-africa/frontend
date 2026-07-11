@@ -62,7 +62,7 @@ export function SiteFooter({ fixed = false }: SiteFooterProps) {
                 </Link>
               </li>
               <li>
-                <Link href="/#creators" className="hover:text-ink">
+                <Link href="/for-creators" className="hover:text-ink">
                   For creators
                 </Link>
               </li>

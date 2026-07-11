@@ -3,11 +3,11 @@ import { isPublicPageShareable } from "@/lib/creator-public-page";
 import type { CreatorProfile } from "@/types/api";
 import { setStoredAuth } from "@/lib/auth-storage";
 
-export async function validateStoredSession(token: string): Promise<CreatorProfile | null> {
+export async function validateStoredSession(token?: string | null): Promise<CreatorProfile | null> {
   try {
     const { fetchMyProfile } = await import("@/lib/api");
     const profile = await fetchMyProfile(token);
-    setStoredAuth(token, {
+    setStoredAuth(token ?? null, {
       id: profile.id,
       email: profile.email,
       username: profile.username,

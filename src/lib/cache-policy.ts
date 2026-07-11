@@ -27,6 +27,15 @@ const SENSITIVE_PATH_FRAGMENTS = [
   "/sign-up",
 ] as const;
 
+const STATIC_PAGE_PATHS = new Set([
+  "/",
+  "/faq",
+  "/for-creators",
+  "/privacy",
+  "/terms",
+  "/waitlist",
+]);
+
 export function inferCachePolicy(pathname: string, hasAuthHeader = false): CachePolicyName {
   if (hasAuthHeader) return "noStore";
   if (SENSITIVE_PATH_FRAGMENTS.some((fragment) => pathname.includes(fragment))) {
@@ -35,7 +44,7 @@ export function inferCachePolicy(pathname: string, hasAuthHeader = false): Cache
   if (pathname.match(/^\/tribes\/[a-z0-9_]+$/)) return "publicShort";
   if (pathname.match(/^\/api\/tribes\/[a-z0-9_]+$/)) return "publicShort";
   if (pathname.match(/^\/share\/[A-Za-z0-9_-]{20,48}$/)) return "publicShort";
-  if (pathname === "/") return "staticPage";
+  if (STATIC_PAGE_PATHS.has(pathname)) return "staticPage";
   return "noStore";
 }
 

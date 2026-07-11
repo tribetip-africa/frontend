@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRef } from "react";
+import { CitationDefinition } from "@/components/seo/citation-definition";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { AfricaFlowMap } from "@/components/landing/africa-flow-map";
@@ -13,6 +14,7 @@ import { LandingHero } from "@/components/landing/landing-hero";
 import { TipFlowPreview } from "@/components/landing/tip-flow-preview";
 import { useLandingScrollMotion } from "@/components/landing/use-landing-scroll-motion";
 import { Button } from "@/components/ui/button";
+import { ENTITY_DEFINITION } from "@/lib/entity";
 import { primaryLaunchCta } from "@/lib/launch-mode";
 
 const benefits = [
@@ -48,6 +50,8 @@ export function LandingPage() {
       <SiteHeader />
       <main ref={mainRef}>
         <LandingHero />
+
+        <CitationDefinition>{ENTITY_DEFINITION}</CitationDefinition>
 
         <HowItWorks />
 

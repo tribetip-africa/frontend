@@ -1,4 +1,6 @@
 import type { Tribe } from "@/types/api";
+import { isCookieAuthEnabled } from "@/lib/auth-mode";
+import { clearCsrfToken } from "@/lib/csrf-storage";
 import { clearAuthSessionCookie, setAuthSessionCookie } from "@/lib/auth-cookie";
 
 const TOKEN_KEY = "tribetip_token";
@@ -110,11 +112,24 @@ function normalizeStoredTribe(raw: Record<string, unknown>): StoredTribe | null 
   };
 }
 
+function clearLegacyTokenStorage() {
+  if (typeof window === "undefined" || !isCookieAuthEnabled()) return;
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+export function isAuthenticatedSnapshot(snapshot: AuthStorageSnapshot = getAuthStorageSnapshot()): boolean {
+  if (!snapshot.tribe) return false;
+  if (isCookieAuthEnabled()) return true;
+  return Boolean(snapshot.token);
+}
+
 export function getAuthStorageSnapshot(): AuthStorageSnapshot {
-  const token = getStoredToken();
+  clearLegacyTokenStorage();
+
+  const token = isCookieAuthEnabled() ? null : getStoredToken();
   const tribe = getStoredTribe();
 
-  if (token && tribe) {
+  if (tribe && (token || isCookieAuthEnabled())) {
     setAuthSessionCookie();
 
     if (cachedSnapshot.token === token && tribesEqual(cachedSnapshot.tribe, tribe)) {
@@ -134,11 +149,11 @@ export function getAuthStorageSnapshot(): AuthStorageSnapshot {
 }
 
 export function getStoredToken(): string | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined" || isCookieAuthEnabled()) return null;
   return localStorage.getItem(TOKEN_KEY);
 }
 
-export function setStoredAuth(token: string, tribe: StoredTribe | Record<string, unknown>) {
+export function setStoredAuth(token: string | null, tribe: StoredTribe | Record<string, unknown>) {
   const normalized = normalizeStoredTribe(tribe as Record<string, unknown>);
   if (!normalized) {
     return;
@@ -146,12 +161,18 @@ export function setStoredAuth(token: string, tribe: StoredTribe | Record<string,
 
   const existingToken = getStoredToken();
   const existingTribe = getStoredTribe();
+  const nextToken = isCookieAuthEnabled() ? null : token;
 
-  if (existingToken === token && tribesEqual(existingTribe, normalized)) {
+  if (existingToken === nextToken && tribesEqual(existingTribe, normalized)) {
     return;
   }
 
-  localStorage.setItem(TOKEN_KEY, token);
+  if (!isCookieAuthEnabled() && token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else if (isCookieAuthEnabled()) {
+    localStorage.removeItem(TOKEN_KEY);
+  }
+
   localStorage.setItem(TRIBE_KEY, JSON.stringify(normalized));
   setAuthSessionCookie();
   notifyAuthStorageChange();
@@ -172,5 +193,6 @@ export function clearStoredAuth() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(TRIBE_KEY);
   clearAuthSessionCookie();
+  clearCsrfToken();
   notifyAuthStorageChange();
 }

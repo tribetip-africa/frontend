@@ -1,21 +1,43 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { JsonLd } from "@/components/json-ld";
+import { CitationDefinition } from "@/components/seo/citation-definition";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FaqAccordion } from "@/components/faq/faq-accordion";
 import { Button } from "@/components/ui/button";
 import { FAQ_CATEGORIES, SUPPORT_EMAIL } from "@/lib/faq-content";
+import { ENTITY_DEFINITION } from "@/lib/entity";
+import { buildBreadcrumbJsonLd, buildFaqPageJsonLd, buildWebPageJsonLd } from "@/lib/seo-schema";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "FAQ — Help & answers",
-  description:
-    "Answers to common questions about TribeTip: getting started, receiving tips, fees, payouts, account security, and support for African creators.",
-  alternates: { canonical: "/faq" },
-};
+const FAQ_TITLE = "FAQ — Help & answers";
+const FAQ_DESCRIPTION =
+  "Answers to common questions about TribeTip: getting started, receiving tips, fees, payouts, account security, and support for African creators.";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: FAQ_TITLE,
+  description: FAQ_DESCRIPTION,
+  path: "/faq",
+});
 
 export default function FaqPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageJsonLd({
+            name: FAQ_TITLE,
+            description: FAQ_DESCRIPTION,
+            path: "/faq",
+          }),
+          buildBreadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "FAQ", path: "/faq" },
+          ]),
+          buildFaqPageJsonLd(),
+        ]}
+      />
       <SiteHeader />
       <main>
         {/* Hero */}
@@ -31,6 +53,8 @@ export default function FaqPage() {
             </p>
           </div>
         </section>
+
+        <CitationDefinition>{ENTITY_DEFINITION}</CitationDefinition>
 
         {/* Category quick-nav */}
         <section className="bg-white pb-2">
@@ -63,7 +87,7 @@ export default function FaqPage() {
                   </h2>
                   <p className="mt-1 text-ink-soft">{category.description}</p>
                 </div>
-                <FaqAccordion items={category.items} name={`faq-${category.id}`} />
+                <FaqAccordion categoryId={category.id} items={category.items} name={`faq-${category.id}`} />
               </div>
             ))}
           </div>

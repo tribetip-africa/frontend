@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { WaitlistForm } from "@/components/waitlist-form";
 import { showWaitlist } from "@/lib/launch-mode";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "Join the waitlist",
+  description:
+    "Join the TribeTip waitlist for early access. One link for African creators to accept tips with mobile money, cards, and bank transfers.",
+  path: "/waitlist",
+});
 
 export default function WaitlistPage() {
   if (!showWaitlist()) {

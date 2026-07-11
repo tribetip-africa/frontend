@@ -1,4 +1,6 @@
 import { createIdempotencyKey } from "@/lib/idempotency-key";
+import { isCookieAuthEnabled } from "@/lib/auth-mode";
+import { storeCsrfToken } from "@/lib/csrf-storage";
 import { isCheckoutStillProcessing } from "@/lib/tip-checkout";
 import type {
   AuthResponse,
@@ -50,6 +52,14 @@ function parseBearerToken(authorization: string | null): string | null {
 function extractToken(response: Response, data: AuthResponse): string | null {
   if (data.token) return data.token;
   return parseBearerToken(response.headers.get("Authorization"));
+}
+
+function persistAuthResponse(response: Response, data: AuthResponse): string | null {
+  const token = extractToken(response, data);
+  if (data.csrf_token) {
+    storeCsrfToken(data.csrf_token);
+  }
+  return token;
 }
 
 export async function checkApiHealth(): Promise<boolean> {
@@ -104,7 +114,7 @@ export type ShareLinkPayload = {
   shareable: boolean;
 };
 
-export async function fetchMyShareLink(authToken: string): Promise<ShareLinkPayload> {
+export async function fetchMyShareLink(authToken: string | null): Promise<ShareLinkPayload> {
   const { data } = await requestJson<{ share_link: ShareLinkPayload }>(
     `${API_BASE}/me/share_link`,
     {
@@ -116,7 +126,7 @@ export async function fetchMyShareLink(authToken: string): Promise<ShareLinkPayl
   return data.share_link;
 }
 
-export async function rotateMyShareLink(authToken: string): Promise<ShareLinkPayload> {
+export async function rotateMyShareLink(authToken: string | null): Promise<ShareLinkPayload> {
   const { data } = await requestJson<{ share_link: ShareLinkPayload; message?: string }>(
     `${API_BASE}/me/share_link/rotate`,
     {
@@ -129,7 +139,7 @@ export async function rotateMyShareLink(authToken: string): Promise<ShareLinkPay
   return data.share_link;
 }
 
-export async function fetchMyReferrals(authToken: string): Promise<ReferralsPayload["referrals"]> {
+export async function fetchMyReferrals(authToken: string | null): Promise<ReferralsPayload["referrals"]> {
   const { data } = await requestJson<ReferralsPayload>(`${API_BASE}/me/referrals`, {
     cachePolicy: "noStore",
     headers: authHeaders(authToken),
@@ -227,13 +237,13 @@ export async function signUp(
 
   return {
     data: data as AuthResponse,
-    token: extractToken(response, data as AuthResponse),
+    token: persistAuthResponse(response, data as AuthResponse),
   };
 }
 
 export async function signIn(
   payload: SignInPayload,
-): Promise<{ data: AuthResponse; token: string }> {
+): Promise<{ data: AuthResponse; token: string | null }> {
   const { response, data } = await requestJson<AuthResponse>(
     `${API_BASE}/tribes/sign_in.json`,
     {
@@ -244,8 +254,8 @@ export async function signIn(
     },
   );
 
-  const token = extractToken(response, data as AuthResponse);
-  if (!token) {
+  const token = persistAuthResponse(response, data as AuthResponse);
+  if (!isCookieAuthEnabled() && !token) {
     throw new TribetipAuthError(
       "No authentication token returned. Restart the Rails API so CORS exposes Authorization, or ensure sign-in returns token in JSON.",
     );
@@ -254,20 +264,20 @@ export async function signIn(
   return { data: data as AuthResponse, token };
 }
 
-export async function signOut(token: string): Promise<void> {
+export async function signOut(token?: string | null): Promise<void> {
   await requestJson<Record<string, unknown>>(`${API_BASE}/tribes/sign_out.json`, {
     method: "DELETE",
     cachePolicy: "noStore",
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${token}`,
+      ...authHeaders(token),
     },
   });
 }
 
 export async function refreshSession(
-  token: string,
-): Promise<{ data: AuthResponse; token: string }> {
+  token?: string | null,
+): Promise<{ data: AuthResponse; token: string | null }> {
   const { response, data } = await requestJson<AuthResponse>(
     `${API_BASE}/tribes/session/refresh`,
     {
@@ -277,15 +287,15 @@ export async function refreshSession(
     },
   );
 
-  const nextToken = extractToken(response, data as AuthResponse);
-  if (!nextToken) {
+  const nextToken = persistAuthResponse(response, data as AuthResponse);
+  if (!isCookieAuthEnabled() && !nextToken) {
     throw new TribetipAuthError("No authentication token returned from session refresh.");
   }
 
   return { data: data as AuthResponse, token: nextToken };
 }
 
-export async function fetchMyProfile(token: string): Promise<CreatorProfile> {
+export async function fetchMyProfile(token?: string | null): Promise<CreatorProfile> {
   const { data } = await requestJson<{ profile: CreatorProfile }>(`${API_BASE}/me/profile`, {
     cachePolicy: "noStore",
     headers: authHeaders(token),
@@ -311,7 +321,7 @@ export async function updateMyProfile(
   return data.profile;
 }
 
-export async function publishMyProfile(token: string): Promise<CreatorProfile> {
+export async function publishMyProfile(token: string | null): Promise<CreatorProfile> {
   const { data } = await requestJson<{ profile: CreatorProfile }>(
     `${API_BASE}/me/profile/publish`,
     {
@@ -340,7 +350,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 async function pollPaystackOnboardingComplete(
-  token: string,
+  token: string | null,
   { attempts = 60, intervalMs = 500 } = {},
 ): Promise<PaystackOnboardingPayload> {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
@@ -423,7 +433,7 @@ export async function reconcileTipPayment(paystackReference: string): Promise<Ti
   return data.tip;
 }
 
-export async function fetchMyTips(token: string): Promise<Tip[]> {
+export async function fetchMyTips(token: string | null): Promise<Tip[]> {
   const { data } = await requestJson<{ tips: Tip[] }>(`${API_BASE}/me/tips`, {
     cachePolicy: "noStore",
     headers: authHeaders(token),
@@ -637,7 +647,7 @@ export async function markCreatorNotificationRead(
   return data.notification;
 }
 
-export async function markAllCreatorNotificationsRead(token: string): Promise<void> {
+export async function markAllCreatorNotificationsRead(token: string | null): Promise<void> {
   await requestJson(`${API_BASE}/me/notifications/read_all`, {
     method: "PATCH",
     cachePolicy: "noStore",
@@ -661,7 +671,7 @@ export async function fetchPaystackWithdrawals(
   return data;
 }
 
-export async function createPaystackWithdrawal(token: string): Promise<{
+export async function createPaystackWithdrawal(token: string | null): Promise<{
   message: string;
   withdrawal: PaystackSettlement;
   status: WithdrawalStatus;
@@ -682,7 +692,7 @@ export async function createPaystackWithdrawal(token: string): Promise<{
   return data;
 }
 
-export async function repairPaystackData(token: string): Promise<PaystackRepairPayload> {
+export async function repairPaystackData(token: string | null): Promise<PaystackRepairPayload> {
   const { data } = await requestJson<PaystackRepairPayload>(`${API_BASE}/me/paystack/repair`, {
     method: "POST",
     cachePolicy: "noStore",
@@ -803,7 +813,7 @@ export async function runAdminPlatformReconciliation(
   return data;
 }
 
-export async function fetchPaystackOnboarding(token: string): Promise<PaystackOnboardingPayload> {
+export async function fetchPaystackOnboarding(token: string | null): Promise<PaystackOnboardingPayload> {
   const { data } = await requestJson<PaystackOnboardingPayload>(
     `${API_BASE}/me/paystack/onboarding`,
     {
@@ -815,7 +825,7 @@ export async function fetchPaystackOnboarding(token: string): Promise<PaystackOn
   return data;
 }
 
-export async function fetchPaystackAccountNumber(token: string): Promise<string> {
+export async function fetchPaystackAccountNumber(token: string | null): Promise<string> {
   const { data } = await requestJson<{ account_number: string }>(
     `${API_BASE}/me/paystack/account_number`,
     {
@@ -828,7 +838,7 @@ export async function fetchPaystackAccountNumber(token: string): Promise<string>
 }
 
 export async function completePaystackOnboarding(
-  token: string,
+  token: string | null,
   payload: CompletePaystackOnboardingPayload,
   idempotencyKey: string = createIdempotencyKey(),
 ): Promise<{ onboarding: PaystackOnboarding; tribe: Tribe; market: PaystackMarket; banks: PaystackBank[] }> {

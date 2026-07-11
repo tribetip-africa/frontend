@@ -193,13 +193,14 @@ body {
 }
 
 .hero-payout-headline {
-  display: inline;
+  display: flex;
+  flex-direction: column;
 }
 
 .hero-payout-rotator {
   position: relative;
-  display: inline;
-  vertical-align: baseline;
+  display: block;
+  margin-top: 0.12em;
 }
 
 .hero-payout-rotator-item {

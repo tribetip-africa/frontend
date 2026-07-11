@@ -1,19 +1,39 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { JsonLd } from "@/components/json-ld";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { TERMS_LAST_UPDATED, TERMS_SECTIONS } from "@/lib/terms-content";
+import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from "@/lib/seo-schema";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Terms of Service",
-  description:
-    "The terms that govern your use of TribeTip — accounts, tips, fees, payouts, acceptable use, and your rights as a creator or supporter.",
-  alternates: { canonical: "/terms" },
-};
+const TERMS_TITLE = "Terms of Service";
+const TERMS_DESCRIPTION =
+  "The terms that govern your use of TribeTip — accounts, tips, fees, payouts, acceptable use, and your rights as a creator or supporter.";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: TERMS_TITLE,
+  description: TERMS_DESCRIPTION,
+  path: "/terms",
+});
 
 export default function TermsPage() {
   return (
     <>
+      <JsonLd
+        data={[
+          buildWebPageJsonLd({
+            name: TERMS_TITLE,
+            description: TERMS_DESCRIPTION,
+            path: "/terms",
+            dateModified: TERMS_LAST_UPDATED,
+          }),
+          buildBreadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Terms of Service", path: "/terms" },
+          ]),
+        ]}
+      />
       <SiteHeader />
       <main>
         {/* Hero */}

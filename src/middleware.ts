@@ -1,7 +1,12 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { cacheControlHeader, inferCachePolicy } from "@/lib/cache-policy";
-import { cspHeaderName, buildEmbeddableContentSecurityPolicy } from "@/lib/csp";
+import {
+  buildContentSecurityPolicy,
+  buildEmbeddableContentSecurityPolicy,
+  cspHeaderName,
+  generateCspNonce,
+} from "@/lib/csp";
 import { isSignupOpen, launchMode, waitlistRedirectPath } from "@/lib/launch-mode";
 import {
   isBlockedPublicUsernamePath,
@@ -16,8 +21,22 @@ function applyWebCacheHeaders(response: NextResponse, pathname: string) {
   response.headers.set("Cache-Control", cacheControlHeader(policy));
 }
 
+function applyContentSecurityPolicy(response: NextResponse, pathname: string, nonce: string) {
+  const embeddable = isEmbeddablePublicTipPath(pathname);
+  const policy = embeddable
+    ? buildEmbeddableContentSecurityPolicy({ nonce })
+    : buildContentSecurityPolicy({ nonce });
+
+  if (embeddable) {
+    response.headers.delete("x-frame-options");
+  }
+
+  response.headers.set(cspHeaderName(), policy);
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const nonce = generateCspNonce();
 
   if (!isSignupOpen() && AUTH_PATHS.has(pathname)) {
     const url = request.nextUrl.clone();
@@ -37,15 +56,16 @@ export function middleware(request: NextRequest) {
     return new NextResponse(null, { status: 404 });
   }
 
-  const response = NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
 
-  if (isEmbeddablePublicTipPath(pathname)) {
-    response.headers.delete("x-frame-options");
-    response.headers.delete("content-security-policy");
-    response.headers.delete("content-security-policy-report-only");
-    response.headers.set(cspHeaderName(), buildEmbeddableContentSecurityPolicy());
-  }
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 
+  applyContentSecurityPolicy(response, pathname, nonce);
   applyWebCacheHeaders(response, pathname);
 
   return response;

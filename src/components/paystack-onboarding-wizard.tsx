@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { PaystackVerificationChecks } from "@/components/paystack-verification-checks";
 
 type PaystackOnboardingWizardProps = {
-  token: string;
+  token: string | null;
   username: string;
   onComplete?: (tribe: Tribe) => void;
 };
@@ -50,7 +50,7 @@ export function PaystackOnboardingWizard({ token, username, onComplete }: Paysta
 
       const sessionToken = getStoredToken();
       const storedTribe = getStoredTribe();
-      if (!sessionToken || !storedTribe) return;
+      if (!storedTribe) return;
 
       completedRef.current = true;
 

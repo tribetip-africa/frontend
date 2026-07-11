@@ -1,9 +1,12 @@
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { CreatorPublicPage } from "@/components/creator-public-page";
+import { JsonLd } from "@/components/json-ld";
 import { fetchPublicProfile, reconcileTipPayment } from "@/lib/api";
 import { TribetipApiError } from "@/lib/errors";
 import { isValidPublicUsername } from "@/lib/public-tip-path";
+import { buildCreatorProfileJsonLd } from "@/lib/seo-schema";
+import { buildCreatorMetadata, buildCreatorMetadataFallback } from "@/lib/seo";
 
 const loadPublicProfile = cache(async (username: string) => fetchPublicProfile(username));
 
@@ -21,13 +24,9 @@ export async function generateMetadata({ params }: CreatorPageProps) {
 
   try {
     const profile = await loadPublicProfile(username);
-    return {
-      title: `Tip ${profile.display_name} on TribeTip`,
-      description:
-        profile.bio ?? `Support ${profile.display_name} with a secure tip via card or mobile money.`,
-    };
+    return buildCreatorMetadata(profile);
   } catch {
-    return { title: `@${username} · TribeTip` };
+    return buildCreatorMetadataFallback(username);
   }
 }
 
@@ -61,10 +60,13 @@ export default async function CreatorPage({ params, searchParams }: CreatorPageP
   }
 
   return (
-    <CreatorPublicPage
-      profile={profile}
-      tipSuccess={tipStatus === "success"}
-      celebrationKey={paystackReference ?? undefined}
-    />
+    <>
+      <JsonLd data={buildCreatorProfileJsonLd(profile)} />
+      <CreatorPublicPage
+        profile={profile}
+        tipSuccess={tipStatus === "success"}
+        celebrationKey={paystackReference ?? undefined}
+      />
+    </>
   );
 }

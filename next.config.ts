@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import { buildContentSecurityPolicy, buildEmbeddableContentSecurityPolicy, cspHeaderName } from "./src/lib/csp";
 import { RESERVED_ROOT_SEGMENTS } from "./src/lib/public-tip-path";
 
 // Single source of truth: the embeddable creator-page header rule must never
@@ -22,16 +21,6 @@ const sharedSecurityHeaders = [
     : []),
 ];
 
-const lockedSecurityHeaders = [
-  { key: cspHeaderName(), value: buildContentSecurityPolicy() },
-  ...sharedSecurityHeaders,
-];
-
-const embeddableSecurityHeaders = [
-  { key: cspHeaderName(), value: buildEmbeddableContentSecurityPolicy() },
-  ...sharedSecurityHeaders,
-];
-
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   turbopack: {
@@ -44,20 +33,26 @@ const nextConfig: NextConfig = {
       { source: "/admin/:path*", destination: "/dashboard", permanent: false },
     ];
   },
+  async rewrites() {
+    return [
+      { source: "/llms.txt", destination: "/api/llms" },
+      { source: "/:key.txt", destination: "/api/indexnow/key?key=:key" },
+    ];
+  },
   async headers() {
     return [
       {
         source: "/t/:path*",
-        headers: embeddableSecurityHeaders,
+        headers: sharedSecurityHeaders,
       },
       {
         // Public creator pages — embeddable (frame-ancestors *), no X-Frame-Options.
         source: embeddableUsernameSource,
-        headers: embeddableSecurityHeaders,
+        headers: sharedSecurityHeaders,
       },
       {
         source: "/((?!t/).*)",
-        headers: lockedSecurityHeaders,
+        headers: sharedSecurityHeaders,
       },
     ];
   },

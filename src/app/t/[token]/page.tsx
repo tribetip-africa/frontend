@@ -3,6 +3,7 @@ import { CreatorPublicPage } from "@/components/creator-public-page";
 import { fetchPublicProfileByShareToken, reconcileTipPayment } from "@/lib/api";
 import { TribetipApiError } from "@/lib/errors";
 import { isValidShareToken } from "@/lib/share-link";
+import { buildPrivatePageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -24,14 +25,17 @@ export async function generateMetadata({ params }: ShareTipPageProps) {
 
   try {
     const profile = await loadPublicProfileByShareToken(token);
-    return {
-      title: `Tip ${profile.display_name} on TribeTip`,
+    return buildPrivatePageMetadata({
+      title: `Tip ${profile.display_name}`,
       description:
         profile.bio ?? `Support ${profile.display_name} with a secure tip via card or mobile money.`,
-      robots: { index: false, follow: false },
-    };
+      path: `/t/${token}`,
+    });
   } catch {
-    return { title: "Tip on TribeTip" };
+    return buildPrivatePageMetadata({
+      title: "Tip on TribeTip",
+      path: `/t/${token}`,
+    });
   }
 }
 

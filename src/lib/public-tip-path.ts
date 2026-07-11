@@ -6,15 +6,18 @@ export const RESERVED_ROOT_SEGMENTS = new Set([
   "sign-in",
   "sign-up",
   "faq",
+  "for-creators",
   "terms",
   "privacy",
   "waitlist",
+  "llms",
   "t",
   "api",
   "_next",
   "favicon.ico",
   "robots.txt",
   "sitemap.xml",
+  "llms.txt",
   "widget.js",
 ]);
 
@@ -42,6 +45,11 @@ export function isEmbeddablePublicTipPath(pathname: string): boolean {
 export function isBlockedPublicUsernamePath(pathname: string): boolean {
   const segments = pathname.split("/").filter(Boolean);
   if (segments.length !== 1 || RESERVED_ROOT_SEGMENTS.has(segments[0])) {
+    return false;
+  }
+
+  // Allow root text files such as IndexNow keys (e.g. /{key}.txt).
+  if (segments[0].endsWith(".txt")) {
     return false;
   }
 

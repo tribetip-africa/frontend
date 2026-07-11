@@ -56,7 +56,10 @@ describe("api error handling", () => {
     });
   });
 
-  it("throws TribetipAuthError when sign-in succeeds without a token", async () => {
+  it("throws TribetipAuthError when sign-in succeeds without a token in bearer mode", async () => {
+    const previous = process.env.NEXT_PUBLIC_AUTH_COOKIE;
+    process.env.NEXT_PUBLIC_AUTH_COOKIE = "0";
+
     secureFetchMock.mockResolvedValue(
       jsonResponse({
         message: "Signed in successfully.",
@@ -78,6 +81,8 @@ describe("api error handling", () => {
     await expect(
       signIn({ login: "demo", password: "securepass123" }),
     ).rejects.toBeInstanceOf(TribetipAuthError);
+
+    process.env.NEXT_PUBLIC_AUTH_COOKIE = previous;
   });
 
   it("throws TribetipNetworkError when fetch fails", async () => {

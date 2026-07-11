@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { clearStoredAuth, getStoredTribe } from "@/lib/auth-storage";
@@ -14,15 +14,21 @@ type AuthGateProps = {
 export function AuthGate({ children }: AuthGateProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { token, isLoading } = useAuth();
+  const { token, isAuthenticated, isLoading } = useAuth();
   const [checking, setChecking] = useState(false);
-  const [validatedToken, setValidatedToken] = useState<string | null>(null);
+  const [validatedSessionKey, setValidatedSessionKey] = useState<string | null>(null);
+  const sessionKey = isAuthenticated ? (token ?? "cookie") : null;
+  const validated = sessionKey !== null && validatedSessionKey === sessionKey;
+  const redirectAttempted = useRef(false);
 
   useEffect(() => {
-    if (isLoading || !token) return;
+    if (isLoading || !isAuthenticated || !sessionKey) {
+      return;
+    }
 
-    if (validatedToken === token) {
-      if (isMarketingPath(pathname) && getStoredTribe()) {
+    if (validated) {
+      if (isMarketingPath(pathname) && getStoredTribe() && !redirectAttempted.current) {
+        redirectAttempted.current = true;
         router.replace("/dashboard");
       }
       return;
@@ -37,16 +43,17 @@ export function AuthGate({ children }: AuthGateProps) {
         await validateStoredSession(token);
         if (cancelled) return;
 
-        setValidatedToken(token);
+        setValidatedSessionKey(sessionKey);
 
         if (isMarketingPath(pathname)) {
+          redirectAttempted.current = true;
           router.replace("/dashboard");
         }
       } catch (error) {
         if (cancelled) return;
 
         if (isUnauthorizedError(error)) {
-          setValidatedToken(null);
+          setValidatedSessionKey(null);
           clearStoredAuth();
           router.replace("/");
           return;
@@ -59,11 +66,15 @@ export function AuthGate({ children }: AuthGateProps) {
     return () => {
       cancelled = true;
     };
-  }, [isLoading, token, pathname, router, validatedToken]);
+  }, [isLoading, isAuthenticated, sessionKey, token, pathname, router, validated]);
 
-  const sessionPendingValidation = Boolean(token) && validatedToken !== token;
+  useEffect(() => {
+    redirectAttempted.current = false;
+  }, [pathname]);
+
+  const sessionPendingValidation = isAuthenticated && !validated;
   const needsAuthBootstrap =
-    isProtectedPath(pathname) || (isMarketingPath(pathname) && Boolean(token));
+    isProtectedPath(pathname) || (isMarketingPath(pathname) && isAuthenticated);
 
   const shouldBlock =
     (isLoading && needsAuthBootstrap) ||
