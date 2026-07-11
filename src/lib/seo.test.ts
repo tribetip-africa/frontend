@@ -10,6 +10,7 @@ import {
   getRobotsDisallowedPaths,
   getSitemapPaths,
   pageTitle,
+  serializeJsonLd,
 } from "@/lib/seo";
 
 describe("seo", () => {
@@ -138,6 +139,33 @@ describe("seo", () => {
         index: false,
         follow: false,
       },
+    });
+  });
+
+  it("escapes < in JSON-LD to prevent script breakout", () => {
+    const payload = serializeJsonLd({
+      description: "</script><script>alert(1)</script>",
+    });
+
+    expect(payload).not.toContain("</script>");
+    expect(payload).toContain("\\u003c/script>");
+    expect(JSON.parse(payload)).toEqual({
+      description: "</script><script>alert(1)</script>",
+    });
+  });
+
+  it("wraps JSON-LD arrays in a single @graph object", () => {
+    const payload = serializeJsonLd([
+      { "@context": "https://schema.org", "@type": "Organization", name: "TribeTip" },
+      { "@context": "https://schema.org", "@type": "WebSite", name: "TribeTip" },
+    ]);
+
+    expect(JSON.parse(payload)).toEqual({
+      "@context": "https://schema.org",
+      "@graph": [
+        { "@type": "Organization", name: "TribeTip" },
+        { "@type": "WebSite", name: "TribeTip" },
+      ],
     });
   });
 
