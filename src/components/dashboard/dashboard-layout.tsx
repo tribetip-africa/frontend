@@ -25,7 +25,7 @@ type DashboardLayoutProps = {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
-  const { tribe, token, isLoading } = useAuth();
+  const { tribe, token, isAuthenticated, isLoading } = useAuth();
   const signingOut = useRef(false);
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -34,11 +34,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const isAdmin = isAdminRole(tribe?.role);
   const onboardingComplete =
     isPaystackOnboardingComplete(tribe) || isPaystackOnboardingComplete(profile);
-  const showOnboardingModal = Boolean(tribe && token && !isAdmin && !onboardingComplete);
+  const showOnboardingModal = Boolean(tribe && isAuthenticated && !isAdmin && !onboardingComplete);
 
   const handleProfileChange = useCallback((loadedProfile: CreatorProfile) => {
     setProfile(loadedProfile);
-    if (tribe && token) {
+    if (tribe) {
       setStoredAuth(token, {
         ...tribe,
         account_status: loadedProfile.account_status,
@@ -52,11 +52,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     (updatedTribe: Tribe) => {
       if (token) {
         setStoredAuth(token, updatedTribe);
+      } else {
+        setStoredAuth(null, updatedTribe);
       }
 
       setPayoutSuccessVisible(true);
 
-      fetchMyProfile(token!)
+      fetchMyProfile(token)
         .then(handleProfileChange)
         .catch((error) => setProfileError(getDisplayMessage(error)));
     },
@@ -70,13 +72,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [isLoading, tribe, router]);
 
   useEffect(() => {
-    if (!token || !tribe || isAdmin) return;
+    if (!isAuthenticated || !tribe || isAdmin) return;
     if (!isPaystackOnboardingComplete(tribe)) return;
 
     fetchMyProfile(token)
       .then(handleProfileChange)
       .catch((error) => setProfileError(getDisplayMessage(error)));
-  }, [token, isAdmin, tribe, handleProfileChange]);
+  }, [isAuthenticated, isAdmin, tribe, token, handleProfileChange]);
 
   useEffect(() => {
     checkApiHealth().then((ok) => {
