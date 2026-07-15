@@ -8,7 +8,7 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { useAuth } from "@/context/auth-context";
 import { fetchMyProfile } from "@/lib/api";
 import { canAccessCreatorPublicPage, LOCKED_PAGE_HINT } from "@/lib/creator-public-page";
-import { isSignupOpen, primaryLaunchCta } from "@/lib/launch-mode";
+import { isSignInOpen, isSignupOpen, primaryLaunchCta } from "@/lib/launch-mode";
 import { getCreatorPageUrl } from "@/lib/platform";
 import { isAdminRole } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,7 @@ export function SiteHeader() {
   const onDashboard = isDashboardPath(pathname);
   const launchCta = primaryLaunchCta();
   const signupOpen = isSignupOpen();
+  const signInOpen = isSignInOpen();
 
   useEffect(() => {
     if (!shouldLoadProfile || !token) return;
@@ -134,16 +135,27 @@ export function SiteHeader() {
                 </Button>
               </Link>
             </>
-          ) : launchCta ? (
-            <Link href={launchCta.href}>
-              <Button variant="primary" type="button">
-                {launchCta.label}
-              </Button>
-            </Link>
           ) : (
-            <span className="hidden rounded-full border border-line bg-surface px-4 py-2 text-sm font-semibold text-muted sm:inline">
-              Launching soon
-            </span>
+            <>
+              {signInOpen && (
+                <Link href="/sign-in" className="hidden sm:block">
+                  <Button variant="ghost" type="button">
+                    Log in
+                  </Button>
+                </Link>
+              )}
+              {launchCta ? (
+                <Link href={launchCta.href}>
+                  <Button variant="primary" type="button">
+                    {launchCta.label}
+                  </Button>
+                </Link>
+              ) : (
+                <span className="hidden rounded-full border border-line bg-surface px-4 py-2 text-sm font-semibold text-muted sm:inline">
+                  Launching soon
+                </span>
+              )}
+            </>
           )}
         </div>
       </div>
