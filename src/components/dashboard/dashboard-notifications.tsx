@@ -5,7 +5,7 @@ import { NotificationToast } from "@/components/notification-toast";
 import { useNotifications } from "@/hooks/use-notifications";
 
 type DashboardNotificationsProps = {
-  token: string;
+  token: string | null;
   enabled: boolean;
 };
 
