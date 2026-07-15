@@ -22,7 +22,7 @@ type UseNotificationsOptions = {
 };
 
 export function useNotifications(
-  token: string,
+  token: string | null,
   enabled: boolean,
   options: UseNotificationsOptions = {},
 ) {
