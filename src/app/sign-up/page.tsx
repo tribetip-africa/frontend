@@ -33,7 +33,6 @@ function SignUpContent() {
 
   useEffect(() => {
     if (isSignupOpen()) {
-      setInviteLoading(false);
       return;
     }
 

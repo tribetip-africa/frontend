@@ -44,7 +44,7 @@ export function PaystackOnboardingWizard({ token, username, onComplete }: Paysta
   const [settlementBank, setSettlementBank] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [businessName, setBusinessName] = useState("");
-  const [referralCode, setReferralCode] = useState("");
+  const [referralCode, setReferralCode] = useState(() => getReferralCode() ?? "");
   const [referralAttached, setReferralAttached] = useState(
     () => Boolean(getStoredTribe()?.referral_attached),
   );
@@ -52,13 +52,6 @@ export function PaystackOnboardingWizard({ token, username, onComplete }: Paysta
   const onboardingIdempotencyKey = useRef<string | null>(null);
   const completedRef = useRef(false);
   const pollInFlightRef = useRef(false);
-
-  useEffect(() => {
-    const fromCookie = getReferralCode();
-    if (fromCookie) {
-      setReferralCode(fromCookie);
-    }
-  }, []);
 
   const finishOnboarding = useCallback(
     (onboarding: PaystackOnboarding, tribe?: Tribe) => {
