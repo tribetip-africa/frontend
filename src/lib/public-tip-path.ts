@@ -10,6 +10,7 @@ export const RESERVED_ROOT_SEGMENTS = new Set([
   "terms",
   "privacy",
   "waitlist",
+  "early-access",
   "llms",
   "t",
   "api",
