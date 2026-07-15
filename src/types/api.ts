@@ -353,6 +353,7 @@ export type SignUpPayload = {
   country_code?: string;
   currency?: string;
   referral_code?: string;
+  early_access_token?: string;
 };
 
 export type SignInPayload = {
@@ -457,6 +458,23 @@ export type AdminReferralSummary = {
   referrer_bonus_currency?: string | null;
   qualifying_tip_reference?: string | null;
   metadata: Record<string, unknown>;
+};
+
+export type EarlyAccessInvitePayload = {
+  id: string;
+  email: string;
+  token: string;
+  path: string;
+  url: string;
+  expires_at: string;
+  used_at?: string | null;
+  revoked_at?: string | null;
+  available: boolean;
+};
+
+export type EarlyAccessInvitePreview = {
+  email: string;
+  expires_at: string;
 };
 
 export type AdminReferralsOverview = {
