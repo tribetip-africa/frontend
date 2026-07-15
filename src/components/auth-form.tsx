@@ -20,6 +20,7 @@ type AuthFormProps = {
   onSubmit: (values: Record<string, string>) => Promise<void>;
   defaultUsername?: string;
   defaultReferralCode?: string;
+  lockedEmail?: string;
 };
 
 export function AuthForm({
@@ -27,6 +28,7 @@ export function AuthForm({
   onSubmit,
   defaultUsername = "",
   defaultReferralCode = "",
+  lockedEmail,
 }: AuthFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -151,8 +153,15 @@ export function AuthForm({
             type={field.type ?? "text"}
             autoComplete={field.autoComplete}
             required={field.required}
-            className="w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none ring-accent placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/30"
-            defaultValue={field.name === "username" ? defaultUsername : undefined}
+            readOnly={field.name === "email" && Boolean(lockedEmail)}
+            className="w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none ring-accent placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/30 read-only:bg-brand-50/80 read-only:text-brand-800"
+            defaultValue={
+              field.name === "username"
+                ? defaultUsername
+                : field.name === "email" && lockedEmail
+                  ? lockedEmail
+                  : undefined
+            }
             placeholder={
               field.name === "username"
                 ? "e.g. ama_creates"
@@ -168,7 +177,9 @@ export function AuthForm({
           )}
           {field.name === "email" && (
             <p className="mt-1 text-xs text-brand-600/80">
-              Use a real email Paystack accepts (e.g. you@gmail.com). Test domains like .local won&apos;t work for payouts.
+              {lockedEmail
+                ? "This email is fixed to your early access invite."
+                : "Use a real email Paystack accepts (e.g. you@gmail.com). Test domains like .local won't work for payouts."}
             </p>
           )}
         </div>
