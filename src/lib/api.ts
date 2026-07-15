@@ -36,6 +36,8 @@ import type {
   ReferralsPayload,
   ReferralInvitePayload,
   AdminReferralsResponse,
+  EarlyAccessInvitePayload,
+  EarlyAccessInvitePreview,
 } from "@/types/api";
 import { authHeaders, requestJson } from "@/lib/api-request";
 import { TribetipAuthError, getDisplayMessage } from "@/lib/errors";
@@ -219,6 +221,64 @@ export async function rejectAdminReferral(
     },
   );
 
+  return data;
+}
+
+export async function fetchEarlyAccessInvite(token: string): Promise<EarlyAccessInvitePreview> {
+  const { data } = await requestJson<EarlyAccessInvitePreview>(
+    `${API_BASE}/early_access/${encodeURIComponent(token)}`,
+    { cachePolicy: "noStore" },
+  );
+  return data;
+}
+
+export async function fetchAdminEarlyAccessInvites(
+  authToken: string,
+  params: { limit?: number; offset?: number } = {},
+): Promise<{ invites: EarlyAccessInvitePayload[] }> {
+  const search = new URLSearchParams();
+  if (params.limit != null) search.set("limit", String(params.limit));
+  if (params.offset != null) search.set("offset", String(params.offset));
+  const query = search.toString();
+
+  const { data } = await requestJson<{ invites: EarlyAccessInvitePayload[] }>(
+    `${API_BASE}/admin/early_access_invites${query ? `?${query}` : ""}`,
+    {
+      cachePolicy: "noStore",
+      headers: authHeaders(authToken),
+    },
+  );
+  return data;
+}
+
+export async function createAdminEarlyAccessInvite(
+  authToken: string,
+  payload: { email: string; expires_in_days?: number },
+): Promise<{ message: string; invite: EarlyAccessInvitePayload }> {
+  const { data } = await requestJson<{ message: string; invite: EarlyAccessInvitePayload }>(
+    `${API_BASE}/admin/early_access_invites`,
+    {
+      method: "POST",
+      cachePolicy: "noStore",
+      headers: authHeaders(authToken),
+      body: JSON.stringify(payload),
+    },
+  );
+  return data;
+}
+
+export async function revokeAdminEarlyAccessInvite(
+  authToken: string,
+  inviteId: string,
+): Promise<{ message: string; invite: EarlyAccessInvitePayload }> {
+  const { data } = await requestJson<{ message: string; invite: EarlyAccessInvitePayload }>(
+    `${API_BASE}/admin/early_access_invites/${encodeURIComponent(inviteId)}/revoke`,
+    {
+      method: "PATCH",
+      cachePolicy: "noStore",
+      headers: authHeaders(authToken),
+    },
+  );
   return data;
 }
 
