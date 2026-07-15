@@ -11,7 +11,7 @@ const CARD_BALANCE_VIEW_MS = 5 * 1000;
 
 type PayoutCardProps = {
   data: PayoutCardData;
-  token?: string;
+  token?: string | null;
 };
 
 function CardChip({ className = "" }: { className?: string }) {

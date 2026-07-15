@@ -19,7 +19,6 @@ type AuthFormProps = {
   mode: "sign-up" | "sign-in";
   onSubmit: (values: Record<string, string>) => Promise<void>;
   defaultUsername?: string;
-  defaultReferralCode?: string;
   lockedEmail?: string;
 };
 
@@ -27,7 +26,6 @@ export function AuthForm({
   mode,
   onSubmit,
   defaultUsername = "",
-  defaultReferralCode = "",
   lockedEmail,
 }: AuthFormProps) {
   const [error, setError] = useState<string | null>(null);
@@ -184,26 +182,6 @@ export function AuthForm({
           )}
         </div>
       ))}
-
-      {mode === "sign-up" && (
-        <div>
-          <label htmlFor="referral_code" className="mb-1 block text-sm font-medium text-brand-800">
-            Referral code <span className="font-normal text-brand-600">(optional)</span>
-          </label>
-          <input
-            id="referral_code"
-            name="referral_code"
-            type="text"
-            autoComplete="off"
-            className="w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none ring-accent placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/30"
-            defaultValue={defaultReferralCode}
-            placeholder="Paste a link code or @username"
-          />
-          <p className="mt-1 text-xs text-brand-600/80">
-            Have a friend&apos;s invite link or code? Paste it here. Leave blank if you don&apos;t have one.
-          </p>
-        </div>
-      )}
 
       {error && (
         <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">

@@ -15,7 +15,7 @@ import type { PaystackSettlement } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
 type SettlementHistoryPanelProps = {
-  token?: string;
+  token?: string | null;
   settlements: PaystackSettlement[];
   currency: string;
   error: string | null;

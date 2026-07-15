@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 
 type ShareQrPanelProps = {
-  token: string;
+  token: string | null;
   shareable: boolean;
   displayName?: string | null;
   compact?: boolean;

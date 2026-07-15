@@ -8,7 +8,7 @@ import type { CreatorMetrics, Tip } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
 type CreatorNeedsAttentionProps = {
-  token: string;
+  token: string | null;
   metrics: CreatorMetrics | null | undefined;
   tips: Tip[];
   onRepaired?: () => void;

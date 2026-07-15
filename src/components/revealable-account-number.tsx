@@ -12,7 +12,7 @@ const REVEAL_DURATION_MS = 5_000;
 
 type RevealableAccountNumberProps = {
   value: string;
-  token?: string;
+  token?: string | null;
   fullValue?: string;
   className?: string;
   mono?: boolean;

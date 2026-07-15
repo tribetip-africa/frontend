@@ -14,7 +14,7 @@ import type { PaystackSettlementsPayload } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
 type CreatorLastSettlementProps = {
-  token?: string;
+  token?: string | null;
   payload: PaystackSettlementsPayload | null;
   loading: boolean;
   error: string | null;

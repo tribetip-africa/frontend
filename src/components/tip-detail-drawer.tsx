@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 
 type TipDetailDrawerProps = {
-  token: string;
+  token: string | null;
   tipId: string | null;
   initialTip?: Tip | null;
   onClose: () => void;

@@ -4,7 +4,7 @@ import type { UpdateWidgetEmbedPayload, WidgetEmbedPayload } from "@/widget/type
 
 const API_BASE = getApiBaseUrl();
 
-export async function fetchMyWidgetEmbed(authToken: string): Promise<WidgetEmbedPayload> {
+export async function fetchMyWidgetEmbed(authToken: string | null): Promise<WidgetEmbedPayload> {
   const { data } = await requestJson<{ widget_embed: WidgetEmbedPayload }>(
     `${API_BASE}/me/widget_embed`,
     {
@@ -17,7 +17,7 @@ export async function fetchMyWidgetEmbed(authToken: string): Promise<WidgetEmbed
 }
 
 export async function updateMyWidgetEmbed(
-  authToken: string,
+  authToken: string | null,
   payload: UpdateWidgetEmbedPayload,
 ): Promise<WidgetEmbedPayload> {
   const { data } = await requestJson<{ widget_embed: WidgetEmbedPayload }>(
@@ -36,7 +36,7 @@ export async function updateMyWidgetEmbed(
   return data.widget_embed;
 }
 
-export async function rotateMyWidgetEmbed(authToken: string): Promise<WidgetEmbedPayload> {
+export async function rotateMyWidgetEmbed(authToken: string | null): Promise<WidgetEmbedPayload> {
   const { data } = await requestJson<{ widget_embed: WidgetEmbedPayload; message?: string }>(
     `${API_BASE}/me/widget_embed/rotate`,
     {

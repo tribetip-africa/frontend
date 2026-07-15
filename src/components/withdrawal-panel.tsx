@@ -8,7 +8,7 @@ import type { PaystackWithdrawalsPayload, WithdrawalStatus } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
 type WithdrawalPanelProps = {
-  token?: string;
+  token?: string | null;
   payload: PaystackWithdrawalsPayload | null;
   error: string | null;
   loading: boolean;

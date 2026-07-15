@@ -16,7 +16,7 @@ import type { CreatorProfile } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
 type ProfileSettingsProps = {
-  token: string;
+  token: string | null;
   initialProfile: CreatorProfile;
   onProfileChange: (profile: CreatorProfile) => void;
   embedded?: boolean;

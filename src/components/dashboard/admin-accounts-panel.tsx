@@ -31,7 +31,7 @@ import { RepairResultSummary } from "@/components/repair-result-summary";
 const PAGE_SIZE = 25;
 
 type AdminAccountsPanelProps = {
-  token: string;
+  token: string | null;
   onOverviewChange?: (overview: AdminOverview) => void;
 };
 

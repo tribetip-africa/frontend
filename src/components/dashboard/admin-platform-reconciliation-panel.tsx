@@ -12,7 +12,7 @@ import { formatSettlementDate } from "@/lib/settlement-status";
 import type { PlatformReconciliationReport } from "@/types/api";
 
 type AdminPlatformReconciliationPanelProps = {
-  token: string;
+  token: string | null;
 };
 
 function severityTone(severity: string): string {

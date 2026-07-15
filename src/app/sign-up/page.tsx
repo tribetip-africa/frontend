@@ -7,15 +7,10 @@ import { AuthPageShell } from "@/components/auth-page-shell";
 import { SiteHeader } from "@/components/site-header";
 import { useAuth } from "@/context/auth-context";
 import { fetchEarlyAccessInvite } from "@/lib/api";
-import {
-  clearEarlyAccessToken,
-  getEarlyAccessToken,
-  normalizeEarlyAccessToken,
-  setEarlyAccessToken,
-} from "@/lib/early-access-attribution";
+import { clearEarlyAccessToken, getEarlyAccessToken, normalizeEarlyAccessToken, setEarlyAccessToken } from "@/lib/early-access-attribution";
 import { getDisplayMessage } from "@/lib/errors";
 import { isSignupOpen } from "@/lib/launch-mode";
-import { clearReferralCode, getReferralCode, normalizeReferralCode, setReferralCode } from "@/lib/referral-attribution";
+import { setReferralCode } from "@/lib/referral-attribution";
 import type { SignUpPayload } from "@/types/api";
 
 function SignUpContent() {
@@ -24,7 +19,6 @@ function SignUpContent() {
   const { signUp } = useAuth();
   const defaultUsername = searchParams.get("username") ?? "";
   const referralFromUrl = searchParams.get("ref");
-  const defaultReferralCode = referralFromUrl ?? getReferralCode() ?? "";
   const eaFromUrl = normalizeEarlyAccessToken(searchParams.get("ea"));
   const [inviteEmail, setInviteEmail] = useState<string | null>(null);
   const [inviteToken, setInviteToken] = useState<string | null>(null);
@@ -79,13 +73,6 @@ function SignUpContent() {
 
   async function handleSubmit(values: Record<string, string>) {
     const payload = values as unknown as SignUpPayload;
-    const manualReferralCode = normalizeReferralCode(values.referral_code);
-    const referralCode = manualReferralCode ?? getReferralCode();
-    if (referralCode) {
-      payload.referral_code = referralCode;
-    } else {
-      delete payload.referral_code;
-    }
 
     if (inviteToken) {
       payload.early_access_token = inviteToken;
@@ -95,7 +82,6 @@ function SignUpContent() {
     }
 
     const { confirmationRequired } = await signUp(payload);
-    clearReferralCode();
     clearEarlyAccessToken();
     void fetch("/api/early-access/cookie", { method: "DELETE" });
 
@@ -132,7 +118,6 @@ function SignUpContent() {
           mode="sign-up"
           onSubmit={handleSubmit}
           defaultUsername={defaultUsername}
-          defaultReferralCode={defaultReferralCode}
           lockedEmail={inviteEmail ?? undefined}
         />
       )}

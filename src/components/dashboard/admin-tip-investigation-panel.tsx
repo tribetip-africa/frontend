@@ -8,7 +8,7 @@ import { getDisplayMessage } from "@/lib/errors";
 import type { TipInvestigation } from "@/types/api";
 
 type AdminTipInvestigationPanelProps = {
-  token: string;
+  token: string | null;
 };
 
 export function AdminTipInvestigationPanel({ token }: AdminTipInvestigationPanelProps) {

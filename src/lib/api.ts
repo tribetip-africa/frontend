@@ -151,7 +151,7 @@ export async function fetchMyReferrals(authToken: string | null): Promise<Referr
 }
 
 export async function updateMyReferrals(
-  authToken: string,
+  authToken: string | null,
   referralsEnabled: boolean,
 ): Promise<ReferralsPayload["referrals"]> {
   const { data } = await requestJson<ReferralsPayload>(`${API_BASE}/me/referrals`, {
@@ -172,7 +172,7 @@ export async function updateMyReferrals(
 }
 
 export async function rotateReferralInvite(
-  authToken: string,
+  authToken: string | null,
 ): Promise<{ message: string; invite: ReferralInvitePayload }> {
   const { data } = await requestJson<{ message: string; invite: ReferralInvitePayload }>(
     `${API_BASE}/me/referrals/invite/rotate`,
@@ -187,7 +187,7 @@ export async function rotateReferralInvite(
 }
 
 export async function fetchAdminReferrals(
-  authToken: string,
+  authToken: string | null,
   params: { limit?: number; offset?: number } = {},
 ): Promise<AdminReferralsResponse> {
   const search = new URLSearchParams();
@@ -207,7 +207,7 @@ export async function fetchAdminReferrals(
 }
 
 export async function rejectAdminReferral(
-  authToken: string,
+  authToken: string | null,
   referralId: string,
   reason: string,
 ): Promise<{ message: string }> {
@@ -233,7 +233,7 @@ export async function fetchEarlyAccessInvite(token: string): Promise<EarlyAccess
 }
 
 export async function fetchAdminEarlyAccessInvites(
-  authToken: string,
+  authToken: string | null,
   params: { limit?: number; offset?: number } = {},
 ): Promise<{ invites: EarlyAccessInvitePayload[] }> {
   const search = new URLSearchParams();
@@ -252,7 +252,7 @@ export async function fetchAdminEarlyAccessInvites(
 }
 
 export async function createAdminEarlyAccessInvite(
-  authToken: string,
+  authToken: string | null,
   payload: { email: string; expires_in_days?: number },
 ): Promise<{ message: string; invite: EarlyAccessInvitePayload }> {
   const { data } = await requestJson<{ message: string; invite: EarlyAccessInvitePayload }>(
@@ -268,7 +268,7 @@ export async function createAdminEarlyAccessInvite(
 }
 
 export async function revokeAdminEarlyAccessInvite(
-  authToken: string,
+  authToken: string | null,
   inviteId: string,
 ): Promise<{ message: string; invite: EarlyAccessInvitePayload }> {
   const { data } = await requestJson<{ message: string; invite: EarlyAccessInvitePayload }>(
@@ -365,7 +365,7 @@ export async function fetchMyProfile(token?: string | null): Promise<CreatorProf
 }
 
 export async function updateMyProfile(
-  token: string,
+  token: string | null,
   payload: UpdateProfilePayload,
 ): Promise<CreatorProfile> {
   const { data } = await requestJson<{ profile: CreatorProfile }>(`${API_BASE}/me/profile`, {
@@ -398,6 +398,7 @@ type CompletePaystackOnboardingPayload = {
   settlement_bank: string;
   account_number: string;
   business_name?: string;
+  referral_code?: string;
 };
 
 type CreateTipOptions = {
@@ -502,7 +503,7 @@ export async function fetchMyTips(token: string | null): Promise<Tip[]> {
   return data.tips;
 }
 
-export async function fetchMyTip(token: string, tipId: string): Promise<Tip> {
+export async function fetchMyTip(token: string | null, tipId: string): Promise<Tip> {
   const { data } = await requestJson<{ tip: Tip }>(
     `${API_BASE}/me/tips/${encodeURIComponent(tipId)}`,
     {
@@ -521,7 +522,7 @@ type AdminTribesQuery = {
 };
 
 export async function fetchAdminTribes(
-  token: string,
+  token: string | null,
   query: AdminTribesQuery = {},
 ): Promise<AdminTribesResponse> {
   const params = new URLSearchParams();
@@ -540,7 +541,7 @@ export async function fetchAdminTribes(
   return data;
 }
 
-export async function suspendAdminTribe(token: string, tribeId: string): Promise<AdminTribeSummary> {
+export async function suspendAdminTribe(token: string | null, tribeId: string): Promise<AdminTribeSummary> {
   const { data } = await requestJson<{ tribe: AdminTribeSummary }>(
     `${API_BASE}/admin/tribes/${encodeURIComponent(tribeId)}/suspend`,
     {
@@ -553,7 +554,7 @@ export async function suspendAdminTribe(token: string, tribeId: string): Promise
   return data.tribe;
 }
 
-export async function activateAdminTribe(token: string, tribeId: string): Promise<AdminTribeSummary> {
+export async function activateAdminTribe(token: string | null, tribeId: string): Promise<AdminTribeSummary> {
   const { data } = await requestJson<{ tribe: AdminTribeSummary }>(
     `${API_BASE}/admin/tribes/${encodeURIComponent(tribeId)}/activate`,
     {
@@ -571,7 +572,7 @@ type PaystackAuditOptions = {
 };
 
 export async function fetchAdminPaystackEvents(
-  token: string,
+  token: string | null,
   query: { status?: string; limit?: number; offset?: number } = {},
 ): Promise<AdminPaystackEventsResponse> {
   const params = new URLSearchParams();
@@ -593,7 +594,7 @@ export async function fetchAdminPaystackEvents(
 }
 
 export async function investigateAdminTip(
-  token: string,
+  token: string | null,
   paystackReference: string,
 ): Promise<TipInvestigation> {
   const { data } = await requestJson<{ investigation: TipInvestigation }>(
@@ -608,7 +609,7 @@ export async function investigateAdminTip(
 }
 
 export async function replayAdminPaystackEvent(
-  token: string,
+  token: string | null,
   eventId: string,
 ): Promise<AdminPaystackEvent> {
   const { data } = await requestJson<{ event: AdminPaystackEvent }>(
@@ -624,7 +625,7 @@ export async function replayAdminPaystackEvent(
 }
 
 export async function fetchAdminPaystackAudit(
-  token: string,
+  token: string | null,
   tribeId: string,
   options: PaystackAuditOptions = {},
 ): Promise<PaystackAuditReport> {
@@ -644,7 +645,7 @@ export async function fetchAdminPaystackAudit(
 }
 
 export async function fetchPaystackSettlements(
-  token: string,
+  token: string | null,
   options?: { refresh?: boolean },
 ): Promise<PaystackSettlementsPayload> {
   const query = options?.refresh ? "?refresh=true" : "";
@@ -660,7 +661,7 @@ export async function fetchPaystackSettlements(
 }
 
 export async function fetchPaystackSettlementDetail(
-  token: string,
+  token: string | null,
   settlementId: string,
 ): Promise<SettlementDetailPayload> {
   const { data } = await requestJson<SettlementDetailPayload>(
@@ -675,7 +676,7 @@ export async function fetchPaystackSettlementDetail(
 }
 
 export async function fetchCreatorNotifications(
-  token: string,
+  token: string | null,
   options?: { limit?: number },
 ): Promise<CreatorNotificationsPayload> {
   const params = new URLSearchParams();
@@ -692,7 +693,7 @@ export async function fetchCreatorNotifications(
 }
 
 export async function markCreatorNotificationRead(
-  token: string,
+  token: string | null,
   notificationId: string,
 ): Promise<CreatorNotification> {
   const { data } = await requestJson<{ notification: CreatorNotification }>(
@@ -716,7 +717,7 @@ export async function markAllCreatorNotificationsRead(token: string | null): Pro
 }
 
 export async function fetchPaystackWithdrawals(
-  token: string,
+  token: string | null,
   options?: { refresh?: boolean },
 ): Promise<PaystackWithdrawalsPayload> {
   const query = options?.refresh ? "?refresh=true" : "";
@@ -762,7 +763,7 @@ export async function repairPaystackData(token: string | null): Promise<Paystack
   return data;
 }
 
-export async function reconcileMyTip(token: string, tipId: string): Promise<Tip> {
+export async function reconcileMyTip(token: string | null, tipId: string): Promise<Tip> {
   const { data } = await requestJson<{ message: string; tip: Tip }>(
     `${API_BASE}/me/tips/${encodeURIComponent(tipId)}/reconcile`,
     {
@@ -776,7 +777,7 @@ export async function reconcileMyTip(token: string, tipId: string): Promise<Tip>
 }
 
 export async function repairAdminPaystackData(
-  token: string,
+  token: string | null,
   tribeId: string,
 ): Promise<AdminPaystackRepairPayload> {
   const { data } = await requestJson<AdminPaystackRepairPayload>(
@@ -792,7 +793,7 @@ export async function repairAdminPaystackData(
 }
 
 export async function fetchAdminSettlements(
-  token: string,
+  token: string | null,
   tribeId: string,
   options?: { refresh?: boolean },
 ): Promise<AdminSettlementsPayload> {
@@ -815,7 +816,7 @@ type PaymentAlertsQuery = {
 };
 
 export async function fetchAdminPaymentAlerts(
-  token: string,
+  token: string | null,
   query: PaymentAlertsQuery = {},
 ): Promise<PaymentAlertsResponse> {
   const params = new URLSearchParams();
@@ -837,7 +838,7 @@ export async function fetchAdminPaymentAlerts(
 }
 
 export async function fetchAdminPlatformReconciliation(
-  token: string,
+  token: string | null,
 ): Promise<PlatformReconciliationResponse> {
   const { data } = await requestJson<PlatformReconciliationResponse>(
     `${API_BASE}/admin/paystack/reconciliation`,
@@ -851,7 +852,7 @@ export async function fetchAdminPlatformReconciliation(
 }
 
 export async function runAdminPlatformReconciliation(
-  token: string,
+  token: string | null,
   options?: { autoRepair?: boolean },
 ): Promise<PlatformReconciliationResponse> {
   const { data } = await requestJson<PlatformReconciliationResponse>(

@@ -10,7 +10,7 @@ import {
 import type { PaystackSettlement } from "@/types/api";
 
 type WithdrawalHistoryPanelProps = {
-  token?: string;
+  token?: string | null;
   withdrawals: PaystackSettlement[];
   currency: string;
   loading: boolean;

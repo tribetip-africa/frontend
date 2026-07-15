@@ -8,7 +8,7 @@ import type { Tip } from "@/types/api";
 
 const PREVIEW_LIMIT = 5;
 
-export function useCreatorTipsPreview(token: string, refreshSignal = 0) {
+export function useCreatorTipsPreview(token: string | null, refreshSignal = 0) {
   const [tips, setTips] = useState<Tip[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

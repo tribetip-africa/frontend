@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { PaystackVerificationChecks } from "@/components/paystack-verification-checks";
 
 type PaystackPayoutStatusPanelProps = {
-  token?: string;
+  token?: string | null;
   payload: PaystackOnboardingPayload | null;
   error: string | null;
   loading: boolean;

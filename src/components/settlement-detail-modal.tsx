@@ -15,7 +15,7 @@ import {
 import type { SettlementDetailPayload } from "@/types/api";
 
 type SettlementDetailModalProps = {
-  token: string;
+  token: string | null;
   settlementId: string | null;
   onClose: () => void;
 };

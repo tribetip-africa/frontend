@@ -9,7 +9,7 @@ import { formatSettlementDate } from "@/lib/settlement-status";
 import type { PaymentAlert } from "@/types/api";
 
 type AdminPaymentAlertsPanelProps = {
-  token: string;
+  token: string | null;
 };
 
 function severityTone(severity: PaymentAlert["severity"]): string {

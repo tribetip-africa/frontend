@@ -11,7 +11,7 @@ type UsePaystackSettlementsOptions = {
 };
 
 export function usePaystackSettlements(
-  token: string,
+  token: string | null,
   options: UsePaystackSettlementsOptions = {},
 ) {
   const refreshOnLoad = options.refresh ?? true;

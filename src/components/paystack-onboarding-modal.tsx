@@ -49,6 +49,7 @@ export function PaystackOnboardingModal({
           </h2>
           <p className="mt-1.5 text-sm text-brand-700">
             Link your Paystack customer profile and payout account before you can receive tips.
+            If a creator invited you, you can add their referral code here.
           </p>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-4 sm:px-8 sm:py-5">

@@ -4,6 +4,7 @@ export type Tribe = {
   username: string;
   role: "creator" | "admin";
   account_status: "pending" | "active" | "suspended";
+  referral_attached?: boolean;
   paystack_onboarding: PaystackOnboarding;
   public_page_shareable?: boolean;
 };

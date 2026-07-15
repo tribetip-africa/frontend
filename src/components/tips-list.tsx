@@ -12,7 +12,7 @@ import type { Tip } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
 type TipsListProps = {
-  token: string;
+  token: string | null;
   refreshSignal?: number;
   previewLimit?: number;
   tips?: Tip[];

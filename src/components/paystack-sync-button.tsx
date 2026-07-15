@@ -7,7 +7,7 @@ import type { PaystackRepairResult } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
 type PaystackSyncButtonProps = {
-  token: string;
+  token: string | null;
   variant?: "primary" | "secondary" | "ghost";
   label?: string;
   syncingLabel?: string;

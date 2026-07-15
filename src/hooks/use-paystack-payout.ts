@@ -6,7 +6,7 @@ import { getDisplayMessage } from "@/lib/errors";
 import { runAfterPaint } from "@/lib/run-after-paint";
 import type { PaystackOnboardingPayload } from "@/types/api";
 
-export function usePaystackPayout(token: string) {
+export function usePaystackPayout(token: string | null) {
   const [payload, setPayload] = useState<PaystackOnboardingPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

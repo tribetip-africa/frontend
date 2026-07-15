@@ -5,7 +5,7 @@ import { formatPayoutDestination, parsePayoutDestination } from "@/lib/payout-de
 
 type RevealablePayoutDestinationProps = {
   destination: string;
-  token?: string;
+  token?: string | null;
   className?: string;
   mono?: boolean;
 };

@@ -12,6 +12,11 @@ import {
   pickDefaultSettlementBank,
   sortSettlementBanks,
 } from "@/lib/payout-setup-config";
+import {
+  clearReferralCode,
+  getReferralCode,
+  normalizeReferralCode,
+} from "@/lib/referral-attribution";
 import type {
   PaystackBank,
   PaystackMarket,
@@ -39,10 +44,21 @@ export function PaystackOnboardingWizard({ token, username, onComplete }: Paysta
   const [settlementBank, setSettlementBank] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [businessName, setBusinessName] = useState("");
+  const [referralCode, setReferralCode] = useState("");
+  const [referralAttached, setReferralAttached] = useState(
+    () => Boolean(getStoredTribe()?.referral_attached),
+  );
   const [verification, setVerification] = useState<PaystackVerificationCheck[]>([]);
   const onboardingIdempotencyKey = useRef<string | null>(null);
   const completedRef = useRef(false);
   const pollInFlightRef = useRef(false);
+
+  useEffect(() => {
+    const fromCookie = getReferralCode();
+    if (fromCookie) {
+      setReferralCode(fromCookie);
+    }
+  }, []);
 
   const finishOnboarding = useCallback(
     (onboarding: PaystackOnboarding, tribe?: Tribe) => {
@@ -158,6 +174,7 @@ export function PaystackOnboardingWizard({ token, username, onComplete }: Paysta
     try {
       const idempotencyKey = onboardingIdempotencyKey.current ?? createIdempotencyKey();
       onboardingIdempotencyKey.current = idempotencyKey;
+      const normalizedReferral = normalizeReferralCode(referralCode);
 
       const { onboarding: status, tribe } = await completePaystackOnboarding(
         token,
@@ -165,6 +182,9 @@ export function PaystackOnboardingWizard({ token, username, onComplete }: Paysta
           settlement_bank: settlementBank.trim(),
           account_number: accountNumber.trim(),
           business_name: businessName.trim() || username,
+          ...(normalizedReferral && !referralAttached
+            ? { referral_code: normalizedReferral }
+            : {}),
         },
         idempotencyKey,
       );
@@ -172,6 +192,10 @@ export function PaystackOnboardingWizard({ token, username, onComplete }: Paysta
       setCustomerReady(status.customer_ready);
       setSubaccountReady(status.subaccount_ready);
       setVerification(status.verification ?? []);
+      if (tribe.referral_attached) {
+        setReferralAttached(true);
+        clearReferralCode();
+      }
 
       if (status.subaccount_ready) {
         finishOnboarding(status, tribe);
@@ -329,6 +353,25 @@ export function PaystackOnboardingWizard({ token, username, onComplete }: Paysta
               <p className="mt-1 text-xs text-brand-600">{formCopy.accountHint}</p>
             )}
           </div>
+
+          {!referralAttached && (
+            <div>
+              <label htmlFor="referral_code" className="mb-1.5 block text-sm font-medium text-brand-800">
+                Referral code <span className="font-normal text-brand-600">(optional)</span>
+              </label>
+              <input
+                id="referral_code"
+                value={referralCode}
+                onChange={(event) => setReferralCode(event.target.value)}
+                autoComplete="off"
+                className="w-full rounded-xl border border-brand-200 px-3 py-2 text-sm text-brand-900"
+                placeholder="Paste a link code or @username"
+              />
+              <p className="mt-1 text-xs text-brand-600">
+                Invited by a creator? Add their code here. You can leave this blank.
+              </p>
+            </div>
+          )}
 
           {!customerReady && payoutDetailsComplete && (
             <p className="text-xs text-brand-600">

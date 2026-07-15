@@ -8,7 +8,7 @@ import { formatMoney } from "@/lib/money";
 import type { AdminReferralSummary, AdminReferralsResponse } from "@/types/api";
 
 type AdminReferralsPanelProps = {
-  token: string;
+  token: string | null;
 };
 
 export function AdminReferralsPanel({ token }: AdminReferralsPanelProps) {

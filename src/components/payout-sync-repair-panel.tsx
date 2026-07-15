@@ -6,7 +6,7 @@ import { PaystackSyncButton } from "@/components/paystack-sync-button";
 import { RepairResultSummary } from "@/components/repair-result-summary";
 
 type PayoutSyncRepairPanelProps = {
-  token: string;
+  token: string | null;
   onRepaired?: (result: PaystackRepairResult) => void;
 };
 

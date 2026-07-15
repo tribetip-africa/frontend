@@ -12,6 +12,7 @@ export type StoredTribe = {
   username: string;
   role: Tribe["role"];
   account_status: Tribe["account_status"];
+  referral_attached?: boolean;
   paystack_onboarding: Tribe["paystack_onboarding"];
   public_page_shareable?: boolean;
 };
@@ -61,6 +62,7 @@ function tribesEqual(a: StoredTribe | null, b: StoredTribe | null): boolean {
     a.paystack_onboarding.subaccount_ready === b.paystack_onboarding.subaccount_ready &&
     (a.paystack_onboarding.subaccount_verified ?? false) ===
       (b.paystack_onboarding.subaccount_verified ?? false) &&
+    Boolean(a.referral_attached) === Boolean(b.referral_attached) &&
     a.public_page_shareable === b.public_page_shareable
   );
 }
@@ -106,6 +108,7 @@ function normalizeStoredTribe(raw: Record<string, unknown>): StoredTribe | null 
     username,
     role,
     account_status: accountStatus,
+    referral_attached: raw.referral_attached === true,
     paystack_onboarding: paystackOnboarding,
     public_page_shareable:
       (raw as { public_page_shareable?: boolean }).public_page_shareable === true,

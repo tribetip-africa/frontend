@@ -5,7 +5,7 @@ import type { CreatorProfile, Tribe } from "@/types/api";
 
 export type DashboardContextValue = {
   tribe: Tribe;
-  token: string;
+  token: string | null;
   isAdmin: boolean;
   profile: CreatorProfile | null;
   profileError: string | null;

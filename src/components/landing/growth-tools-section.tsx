@@ -44,7 +44,7 @@ const TOOLS = [
     eyebrow: "Invite creators",
     title: "Grow the tribe and earn when others succeed",
     description:
-      "Share an expiring invite link or referral code with creators you know. When they sign up, finish payout setup, and receive their first tip, you both benefit.",
+      "Share an expiring invite link or referral code with creators you know. When they finish payout setup and receive their first tip, you both benefit.",
     bullets: [
       "Personal invite link and code from your dashboard",
       "Friends can paste your code during sign-up",

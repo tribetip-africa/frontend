@@ -8,7 +8,7 @@ import { runAfterPaint } from "@/lib/run-after-paint";
 import type { AdminPaystackEvent } from "@/types/api";
 
 type AdminWebhookEventsPanelProps = {
-  token: string;
+  token: string | null;
 };
 
 function statusTone(status: AdminPaystackEvent["status"]): string {

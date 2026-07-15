@@ -9,7 +9,7 @@ import { settlementNotificationHref } from "@/lib/notification-links";
 import type { CreatorNotification } from "@/types/api";
 
 type CreatorNotificationsPageProps = {
-  token: string;
+  token: string | null;
 };
 
 function settlementHref(notification: CreatorNotification): string {

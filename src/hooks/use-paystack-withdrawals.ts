@@ -6,7 +6,7 @@ import { getDisplayMessage } from "@/lib/errors";
 import { runAfterPaint } from "@/lib/run-after-paint";
 import type { PaystackWithdrawalsPayload } from "@/types/api";
 
-export function usePaystackWithdrawals(token: string) {
+export function usePaystackWithdrawals(token: string | null) {
   const [payload, setPayload] = useState<PaystackWithdrawalsPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

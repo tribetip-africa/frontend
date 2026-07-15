@@ -11,7 +11,7 @@ import { getDisplayMessage } from "@/lib/errors";
 import type { EarlyAccessInvitePayload } from "@/types/api";
 
 type AdminEarlyAccessPanelProps = {
-  token: string;
+  token: string | null;
 };
 
 export function AdminEarlyAccessPanel({ token }: AdminEarlyAccessPanelProps) {
