@@ -222,16 +222,73 @@ export async function apiSignIn({ login, password = "securepass123" }) {
   return { response, data, token };
 }
 
+function cookieAuthEnabledInLiveTests() {
+  const flag = process.env.NEXT_PUBLIC_AUTH_COOKIE;
+  return flag !== "0" && flag !== "false";
+}
+
+function cookiesFromSignInResponse(response) {
+  const apiHost = new URL(API_BASE).hostname;
+  const headers =
+    typeof response.headers.getSetCookie === "function" ? response.headers.getSetCookie() : [];
+
+  return headers.flatMap((header) => {
+    const [pair, ...attrs] = header.split(";");
+    const eq = pair.indexOf("=");
+    if (eq < 0) return [];
+
+    const name = pair.slice(0, eq).trim();
+    const value = pair.slice(eq + 1).trim();
+    const attrMap = Object.fromEntries(
+      attrs.map((part) => {
+        const [key, ...rest] = part.trim().split("=");
+        return [key.toLowerCase(), rest.join("=") || true];
+      }),
+    );
+
+    return [
+      {
+        name,
+        value,
+        domain: apiHost,
+        path: typeof attrMap.path === "string" ? attrMap.path : "/",
+        httpOnly: Boolean(attrMap.httponly),
+        secure: Boolean(attrMap.secure),
+        sameSite: "Lax",
+      },
+    ];
+  });
+}
+
 export async function signInPageSession(page, { login, password = "securepass123" }) {
-  const { token, data } = await apiSignIn({ login, password });
+  const { token, data, response } = await apiSignIn({ login, password });
+  const cookieAuth = cookieAuthEnabledInLiveTests();
+  const authCookies = cookiesFromSignInResponse(response);
+
+  if (authCookies.length > 0) {
+    await page.context().addCookies(authCookies);
+  }
 
   await page.goto(`${WEB_BASE}/`, { waitUntil: "domcontentloaded" });
   await page.evaluate(
-    ({ sessionToken, tribe }) => {
-      localStorage.setItem("tribetip_token", sessionToken);
+    ({ sessionToken, tribe, csrfToken, cookieAuth: useCookies }) => {
       localStorage.setItem("tribetip_tribe", JSON.stringify(tribe));
+      document.cookie = "tribetip_session=1; path=/; max-age=86400; samesite=lax";
+      if (csrfToken) {
+        sessionStorage.setItem("tribetip_csrf", csrfToken);
+      }
+      if (useCookies) {
+        localStorage.removeItem("tribetip_token");
+      } else if (sessionToken) {
+        localStorage.setItem("tribetip_token", sessionToken);
+      }
     },
-    { sessionToken: token, tribe: data.tribe },
+    {
+      sessionToken: token,
+      tribe: data.tribe,
+      csrfToken: data.csrf_token ?? null,
+      cookieAuth,
+    },
   );
   await page.goto(`${WEB_BASE}/dashboard`, { waitUntil: "domcontentloaded" });
 
