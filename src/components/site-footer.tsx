@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
-import { isSignupOpen, primaryLaunchCta } from "@/lib/launch-mode";
+import { isSignInOpen, isSignupOpen, primaryLaunchCta } from "@/lib/launch-mode";
 
 type SiteFooterProps = {
   fixed?: boolean;
@@ -9,6 +9,7 @@ type SiteFooterProps = {
 export function SiteFooter({ fixed = false }: SiteFooterProps) {
   const launchCta = primaryLaunchCta();
   const signupOpen = isSignupOpen();
+  const signInOpen = isSignInOpen();
 
   return (
     <footer
@@ -42,14 +43,25 @@ export function SiteFooter({ fixed = false }: SiteFooterProps) {
                     </Link>
                   </li>
                 </>
-              ) : launchCta ? (
-                <li>
-                  <Link href={launchCta.href} className="hover:text-ink">
-                    {launchCta.label}
-                  </Link>
-                </li>
               ) : (
-                <li className="text-muted">Launching soon</li>
+                <>
+                  {signInOpen && (
+                    <li>
+                      <Link href="/sign-in" className="hover:text-ink">
+                        Log in
+                      </Link>
+                    </li>
+                  )}
+                  {launchCta ? (
+                    <li>
+                      <Link href={launchCta.href} className="hover:text-ink">
+                        {launchCta.label}
+                      </Link>
+                    </li>
+                  ) : (
+                    <li className="text-muted">Launching soon</li>
+                  )}
+                </>
               )}
             </ul>
           </div>
