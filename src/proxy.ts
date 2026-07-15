@@ -7,13 +7,19 @@ import {
   cspHeaderName,
   generateCspNonce,
 } from "@/lib/csp";
-import { isSignupOpen, launchMode, waitlistRedirectPath } from "@/lib/launch-mode";
+import {
+  EARLY_ACCESS_COOKIE_NAME,
+  isSignInOpen,
+  isSignUpAllowed,
+  isSignupOpen,
+  isValidEarlyAccessToken,
+  launchMode,
+  waitlistRedirectPath,
+} from "@/lib/launch-mode";
 import {
   isBlockedPublicUsernamePath,
   isEmbeddablePublicTipPath,
 } from "@/lib/public-tip-path";
-
-const AUTH_PATHS = new Set(["/sign-in", "/sign-up"]);
 
 function applyWebCacheHeaders(response: NextResponse, pathname: string) {
   const policy = inferCachePolicy(pathname);
@@ -34,18 +40,36 @@ function applyContentSecurityPolicy(response: NextResponse, pathname: string, no
   response.headers.set(cspHeaderName(), policy);
 }
 
+function isEarlyAccessPath(pathname: string): boolean {
+  const match = pathname.match(/^\/early-access\/([^/]+)$/);
+  return Boolean(match && isValidEarlyAccessToken(match[1]));
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const nonce = generateCspNonce();
 
-  if (!isSignupOpen() && AUTH_PATHS.has(pathname)) {
-    const url = request.nextUrl.clone();
-    url.pathname = waitlistRedirectPath();
-    url.search = "";
-    return NextResponse.redirect(url);
-  }
-
-  if (launchMode() !== "waitlist" && pathname === "/waitlist") {
+  if (pathname === "/sign-in") {
+    if (!isSignInOpen()) {
+      const url = request.nextUrl.clone();
+      url.pathname = waitlistRedirectPath();
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+  } else if (pathname === "/sign-up") {
+    const allowed = isSignUpAllowed({
+      eaQuery: request.nextUrl.searchParams.get("ea"),
+      eaCookie: request.cookies.get(EARLY_ACCESS_COOKIE_NAME)?.value,
+    });
+    if (!allowed) {
+      const url = request.nextUrl.clone();
+      url.pathname = waitlistRedirectPath();
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+  } else if (!isSignupOpen() && isEarlyAccessPath(pathname)) {
+    // Allow redeem path while gated.
+  } else if (launchMode() !== "waitlist" && pathname === "/waitlist") {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     url.search = "";
