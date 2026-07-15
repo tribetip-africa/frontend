@@ -7,7 +7,7 @@ import type { Tribe } from "@/types/api";
 
 type PaystackOnboardingModalProps = {
   open: boolean;
-  token: string;
+  token: string | null;
   username: string;
   onComplete: (tribe: Tribe) => void;
 };
