@@ -11,7 +11,7 @@ import {
   FOR_CREATORS_TITLE,
 } from "@/lib/for-creators-content";
 import { ENTITY_DEFINITION } from "@/lib/entity";
-import { primaryLaunchCta } from "@/lib/launch-mode";
+import { primaryLaunchCta, showWaitlist } from "@/lib/launch-mode";
 import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from "@/lib/seo-schema";
 import { buildPageMetadata } from "@/lib/seo";
 
@@ -23,6 +23,7 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default function ForCreatorsPage() {
   const launchCta = primaryLaunchCta();
+  const waitlistMode = showWaitlist();
 
   return (
     <>
@@ -89,10 +90,12 @@ export default function ForCreatorsPage() {
         <section className="section-alt py-16 sm:py-20">
           <div className="mx-auto max-w-2xl px-4 text-center sm:px-6">
             <h2 className="font-display text-3xl font-extrabold text-ink sm:text-4xl">
-              Ready to launch your tip page?
+              {waitlistMode ? "Want early access?" : "Ready to launch your tip page?"}
             </h2>
             <p className="mt-3 text-lg text-ink-soft">
-              Pick a username, add a short bio, and share your TribeTip link with your community.
+              {waitlistMode
+                ? "Join the waitlist and we will invite you when creator sign-ups open for your market."
+                : "Pick a username, add a short bio, and share your TribeTip link with your community."}
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               {launchCta ? (

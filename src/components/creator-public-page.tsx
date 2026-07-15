@@ -3,6 +3,7 @@ import type { PublicProfile } from "@/lib/api";
 import { CreatorIdentity } from "@/components/creator-identity";
 import { PublicTipHeader } from "@/components/public-tip-header";
 import { PublicTipSection } from "@/components/public-tip-section";
+import { isSignupOpen, primaryLaunchCta } from "@/lib/launch-mode";
 
 type CreatorPublicPageProps = {
   profile: PublicProfile;
@@ -15,6 +16,15 @@ export function CreatorPublicPage({
   tipSuccess = false,
   celebrationKey,
 }: CreatorPublicPageProps) {
+  const signupOpen = isSignupOpen();
+  const launchCta = primaryLaunchCta();
+  const createPageHref = signupOpen ? "/sign-up" : launchCta?.href ?? null;
+  const createPageLabel = signupOpen
+    ? "Create your own TribeTip page"
+    : launchCta
+      ? launchCta.label
+      : null;
+
   return (
     <div className="flex min-h-dvh flex-col bg-cream">
       <PublicTipHeader />
@@ -36,12 +46,14 @@ export function CreatorPublicPage({
             </div>
           </div>
 
-          <p className="mt-6 text-center text-sm text-muted">
-            <Link href="/" className="font-semibold text-ink hover:underline">
-              Create your own TribeTip page
-            </Link>
-            {" — it's free"}
-          </p>
+          {createPageHref && createPageLabel ? (
+            <p className="mt-6 text-center text-sm text-muted">
+              <Link href={createPageHref} className="font-semibold text-ink hover:underline">
+                {createPageLabel}
+              </Link>
+              {signupOpen ? " — it's free" : null}
+            </p>
+          ) : null}
         </div>
       </main>
     </div>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getDisplayMessage, isTribetipError } from "@/lib/errors";
 import type { AfricanMarket } from "@/lib/constants";
 import { defaultMarket, enabledMarkets } from "@/lib/region-flags";
+import { isSignupOpen, primaryLaunchCta } from "@/lib/launch-mode";
 import { Button } from "@/components/ui/button";
 
 type Field = {
@@ -32,6 +33,8 @@ export function AuthForm({
   const [loading, setLoading] = useState(false);
   const signupMarkets = enabledMarkets();
   const [countryCode, setCountryCode] = useState(defaultMarket().code);
+  const signupOpen = isSignupOpen();
+  const launchCta = primaryLaunchCta();
 
   const selectedMarket =
     signupMarkets.find((market) => market.code === countryCode) ?? defaultMarket();
@@ -201,14 +204,21 @@ export function AuthForm({
               Sign in
             </Link>
           </>
-        ) : (
+        ) : signupOpen ? (
           <>
             New here?{" "}
             <Link href="/sign-up" className="font-semibold text-brand-600 hover:underline">
               Create your page
             </Link>
           </>
-        )}
+        ) : launchCta ? (
+          <>
+            New here?{" "}
+            <Link href={launchCta.href} className="font-semibold text-brand-600 hover:underline">
+              {launchCta.label}
+            </Link>
+          </>
+        ) : null}
       </p>
     </form>
   );

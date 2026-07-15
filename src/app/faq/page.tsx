@@ -8,6 +8,7 @@ import { FaqAccordion } from "@/components/faq/faq-accordion";
 import { Button } from "@/components/ui/button";
 import { FAQ_CATEGORIES, SUPPORT_EMAIL } from "@/lib/faq-content";
 import { ENTITY_DEFINITION } from "@/lib/entity";
+import { primaryLaunchCta } from "@/lib/launch-mode";
 import { buildBreadcrumbJsonLd, buildFaqPageJsonLd, buildWebPageJsonLd } from "@/lib/seo-schema";
 import { buildPageMetadata } from "@/lib/seo";
 
@@ -22,6 +23,8 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default function FaqPage() {
+  const launchCta = primaryLaunchCta();
+
   return (
     <>
       <JsonLd
@@ -109,11 +112,13 @@ export default function FaqPage() {
                   Email support
                 </Button>
               </a>
-              <Link href="/sign-up">
-                <Button variant="secondary" type="button" className="px-8 py-3.5 text-base">
-                  Start my page
-                </Button>
-              </Link>
+              {launchCta ? (
+                <Link href={launchCta.href}>
+                  <Button variant="secondary" type="button" className="px-8 py-3.5 text-base">
+                    {launchCta.label}
+                  </Button>
+                </Link>
+              ) : null}
             </div>
             <p className="mt-4 text-sm text-muted">{SUPPORT_EMAIL}</p>
           </div>
