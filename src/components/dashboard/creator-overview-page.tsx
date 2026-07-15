@@ -25,6 +25,7 @@ import { canAccessCreatorPublicPage, isPublicPageShareable } from "@/lib/creator
 import { fetchAdminTribes, fetchMyProfile } from "@/lib/api";
 import { AdminMetricsPanel } from "@/components/admin-metrics-panel";
 import { AdminReferralsPanel } from "@/components/dashboard/admin-referrals-panel";
+import { AdminEarlyAccessPanel } from "@/components/dashboard/admin-early-access-panel";
 import { useDashboard } from "@/context/dashboard-context";
 import type { AdminOverview } from "@/types/api";
 
@@ -226,6 +227,7 @@ export function AdminOverviewPage() {
         )}
       </div>
 
+      <AdminEarlyAccessPanel token={token} />
       <AdminReferralsPanel token={token} />
     </>
   );
