@@ -34,30 +34,30 @@
 
 .dark {
   color-scheme: dark;
-  --background: #101412;
-  --foreground: #e7ece8;
-  --surface: #171d19;
-  --cream: #131815;
-  --ink: #e7ece8;
-  --ink-soft: #b4bdb6;
-  --muted: #8b968d;
-  --sand: #222a25;
-  --line: #2f3832;
-  --brand-50: #162019;
-  --brand-100: #1d2b22;
-  --brand-200: #274433;
-  --brand-400: #5ea67a;
-  --brand-500: #4d8f67;
-  --brand-600: #66a883;
-  --brand-700: #7fbaa0;
-  --brand-800: #9cccb6;
-  --brand-900: #b8ddcb;
-  --accent: #5ea67a;
-  --accent-deep: #4d8f67;
-  --accent-soft: #1b2d23;
-  --accent-hover: #6eb58a;
-  --coral: #dd8a67;
-  --coral-soft: #2d211b;
+  --background: #161b18;
+  --foreground: #e4e9e5;
+  --surface: #1e2521;
+  --cream: #181d1a;
+  --ink: #e4e9e5;
+  --ink-soft: #a8b2ab;
+  --muted: #87918a;
+  --sand: #272e2a;
+  --line: #343c37;
+  --brand-50: #1a2420;
+  --brand-100: #222e28;
+  --brand-200: #2d4036;
+  --brand-400: #6aad84;
+  --brand-500: #5a9a72;
+  --brand-600: #74b08c;
+  --brand-700: #8fc0a4;
+  --brand-800: #a9d0ba;
+  --brand-900: #c3dfd0;
+  --accent: #6aad84;
+  --accent-deep: #5a9a72;
+  --accent-soft: #223029;
+  --accent-hover: #7bbc94;
+  --coral: #d49274;
+  --coral-soft: #2a221e;
   --shadow-color: 0 0 0;
 }
 
@@ -118,6 +118,91 @@ body {
 .surface-soft {
   background: color-mix(in srgb, var(--cream) 82%, var(--brand-50));
   border: 1px solid var(--line);
+}
+
+/* ── Dashboard workspace (light, calm) ──────────────── */
+
+.dashboard-workspace {
+  background:
+    radial-gradient(ellipse 80% 50% at 100% 0%, rgb(61 143 95 / 0.05), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 0% 100%, rgb(201 111 74 / 0.04), transparent 50%),
+    #f7f4ee;
+}
+
+.dashboard-card {
+  border: 1px solid #e4ddd0;
+  background: #fffcf8;
+  border-radius: 1rem;
+  box-shadow: 0 1px 12px rgb(26 36 28 / 0.04);
+}
+
+.dashboard-hero-accent {
+  background: linear-gradient(90deg, var(--accent) 0%, var(--brand-400) 55%, var(--coral) 100%);
+}
+
+[data-dashboard] {
+  color-scheme: light;
+  --background: #f7f4ee;
+  --foreground: #1a221c;
+  --surface: #fffcf8;
+  --cream: #f7f4ee;
+  --ink: #1a221c;
+  --ink-soft: #4a5249;
+  --muted: #6d7268;
+  --sand: #ebe4d8;
+  --line: #e4ddd0;
+  --brand-50: #eef5f0;
+  --brand-100: #d9e8de;
+  --brand-200: #b5d0be;
+  --brand-400: #4d8c67;
+  --brand-500: #356f4f;
+  --brand-600: #2b5a40;
+  --brand-700: #234833;
+  --brand-800: #1c3a29;
+  --brand-900: #152d20;
+  --accent: #3d8f5f;
+  --accent-deep: #32784f;
+  --accent-soft: #e3f0e8;
+  --accent-hover: #358555;
+  --coral: #c96f4a;
+  --coral-soft: #f8ebe4;
+  --shadow-color: 26 36 28;
+}
+
+[data-dashboard] .text-brand-900 {
+  color: var(--ink);
+}
+
+[data-dashboard] .text-brand-800 {
+  color: var(--ink);
+}
+
+[data-dashboard] .text-brand-700 {
+  color: var(--ink-soft);
+}
+
+[data-dashboard] .border-brand-100,
+[data-dashboard] .border-brand-900\/8 {
+  border-color: var(--line);
+}
+
+[data-dashboard] .divide-brand-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--line);
+}
+
+[data-dashboard] .bg-white {
+  background-color: var(--surface);
+}
+
+[data-dashboard] .bg-cream {
+  background-color: var(--cream);
+}
+
+[data-dashboard] .surface-card,
+[data-dashboard] .surface-panel {
+  border-color: var(--line);
+  background: var(--surface);
+  box-shadow: 0 1px 12px rgb(26 36 28 / 0.04);
 }
 
 .section-alt {
