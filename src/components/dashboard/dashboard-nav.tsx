@@ -34,7 +34,7 @@ function navItemClass(isActive: boolean, variant: "light" | "dark") {
   }
 
   return isActive
-    ? "bg-accent-soft text-ink font-semibold"
+    ? "bg-accent-soft text-ink font-semibold ring-1 ring-accent/20"
     : "text-ink-soft hover:bg-sand hover:text-ink";
 }
 
