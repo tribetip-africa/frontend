@@ -2,6 +2,7 @@ import {
   centsToUnits,
   formatMoney,
   parseAmountInput,
+  tipAmountWithinLimits,
   unitsToCents,
 } from "@/lib/money";
 
@@ -27,5 +28,12 @@ describe("amount conversion", () => {
     expect(parseAmountInput(" 1.5 ")).toBe(1.5);
     expect(parseAmountInput("")).toBeNull();
     expect(parseAmountInput("0")).toBeNull();
+  });
+
+  it("enforces tip amount bounds in major units", () => {
+    expect(tipAmountWithinLimits(1)).toBe(true);
+    expect(tipAmountWithinLimits(100_000)).toBe(true);
+    expect(tipAmountWithinLimits(0.5)).toBe(false);
+    expect(tipAmountWithinLimits(100_001)).toBe(false);
   });
 });
