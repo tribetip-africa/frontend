@@ -8,8 +8,10 @@ import { buildTipPresets, type TipPreset } from "@/lib/tip-amounts";
 import {
   centsToUnits,
   formatMoney,
+  MAX_TIP_UNITS,
   MIN_TIP_UNITS,
   parseAmountInput,
+  tipAmountWithinLimits,
   unitsToCents,
 } from "@/lib/money";
 import { getDisplayMessage } from "@/lib/errors";
@@ -81,14 +83,23 @@ export function TipForm({ profile, showSuccess = false }: TipFormProps) {
   function resolveAmountCents(): number | null {
     if (showCustomAmount) {
       const units = parseAmountInput(customAmountInput);
-      if (units === null || units < MIN_TIP_UNITS) {
+      if (units === null || !tipAmountWithinLimits(units)) {
         return null;
       }
 
       return unitsToCents(units);
     }
 
+    const units = centsToUnits(amountCents);
+    if (!tipAmountWithinLimits(units)) {
+      return null;
+    }
+
     return amountCents;
+  }
+
+  function amountErrorMessage(): string {
+    return `Enter an amount between ${MIN_TIP_UNITS} and ${MAX_TIP_UNITS.toLocaleString()} ${profile.currency}.`;
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -97,7 +108,7 @@ export function TipForm({ profile, showSuccess = false }: TipFormProps) {
 
     const resolvedAmountCents = resolveAmountCents();
     if (resolvedAmountCents === null) {
-      setError(`Enter at least ${MIN_TIP_UNITS} ${profile.currency}.`);
+      setError(amountErrorMessage());
       return;
     }
 
@@ -110,7 +121,7 @@ export function TipForm({ profile, showSuccess = false }: TipFormProps) {
 
     const resolvedAmountCents = resolveAmountCents();
     if (resolvedAmountCents === null) {
-      setError(`Enter at least ${MIN_TIP_UNITS} ${profile.currency}.`);
+      setError(amountErrorMessage());
       setConfirmOpen(false);
       return;
     }
@@ -205,6 +216,7 @@ export function TipForm({ profile, showSuccess = false }: TipFormProps) {
                   type="number"
                   inputMode="decimal"
                   min={MIN_TIP_UNITS}
+                  max={MAX_TIP_UNITS}
                   step="any"
                   required
                   value={customAmountInput}
