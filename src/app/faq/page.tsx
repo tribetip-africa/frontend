@@ -45,7 +45,7 @@ export default function FaqPage() {
       <main>
         {/* Hero */}
         <section className="bg-white pt-12 pb-10 sm:pt-16 sm:pb-12">
-          <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
+          <div className="mx-auto max-w-landing px-4 text-center sm:px-6">
             <p className="text-sm font-bold text-brand-600">Help center</p>
             <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
               Frequently asked questions
@@ -61,7 +61,7 @@ export default function FaqPage() {
 
         {/* Category quick-nav */}
         <section className="bg-white pb-2">
-          <div className="mx-auto max-w-3xl px-4 sm:px-6">
+          <div className="mx-auto max-w-landing px-4 sm:px-6">
             <nav aria-label="FAQ categories">
               <ul className="flex flex-wrap justify-center gap-2">
                 {FAQ_CATEGORIES.map((category) => (
@@ -81,7 +81,7 @@ export default function FaqPage() {
 
         {/* Categories */}
         <section className="bg-white pb-16 pt-8 sm:pb-24">
-          <div className="mx-auto max-w-3xl space-y-14 px-4 sm:px-6">
+          <div className="mx-auto max-w-landing space-y-14 px-4 sm:px-6">
             {FAQ_CATEGORIES.map((category) => (
               <div key={category.id} id={category.id} className="scroll-mt-24">
                 <div className="mb-5">
