@@ -303,7 +303,7 @@ export function AfricaFlowMap() {
 
   return (
     <section className="section-alt py-16 sm:py-24" data-landing="stagger-section">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-landing px-4 sm:px-6">
         <div className="text-center" data-landing="reveal">
           <p className="text-sm font-bold text-brand-600">Across Africa</p>
           <h2 className="mt-2 font-display text-3xl font-extrabold text-ink sm:text-4xl">
