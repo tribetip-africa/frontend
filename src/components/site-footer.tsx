@@ -18,7 +18,7 @@ export function SiteFooter({ fixed = false }: SiteFooterProps) {
         fixed ? "fixed inset-x-0 bottom-0 z-40" : "",
       ].join(" ")}
     >
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 md:flex-row md:items-start md:justify-between">
+      <div className="mx-auto flex max-w-landing flex-col gap-8 px-4 py-12 sm:px-6 md:flex-row md:items-start md:justify-between">
         <div>
           <Logo href="/" size="sm" />
           <p className="mt-3 max-w-xs text-sm text-muted">
