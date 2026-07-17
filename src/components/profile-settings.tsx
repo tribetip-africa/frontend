@@ -5,11 +5,13 @@ import { getDisplayMessage } from "@/lib/errors";
 import { isPaystackSubaccountVerified } from "@/lib/paystack-onboarding";
 import { publishMyProfile, updateMyProfile } from "@/lib/api";
 import {
+  MAX_TIP_UNITS,
   MIN_TIP_UNITS,
   centsToUnits,
-  parseAmountInput,
-  unitsToCents,
   formatMoneyUnits,
+  parseAmountInput,
+  tipAmountWithinLimits,
+  unitsToCents,
 } from "@/lib/money";
 import { buildTipPresets } from "@/lib/tip-amounts";
 import type { CreatorProfile } from "@/types/api";
@@ -59,8 +61,10 @@ export function ProfileSettings({
 
     try {
       const defaultTipUnits = parseAmountInput(defaultTipAmountInput);
-      if (defaultTipUnits === null || defaultTipUnits < MIN_TIP_UNITS) {
-        setError(`Enter a default tip amount of at least ${MIN_TIP_UNITS} ${profile.currency}.`);
+      if (defaultTipUnits === null || !tipAmountWithinLimits(defaultTipUnits)) {
+        setError(
+          `Enter a default tip amount between ${MIN_TIP_UNITS} and ${MAX_TIP_UNITS.toLocaleString()} ${profile.currency}.`,
+        );
         return;
       }
 
@@ -138,6 +142,7 @@ export function ProfileSettings({
             id="default_tip_amount"
             type="number"
             min={MIN_TIP_UNITS}
+            max={MAX_TIP_UNITS}
             step="1"
             value={defaultTipAmountInput}
             onChange={(event) => setDefaultTipAmountInput(event.target.value)}
