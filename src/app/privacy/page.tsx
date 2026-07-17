@@ -38,7 +38,7 @@ export default function PrivacyPage() {
       <main>
         {/* Hero */}
         <section className="bg-white pt-12 pb-8 sm:pt-16 sm:pb-10">
-          <div className="mx-auto max-w-3xl px-4 sm:px-6">
+          <div className="mx-auto max-w-landing px-4 sm:px-6">
             <p className="text-sm font-bold text-brand-600">Legal</p>
             <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
               Privacy Policy
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
 
         {/* Body: table of contents + sections */}
         <section className="bg-white pb-16 sm:pb-24">
-          <div className="mx-auto max-w-5xl gap-12 px-4 sm:px-6 lg:grid lg:grid-cols-[16rem_1fr]">
+          <div className="mx-auto max-w-landing gap-12 px-4 sm:px-6 lg:grid lg:grid-cols-[16rem_1fr]">
             {/* Table of contents */}
             <aside className="mb-10 lg:mb-0">
               <div className="lg:sticky lg:top-24">
