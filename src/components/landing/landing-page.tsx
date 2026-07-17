@@ -92,7 +92,7 @@ export function LandingPage() {
         </div>
 
         <section id="creators" className="landing-section py-16 sm:py-24" data-landing="stagger-section">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="mx-auto max-w-landing px-4 sm:px-6">
             <div className="text-center" data-landing="reveal">
               <h2 className="font-display text-3xl font-extrabold text-ink sm:text-4xl">
                 Designed for creators, not corporations
