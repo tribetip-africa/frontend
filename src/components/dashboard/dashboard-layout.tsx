@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { PaystackOnboardingModal } from "@/components/paystack-onboarding-modal";
 import { PayoutSetupSuccess } from "@/components/payout-setup-success";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { DashboardThemeScope } from "@/components/dashboard/dashboard-theme-scope";
 import { DashboardNotifications } from "@/components/dashboard/dashboard-notifications";
 import { DashboardRoleGuard } from "@/components/dashboard/dashboard-role-guard";
 import { DashboardProvider } from "@/context/dashboard-context";
@@ -91,10 +92,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   // Cookie auth keeps JWT HttpOnly (token is null); localStorage mode still has a Bearer token.
   if (isLoading || !tribe || !isAuthenticated) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-cream text-brand-700">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" />
-        <p className="text-sm font-medium">Loading your workspace…</p>
-      </div>
+      <DashboardThemeScope>
+        <div className="dashboard-workspace flex min-h-screen flex-col items-center justify-center gap-3 text-brand-700">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" />
+          <p className="text-sm font-medium text-ink-soft">Loading your workspace…</p>
+        </div>
+      </DashboardThemeScope>
     );
   }
 
@@ -115,41 +118,47 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       ];
 
   return (
-    <DashboardProvider
-      value={{
-        tribe,
-        token,
-        isAdmin,
-        profile,
-        profileError,
-        onProfileChange: handleProfileChange,
-        blurred: showOnboardingModal,
-      }}
-    >
-      <DashboardRoleGuard isAdmin={isAdmin}>
-        <DashboardShell navGroups={navGroups} quickLinks={quickLinks} blurred={showOnboardingModal}>
-          {!isAdmin && (
-            <div className="pointer-events-auto fixed right-4 top-4 z-[60] sm:right-6 lg:top-6">
-              <DashboardNotifications token={token} enabled={!showOnboardingModal} />
-            </div>
-          )}
-          {children}
-        </DashboardShell>
-      </DashboardRoleGuard>
+    <DashboardThemeScope>
+      <DashboardProvider
+        value={{
+          tribe,
+          token,
+          isAdmin,
+          profile,
+          profileError,
+          onProfileChange: handleProfileChange,
+          blurred: showOnboardingModal,
+        }}
+      >
+        <DashboardRoleGuard isAdmin={isAdmin}>
+          <DashboardShell
+            navGroups={navGroups}
+            quickLinks={quickLinks}
+            blurred={showOnboardingModal}
+            headerActions={
+              !isAdmin ? (
+                <DashboardNotifications token={token} enabled={!showOnboardingModal} />
+              ) : undefined
+            }
+          >
+            {children}
+          </DashboardShell>
+        </DashboardRoleGuard>
 
-      {showOnboardingModal && (
-        <PaystackOnboardingModal
-          open
-          token={token}
-          username={tribe.username}
-          onComplete={handleOnboardingComplete}
+        {showOnboardingModal && (
+          <PaystackOnboardingModal
+            open
+            token={token}
+            username={tribe.username}
+            onComplete={handleOnboardingComplete}
+          />
+        )}
+
+        <PayoutSetupSuccess
+          visible={payoutSuccessVisible}
+          onDismiss={() => setPayoutSuccessVisible(false)}
         />
-      )}
-
-      <PayoutSetupSuccess
-        visible={payoutSuccessVisible}
-        onDismiss={() => setPayoutSuccessVisible(false)}
-      />
-    </DashboardProvider>
+      </DashboardProvider>
+    </DashboardThemeScope>
   );
 }
