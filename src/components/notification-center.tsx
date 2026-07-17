@@ -47,7 +47,7 @@ export function NotificationCenter({
       <button
         type="button"
         aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
-        className="relative rounded-xl border border-brand-200 bg-white px-3 py-2 text-sm font-medium text-brand-800 hover:bg-brand-50"
+        className="relative rounded-xl border border-line bg-surface px-3 py-2 text-sm font-medium text-ink shadow-sm transition hover:bg-sand"
         onClick={() => setOpen((current) => !current)}
       >
         Notifications
