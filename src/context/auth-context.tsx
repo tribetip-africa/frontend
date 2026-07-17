@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { confirmationRequired: true, tribe: null };
     }
 
-    if (jwt) {
+    if (jwt || data.csrf_token) {
       setStoredAuth(jwt, data.tribe);
       return { confirmationRequired: false, tribe: data.tribe };
     }
