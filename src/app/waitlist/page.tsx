@@ -21,8 +21,8 @@ export default function WaitlistPage() {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-        <div className="mx-auto grid max-w-4xl gap-10 lg:grid-cols-2 lg:items-center">
+      <main className="mx-auto max-w-landing px-4 py-12 sm:px-6 sm:py-16">
+        <div className="mx-auto grid max-w-landing gap-10 lg:grid-cols-2 lg:items-center">
           <div>
             <p className="text-sm font-bold text-brand-600">Early access</p>
             <h1 className="mt-2 font-display text-3xl font-extrabold text-ink sm:text-4xl">
