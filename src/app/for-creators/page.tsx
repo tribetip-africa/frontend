@@ -43,7 +43,7 @@ export default function ForCreatorsPage() {
       <SiteHeader />
       <main>
         <section className="bg-white pt-12 pb-8 sm:pt-16 sm:pb-10">
-          <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
+          <div className="mx-auto max-w-landing px-4 text-center sm:px-6">
             <p className="text-sm font-bold text-brand-600">For creators</p>
             <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
               Accept tips with one link — built for Africa
@@ -62,7 +62,7 @@ export default function ForCreatorsPage() {
         <CitationDefinition>{ENTITY_DEFINITION}</CitationDefinition>
 
         <section className="bg-white py-12 sm:py-16">
-          <div className="mx-auto max-w-3xl space-y-12 px-4 sm:px-6">
+          <div className="mx-auto max-w-landing space-y-12 px-4 sm:px-6">
             {FOR_CREATORS_SECTIONS.map((section) => (
               <article key={section.id} id={section.id} className="scroll-mt-24">
                 <h2 className="font-display text-2xl font-extrabold text-ink sm:text-3xl">
