@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Logo } from "@/components/brand/logo";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
-import { ThemeSwitcher } from "@/components/theme-switcher";
 import type { DashboardNavGroup } from "@/lib/dashboard-nav";
 import { flattenDashboardNav } from "@/lib/dashboard-nav";
 import { useAuth } from "@/context/auth-context";
@@ -101,11 +100,11 @@ export function DashboardMobileNav({ groups, quickLinks }: DashboardMobileNavPro
 
   return (
     <>
-      <div className="mb-6 flex items-center justify-between gap-3 lg:hidden">
+      <div className="flex items-center justify-between gap-3 lg:hidden">
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-900/10 bg-white text-brand-800 shadow-sm"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line bg-surface text-ink shadow-sm transition hover:bg-sand"
             aria-label="Open dashboard menu"
             aria-expanded={open}
             aria-controls="dashboard-mobile-drawer"
@@ -113,14 +112,11 @@ export function DashboardMobileNav({ groups, quickLinks }: DashboardMobileNavPro
           >
             <MenuIcon />
           </button>
-          <p className="min-w-0 truncate font-display text-sm font-bold text-brand-900">
+          <p className="min-w-0 truncate font-display text-sm font-bold text-ink">
             {pageTitle}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <ThemeSwitcher className="h-9 w-9" />
-          <Logo href="/dashboard" size="sm" className="shrink-0" />
-        </div>
+        <Logo href="/dashboard" size="sm" className="shrink-0" />
       </div>
 
       {open && (
