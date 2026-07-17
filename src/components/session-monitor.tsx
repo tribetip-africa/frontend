@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { refreshSession } from "@/lib/api";
+import { refreshSession, signOut as apiSignOut } from "@/lib/api";
 import { isCookieAuthEnabled } from "@/lib/auth-mode";
 import {
   clearStoredAuth,
@@ -30,6 +30,15 @@ function touchActivity(nowMs: number = Date.now()) {
   window.sessionStorage.setItem(LAST_ACTIVITY_KEY, String(nowMs));
 }
 
+async function endSession(token: string | null) {
+  try {
+    await apiSignOut(token);
+  } catch {
+    // Always clear local state even if the API sign-out fails.
+  }
+  clearStoredAuth();
+}
+
 export function SessionMonitor() {
   const router = useRouter();
   const pathname = usePathname();
@@ -54,10 +63,11 @@ export function SessionMonitor() {
       const idleForMs = now - readLastActivityMs();
 
       if (idleForMs >= IDLE_TIMEOUT_MS) {
-        clearStoredAuth();
-        if (isProtectedPath(pathname)) {
-          router.replace("/sign-in");
-        }
+        void endSession(token).then(() => {
+          if (isProtectedPath(pathname)) {
+            router.replace("/sign-in");
+          }
+        });
         return;
       }
 
@@ -80,10 +90,11 @@ export function SessionMonitor() {
       if (!token) return;
 
       if (isTokenExpired(token, now)) {
-        clearStoredAuth();
-        if (isProtectedPath(pathname)) {
-          router.replace("/sign-in");
-        }
+        void endSession(token).then(() => {
+          if (isProtectedPath(pathname)) {
+            router.replace("/sign-in");
+          }
+        });
         return;
       }
 
