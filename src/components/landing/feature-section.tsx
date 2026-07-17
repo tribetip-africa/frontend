@@ -31,7 +31,7 @@ export function FeatureSection({
           }
         : {})}
     >
-      <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16">
+      <div className="mx-auto grid max-w-landing items-center gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16">
         <div
           className={reversed ? "lg:order-2" : ""}
           {...(motion ? { "data-landing": "feature-text" } : {})}
