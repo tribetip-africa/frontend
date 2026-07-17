@@ -9,10 +9,12 @@ import { CreatorNeedsAttention } from "@/components/dashboard/creator-needs-atte
 import { CreatorOnboardingStepper } from "@/components/dashboard/creator-onboarding-stepper";
 import { CreatorPrimaryCtaCard } from "@/components/dashboard/creator-primary-cta";
 import { CreatorSharePromo } from "@/components/dashboard/creator-share-promo";
+import { PayoutCard } from "@/components/payout-card/payout-card";
 import { PublicPageActions } from "@/components/public-page-actions";
 import { TipsList } from "@/components/tips-list";
 import { Button } from "@/components/ui/button";
 import { useCreatorTipsPreview } from "@/hooks/use-creator-tips-preview";
+import { usePaystackPayout } from "@/hooks/use-paystack-payout";
 import { usePaystackSettlements } from "@/hooks/use-paystack-settlements";
 import { usePaystackWithdrawals } from "@/hooks/use-paystack-withdrawals";
 import {
@@ -22,6 +24,7 @@ import {
 } from "@/lib/creator-onboarding-progress";
 import { accountStatusBannerForCreator } from "@/lib/paystack-onboarding";
 import { canAccessCreatorPublicPage, isPublicPageShareable } from "@/lib/creator-public-page";
+import { buildPayoutCardData } from "@/lib/payout-card-data";
 import { fetchAdminTribes, fetchMyProfile } from "@/lib/api";
 import { AdminMetricsPanel } from "@/components/admin-metrics-panel";
 import { AdminReferralsPanel } from "@/components/dashboard/admin-referrals-panel";
@@ -39,6 +42,7 @@ function accountStatusTone(
 
 export function CreatorOverviewPage() {
   const { token, tribe, profile, profileError, onProfileChange } = useDashboard();
+  const payoutState = usePaystackPayout(token);
   const settlementsState = usePaystackSettlements(token, { refresh: false });
   const withdrawalsState = usePaystackWithdrawals(token);
   const [tipsRefreshSignal, setTipsRefreshSignal] = useState(0);
@@ -54,9 +58,16 @@ export function CreatorOverviewPage() {
   const fullyLive = isCreatorFullyLive({ tribe, profile });
   const currency = profile?.currency ?? withdrawalsState.payload?.status.currency ?? "KES";
   const availableToWithdrawCents = withdrawalsState.payload?.status.available_to_withdraw_cents;
+  const cardData = buildPayoutCardData(
+    profile,
+    tribe.username,
+    payoutState.payload,
+    withdrawalsState.payload?.status,
+  );
 
   async function handleRepairComplete() {
     setTipsRefreshSignal((current) => current + 1);
+    void payoutState.refresh();
 
     try {
       onProfileChange(await fetchMyProfile(token));
@@ -66,16 +77,14 @@ export function CreatorOverviewPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:gap-8">
-      <div className="order-1 lg:order-2">
-        <div className="mb-4 space-y-3 lg:hidden">
-          <p className="text-center text-sm font-medium text-brand-700">
-            Welcome back, @{tribe.username}
-          </p>
-          <div className="flex flex-wrap justify-center gap-2">
-            <StatusBadge tone={accountStatusTone(accountStatus)}>
-              {accountStatus}
-            </StatusBadge>
+    <>
+      <DashboardHero
+        eyebrow="Creator workspace"
+        title={`Welcome back, @${tribe.username}`}
+        description="Earnings, recent tips, payouts, and your public page in one place."
+        badges={
+          <>
+            <StatusBadge tone={accountStatusTone(accountStatus)}>{accountStatus}</StatusBadge>
             {profile && (
               <StatusBadge tone={profile.is_profile_public ? "success" : "warning"}>
                 {profile.is_profile_public ? "Page live" : "Page draft"}
@@ -84,51 +93,30 @@ export function CreatorOverviewPage() {
             {profile && isPublicPageShareable(profile) && (
               <StatusBadge tone="success">Link unlocked</StatusBadge>
             )}
-          </div>
-        </div>
-      </div>
-
-      <div className="order-2 hidden lg:order-1 lg:block">
-        <DashboardHero
-          eyebrow="Creator workspace"
-          title={`Welcome back, @${tribe.username}`}
-          description="Earnings, recent tips, payouts, and your public page in one place."
-          badges={
-            <>
-              <StatusBadge tone={accountStatusTone(accountStatus)}>
-                {accountStatus}
-              </StatusBadge>
-              {profile && (
-                <StatusBadge tone={profile.is_profile_public ? "success" : "warning"}>
-                  {profile.is_profile_public ? "Page live" : "Page draft"}
-                </StatusBadge>
-              )}
-              {profile && isPublicPageShareable(profile) && (
-                <StatusBadge tone="success">Link unlocked</StatusBadge>
-              )}
-            </>
-          }
-          actions={<PublicPageActions username={tribe.username} shareable={shareable} />}
-        />
-      </div>
+          </>
+        }
+        actions={<PublicPageActions username={tribe.username} shareable={shareable} />}
+      />
 
       {!fullyLive && (
-        <div className="order-3 space-y-4">
+        <>
           <CreatorOnboardingStepper steps={onboardingSteps} />
           {primaryCta && <CreatorPrimaryCtaCard cta={primaryCta} />}
-        </div>
+        </>
       )}
 
-      <div className="order-4">
-        <CreatorNeedsAttention
-          token={token}
-          metrics={profile?.metrics}
-          tips={tips}
-          onRepaired={() => void handleRepairComplete()}
-        />
+      <div className="surface-panel rounded-3xl px-3 py-5 sm:px-5 sm:py-6">
+        <PayoutCard data={cardData} token={token} />
       </div>
 
-      <div className="order-5 rounded-2xl border border-brand-100 bg-white p-5 shadow-sm sm:p-6">
+      <CreatorNeedsAttention
+        token={token}
+        metrics={profile?.metrics}
+        tips={tips}
+        onRepaired={() => void handleRepairComplete()}
+      />
+
+      <div className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm sm:p-6">
         <CreatorEarningsPanel
           variant="overview"
           metrics={profile?.metrics}
@@ -138,7 +126,7 @@ export function CreatorOverviewPage() {
         />
       </div>
 
-      <div className="order-6 grid gap-6 lg:grid-cols-2 lg:items-start">
+      <div className="grid gap-5 lg:grid-cols-2 lg:items-start lg:gap-6">
         <TipsList
           token={token}
           refreshSignal={tipsRefreshSignal}
@@ -150,18 +138,16 @@ export function CreatorOverviewPage() {
         <CreatorSharePromo username={tribe.username} profile={profile} shareable={shareable} />
       </div>
 
-      <div className="order-7">
-        <CreatorLastSettlement
-          token={token}
-          payload={settlementsState.payload}
-          loading={settlementsState.loading}
-          error={settlementsState.error}
-        />
-      </div>
+      <CreatorLastSettlement
+        token={token}
+        payload={settlementsState.payload}
+        loading={settlementsState.loading}
+        error={settlementsState.error}
+      />
 
       {statusBanner && (
         <div
-          className={`order-8 rounded-2xl border px-4 py-3 text-sm ${
+          className={`rounded-2xl border px-4 py-3 text-sm ${
             statusBanner.tone === "danger"
               ? "border-red-200 bg-red-50 text-red-800"
               : statusBanner.tone === "warning"
@@ -176,13 +162,13 @@ export function CreatorOverviewPage() {
 
       {profileError && (
         <p
-          className="order-9 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
           role="alert"
         >
           {profileError}
         </p>
       )}
-    </div>
+    </>
   );
 }
 
