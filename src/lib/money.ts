@@ -1,4 +1,10 @@
 export const MIN_TIP_UNITS = 1;
+/** Major currency units — keep aligned with TRIBETIP_TIP_MAX_CENTS / 100 on the API. */
+export const MAX_TIP_UNITS = 100_000;
+
+export function tipAmountWithinLimits(units: number): boolean {
+  return Number.isFinite(units) && units >= MIN_TIP_UNITS && units <= MAX_TIP_UNITS;
+}
 
 export function centsToUnits(amountCents: number): number {
   return amountCents / 100;
