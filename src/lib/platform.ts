@@ -28,7 +28,24 @@ export function getPlatformBaseUrl(): string {
 }
 
 export function getApiBaseUrl(): string {
-  return normalizeUrl(process.env.NEXT_PUBLIC_API_URL ?? defaultsForEnv().apiUrl);
+  const configured = normalizeUrl(
+    process.env.NEXT_PUBLIC_API_URL ?? defaultsForEnv().apiUrl,
+  );
+
+  // localhost and 127.0.0.1 are different sites — cookies (incl. CSRF) only flow on
+  // same-site POST when the page host matches the API host.
+  if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
+    const pageHost = window.location.hostname;
+    if (pageHost === "localhost" || pageHost === "127.0.0.1") {
+      const url = new URL(configured);
+      if (url.hostname !== pageHost) {
+        url.hostname = pageHost;
+        return normalizeUrl(url.toString());
+      }
+    }
+  }
+
+  return configured;
 }
 
 export function getPlatformHostLabel(): string {
