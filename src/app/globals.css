@@ -29,6 +29,8 @@
   --coral: #c96f4a;
   --coral-soft: #f8ebe4;
   --dashboard-content-max: 76.8rem;
+  /* Landing content width: original max-w-6xl (72rem) × 1.2 × 1.1 ≈ 95.04rem */
+  --landing-content-max: 95.04rem;
   --shadow-color: 26 36 28;
 }
 
@@ -87,6 +89,7 @@
   --color-coral: var(--coral);
   --color-coral-soft: var(--coral-soft);
   --max-width-dashboard: var(--dashboard-content-max);
+  --max-width-landing: var(--landing-content-max);
   --font-sans: var(--font-jakarta);
   --font-display: var(--font-jakarta);
 }
